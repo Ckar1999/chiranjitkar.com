@@ -243,6 +243,18 @@ html {
     transform-origin: top center;
 }
 
+/* Keep the first model's face below the taller fixed mobile navigation. */
+@media (max-width: 639px) {
+    .hero-slide[data-slide="0"].scale-100 img {
+        animation-name: kenBurnsMobile;
+    }
+
+    @keyframes kenBurnsMobile {
+        0% { transform: translateY(44px) scale(1); }
+        100% { transform: translateY(44px) scale(1.08); }
+    }
+}
+
 @keyframes kenBurns {
     0% {
         transform: scale(1);
