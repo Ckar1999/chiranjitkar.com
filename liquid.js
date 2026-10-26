@@ -39,6 +39,7 @@ function initMobileMenu() {
     }
 
     toggle.addEventListener('click', (e) => {
+        e.preventDefault();
         e.stopPropagation();
         setOpen(toggle.getAttribute('aria-expanded') !== 'true');
     });
