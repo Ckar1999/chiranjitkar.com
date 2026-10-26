@@ -4,6 +4,13 @@
 
 html {
     scroll-behavior: smooth;
+    max-width: 100vw;
+    overflow-x: clip;
+}
+
+body {
+    max-width: 100vw;
+    overflow-x: clip;
 }
 
 @layer utilities {
@@ -112,6 +119,18 @@ html {
     transform: translateX(0);
 }
 
+/* Mobile & Tablet safety: transform vertically on screens <= 1024px to prevent horizontal page overflow */
+@media (max-width: 1024px) {
+    .editorial-reveal-left,
+    .editorial-reveal-right {
+        transform: translateY(25px);
+    }
+    .editorial-reveal-left.is-visible,
+    .editorial-reveal-right.is-visible {
+        transform: translateY(0);
+    }
+}
+
 .delay-100 { transition-delay: 0.1s; }
 .delay-200 { transition-delay: 0.2s; }
 .delay-300 { transition-delay: 0.3s; }
@@ -123,9 +142,12 @@ html {
    ========================================================================= */
 .marquee-wrapper {
     overflow: hidden;
+    max-width: 100vw;
+    width: 100%;
     white-space: nowrap;
     position: relative;
     user-select: none;
+    contain: paint;
 }
 
 .marquee-content {
