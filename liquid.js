@@ -110,7 +110,7 @@ function initHeroSlider() {
         if (counterCurrent) counterCurrent.textContent = `0${currentSlide + 1}`;
         if (heroData[currentSlide]) {
             if (collectionTag) collectionTag.textContent = heroData[currentSlide].collection;
-            if (conceptText) conceptText.textContent = `"${heroData[currentSlide].concept}"`;
+            if (conceptText) conceptText.textContent = heroData[currentSlide].concept;
         }
     }
 

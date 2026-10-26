@@ -7,7 +7,7 @@
 
 ## Background & Training
 * **Engineering Roots:** Chiranjit completed his formal engineering education in Delhi before turning his passion for visual arts into a full-time professional career.
-* **Celebrity Mentorship:** Trained at the prestigious **Praveen Bhat Academy** in Delhi under the direct mentorship of renowned celebrity fashion photographer **Praveen Bhat** and creative mentor **Krishan Thapa**. Under their tutelage, Chiranjit perfected studio lighting, camera aesthetics, high-end commercial retouching, and creative directing.
+* **Professional Mentorship:** Trained at the prestigious **Praveen Bhat Academy** in Delhi under the direct mentorship of renowned acclaimed fashion photographer **Praveen Bhat** and creative mentor **Krishan Thapa**. Under their tutelage, Chiranjit perfected studio lighting, camera aesthetics, high-end commercial retouching, and creative directing.
 * **Experience:** Over **6+ years** of professional photography experience across Delhi, Mumbai, and Northeast India.
 * **Mumbai Chapter:** Chiranjit expanded operations to Mumbai, actively collaborating with fashion models, runway aspirants, stylists, and apparel brands.
 

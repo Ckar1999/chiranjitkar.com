@@ -25,9 +25,9 @@
   "packages": {
     "full_production": [
       {
-        "id": "glamour-radiance",
-        "name": "Glamour Radiance",
-        "price": 19999.99,
+        "id": "model-portfolio",
+        "name": "Model Portfolio & Headshots",
+        "price": 20000,
         "looks": 3,
         "team": [
           "Makeup Artist",
@@ -38,9 +38,9 @@
         "cloud_backup_months": 1
       },
       {
-        "id": "chic-indoor-elegance",
-        "name": "Chic Indoor Elegance",
-        "price": 34000.0,
+        "id": "editorial-fashion-session",
+        "name": "Editorial & Fashion Session",
+        "price": 34000,
         "looks": 4,
         "team": [
           "Makeup Artist",
@@ -52,9 +52,9 @@
         "cloud_backup_months": 1
       },
       {
-        "id": "vogue-fusion-envision",
-        "name": "Vogue Fusion Envision",
-        "price": 53000.0,
+        "id": "complete-campaign-bridal",
+        "name": "Complete Campaign & Bridal Production",
+        "price": 53000,
         "looks": 8,
         "team": [
           "Full Creative Crew",
@@ -78,19 +78,22 @@
     "solo_looks": [
       {
         "looks": 1,
-        "price": 4599.99,
+        "name": "Single Look",
+        "price": 4599,
         "retouched_images": 7,
         "max_hours": 3
       },
       {
         "looks": 2,
-        "price": 7599.99,
+        "name": "Editorial (2 Looks)",
+        "price": 7599,
         "retouched_images": 14,
         "max_hours": 6
       },
       {
         "looks": 4,
-        "price": 12999.99,
+        "name": "Atelier Archive (4 Looks)",
+        "price": 12999,
         "retouched_images": 28,
         "max_hours": 12
       }
@@ -99,25 +102,25 @@
       {
         "name": "SoloGlimpse",
         "looks": 1,
-        "price": 2499.99,
+        "price": 2499,
         "edited_images": 10
       },
       {
         "name": "Chic Harmony",
         "looks": 2,
-        "price": 3999.99,
+        "price": 3999,
         "edited_images": 20
       },
       {
         "name": "4 Looks Package",
         "looks": 4,
-        "price": 6999.99,
+        "price": 6999,
         "edited_images": 40
       },
       {
         "name": "6 Looks Package",
         "looks": 6,
-        "price": 10599.99,
+        "price": 10599,
         "edited_images": 60
       }
     ]

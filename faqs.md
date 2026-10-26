@@ -5,7 +5,7 @@
 ## 1. General & Photography Practice
 
 ### Q1: Who is Chiranjit Kar?
-**A:** Chiranjit Kar is a highly skilled and passionate professional fashion photographer, renowned for capturing the beauty and essence of the fashion world. With professional training from the prestigious Praveen Bhat Academy under celebrity fashion photographer Praveen Bhat, Chiranjit brings refined aesthetic vision, technical precision, and storytelling to every shoot.
+**A:** Chiranjit Kar is a highly skilled and passionate professional fashion photographer, renowned for capturing the beauty and essence of the fashion world. With professional training from the prestigious Praveen Bhat Academy under acclaimed fashion photographer Praveen Bhat, Chiranjit brings refined aesthetic vision, technical precision, and storytelling to every shoot.
 
 ### Q2: How many years of experience does Chiranjit Kar have in photography?
 **A:** Chiranjit Kar has over 6+ years of dedicated professional experience specializing in fashion, editorial, portrait, and commercial photography.
@@ -14,7 +14,7 @@
 **A:** Services include fashion photography, model portfolio shoots, beauty/cosmetic campaigns, conceptual fashion, catalog/lookbooks, commercial advertising, and creative collaborations.
 
 ### Q4: Where did Chiranjit Kar receive his professional fashion photography training?
-**A:** He trained at the renowned Praveen Bhat Academy in Delhi under celebrity fashion photographer Praveen Bhat and creative mentor Krishan Thapa.
+**A:** He trained at the renowned Praveen Bhat Academy in Delhi under acclaimed fashion photographer Praveen Bhat and creative mentor Krishan Thapa.
 
 ### Q5: What payment options are available for booking a photoshoot?
 **A:** We accept domestic UPI (Google Pay, PhonePe, Paytm), Net Banking, Debit/Credit Cards, and major mobile wallet options.
@@ -38,7 +38,7 @@
 **A:** Yes, sessions cater to both aspiring/established individual models and commercial businesses, apparel labels, and e-commerce stores.
 
 ### Q12: What sets Chiranjit Kar Photography apart from other fashion photographers?
-**A:** The combination of celebrity academy training, technical engineering precision, 6+ years of experience, a relaxed client-friendly shoot environment, and meticulous high-end retouching standards.
+**A:** The combination of elite academy training, technical engineering precision, 6+ years of experience, a relaxed client-friendly shoot environment, and meticulous high-end retouching standards.
 
 ---
 
