@@ -1,0 +1,136 @@
+{
+  "site": {
+    "name": "Chiranjit Kar Photography",
+    "domain": "chiranjitkar.com",
+    "tagline": "Fashion, Commercial & Portrait Photographer",
+    "email": "iamchiranjitkar@hotmail.com",
+    "phone": "+917005238823",
+    "location": "Agartala, Tripura, India",
+    "experience_years": "6+"
+  },
+  "biography": {
+    "name": "Chiranjit Kar",
+    "education": "Engineering graduate from Delhi",
+    "academy": "Praveen Bhat Academy",
+    "mentors": [
+      "Praveen Bhat",
+      "Krishan Thapa"
+    ],
+    "cities": [
+      "Agartala",
+      "Delhi",
+      "Mumbai"
+    ]
+  },
+  "packages": {
+    "full_production": [
+      {
+        "id": "glamour-radiance",
+        "name": "Glamour Radiance",
+        "price": 19999.99,
+        "looks": 3,
+        "team": [
+          "Makeup Artist",
+          "Hairstylist"
+        ],
+        "deliverables": "15 Retouched Photos",
+        "location": "Indoor Studio",
+        "cloud_backup_months": 1
+      },
+      {
+        "id": "chic-indoor-elegance",
+        "name": "Chic Indoor Elegance",
+        "price": 34000.0,
+        "looks": 4,
+        "team": [
+          "Makeup Artist",
+          "Hairstylist",
+          "Wardrobe Stylist + Accessories"
+        ],
+        "deliverables": "20 Retouched Photos",
+        "location": "Indoor Studio",
+        "cloud_backup_months": 1
+      },
+      {
+        "id": "vogue-fusion-envision",
+        "name": "Vogue Fusion Envision",
+        "price": 53000.0,
+        "looks": 8,
+        "team": [
+          "Full Creative Crew",
+          "MUA",
+          "Hairstylist",
+          "Wardrobe Stylist",
+          "Concept Artist"
+        ],
+        "deliverables": "40 Retouched Photos",
+        "features": [
+          "Moodboard & Concept",
+          "Posing Sessions",
+          "Website Gallery Feature",
+          "Reel Collab + Story",
+          "BTS Video Footage"
+        ],
+        "location": "Indoor Studio + Outdoor",
+        "cloud_backup_months": 2
+      }
+    ],
+    "solo_looks": [
+      {
+        "looks": 1,
+        "price": 4599.99,
+        "retouched_images": 7,
+        "max_hours": 3
+      },
+      {
+        "looks": 2,
+        "price": 7599.99,
+        "retouched_images": 14,
+        "max_hours": 6
+      },
+      {
+        "looks": 4,
+        "price": 12999.99,
+        "retouched_images": 28,
+        "max_hours": 12
+      }
+    ],
+    "collaboration_packages": [
+      {
+        "name": "SoloGlimpse",
+        "looks": 1,
+        "price": 2499.99,
+        "edited_images": 10
+      },
+      {
+        "name": "Chic Harmony",
+        "looks": 2,
+        "price": 3999.99,
+        "edited_images": 20
+      },
+      {
+        "name": "4 Looks Package",
+        "looks": 4,
+        "price": 6999.99,
+        "edited_images": 40
+      },
+      {
+        "name": "6 Looks Package",
+        "looks": 6,
+        "price": 10599.99,
+        "edited_images": 60
+      }
+    ]
+  },
+  "turnaround": {
+    "delivery_timeframe": "1 to 2 months post-selection & payment",
+    "order_tracking": "chiranjitkar.com/track-download"
+  },
+  "faq_count": 40,
+  "verification_methods": [
+    "Document-based (Last 6 digits of Aadhaar/PAN)",
+    "Payment-based (₹1 via Razorpay)"
+  ],
+  "portfolio_manifest": "portfolio/portfolio.json",
+  "total_portfolio_images": 21
+}
