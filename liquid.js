@@ -27,6 +27,7 @@ function initMobileMenu() {
 
     const openIcon = toggle.querySelector('.mobile-menu-icon-open');
     const closeIcon = toggle.querySelector('.mobile-menu-icon-close');
+    const label = toggle.querySelector('.mobile-menu-label');
 
     function setOpen(isOpen) {
         toggle.setAttribute('aria-expanded', String(isOpen));
@@ -35,6 +36,9 @@ function initMobileMenu() {
         menu.inert = !isOpen;
         if (openIcon) openIcon.classList.toggle('hidden', isOpen);
         if (closeIcon) closeIcon.classList.toggle('hidden', !isOpen);
+        if (label) label.textContent = isOpen ? 'Close' : 'Menu';
+        toggle.classList.toggle('bg-gold-400/20', isOpen);
+        toggle.classList.toggle('border-gold-300', isOpen);
         document.body.classList.toggle('overflow-hidden', isOpen);
     }
 
