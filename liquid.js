@@ -455,7 +455,7 @@ function renderFaqs(allFaqs) {
 
     filtered.forEach(faq => {
         const card = document.createElement('div');
-        card.className = 'faq-grid-item liquid-card rounded-2xl border border-white/10 overflow-hidden cursor-pointer editorial-reveal';
+        card.className = 'faq-grid-item liquid-card rounded-2xl border border-white/10 overflow-hidden cursor-pointer';
         
         let catBadgeStyle = 'bg-gold-400/10 text-gold-300 border-gold-400/20';
         let catShortName = 'STUDIO PRACTICE';
