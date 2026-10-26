@@ -2,11 +2,17 @@
 User-agent: *
 Allow: /
 
-# Direct indexing for major AI Search Agents
+# Direct indexing for major search engines & AI assistants
 User-agent: Googlebot
 Allow: /
 
+User-agent: Googlebot-Image
+Allow: /
+
 User-agent: Bingbot
+Allow: /
+
+User-agent: Applebot
 Allow: /
 
 User-agent: GPTBot
@@ -18,7 +24,5 @@ Allow: /
 User-agent: ClaudeBot
 Allow: /
 
-User-agent: Applebot
-Allow: /
-
+Host: https://chiranjitkar.com
 Sitemap: https://chiranjitkar.com/sitemap.xml

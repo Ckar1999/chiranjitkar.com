@@ -277,7 +277,7 @@ function renderCards(items) {
         const cleanPath = item.path.startsWith('/') ? item.path.substring(1) : item.path;
 
         card.innerHTML = `
-            <img src="${cleanPath}" alt="${item.title}" loading="lazy" class="w-full h-full object-cover object-center transition-all duration-700">
+            <img src="${cleanPath}" alt="${item.title} - ${item.subtitle} | Haute Couture Fashion Photography by Chiranjit Kar" loading="lazy" decoding="async" class="w-full h-full object-cover object-center transition-all duration-700">
             
             <div class="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-noir-950/70 via-noir-950/15 to-transparent pointer-events-none"></div>
 
@@ -388,6 +388,7 @@ function updateLightboxContent() {
     const cleanPath = item.path.startsWith('/') ? item.path.substring(1) : item.path;
 
     img.src = cleanPath;
+    img.alt = `${item.title} - ${item.subtitle} | Haute Couture Fashion Photography by Chiranjit Kar`;
     title.textContent = item.title;
     subtitle.textContent = item.subtitle;
     desc.textContent = item.description;

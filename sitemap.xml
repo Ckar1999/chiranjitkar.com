@@ -1,45 +1,177 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+  <!-- Core Landing Pages -->
   <url>
     <loc>https://chiranjitkar.com/</loc>
-    <lastmod>2026-10-26</lastmod>
+    <lastmod>2026-10-27</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
+    <image:image>
+      <image:loc>https://chiranjitkar.com/portfolio/lifestyle-street/CKP06296.jpg</image:loc>
+      <image:title>City Rhythms - Haute Couture Fashion Photography by Chiranjit Kar</image:title>
+      <image:caption>Chic contemporary outdoor lifestyle portrait shot on location in Mumbai.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://chiranjitkar.com/portfolio/ethnic-bridal/CKP05563.jpg</image:loc>
+      <image:title>The Royal Lehenga - Haute Couture Fashion Photography by Chiranjit Kar</image:title>
+      <image:caption>Stunning couture lehenga fashion session celebrating Indian royal heritage.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://chiranjitkar.com/portfolio/editorial/CKP04870.jpg</image:loc>
+      <image:title>Velvet Silhouette - Haute Couture Fashion Photography by Chiranjit Kar</image:title>
+      <image:caption>High-fashion editorial portrait showcasing refined poise and expression.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://chiranjitkar.com/portfolio/black-and-white/CKP05675_BW.jpg</image:loc>
+      <image:title>Monochrome Poise - Haute Couture Fashion Photography by Chiranjit Kar</image:title>
+      <image:caption>High-contrast black and white fine art portrait exploring pure shadow and tonal gradients.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://chiranjitkar.com/portfolio/editorial/CKP04876.jpg</image:loc>
+      <image:title>Gilded Grace - Haute Couture Fashion Photography by Chiranjit Kar</image:title>
+      <image:caption>Richly textured studio portrait with directional softbox lighting.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://chiranjitkar.com/portfolio/lifestyle-street/CKP06278_crop.jpg</image:loc>
+      <image:title>Metropolitan Pulse - Haute Couture Fashion Photography by Chiranjit Kar</image:title>
+      <image:caption>Dynamic street-style concept capturing urban energy and effortless movement.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://chiranjitkar.com/portfolio.html</loc>
-    <lastmod>2026-10-26</lastmod>
+    <lastmod>2026-10-27</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.95</priority>
+    <image:image>
+      <image:loc>https://chiranjitkar.com/portfolio/lifestyle-street/CKP06296.jpg</image:loc>
+      <image:title>City Rhythms | Mumbai Fashion &amp; Lifestyle by Chiranjit Kar</image:title>
+      <image:caption>Chic contemporary outdoor lifestyle portrait shot on location in Mumbai.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://chiranjitkar.com/portfolio/ethnic-bridal/CKP05563.jpg</image:loc>
+      <image:title>The Royal Lehenga | Couture Bridal Session with Tanusree Kaur by Chiranjit Kar</image:title>
+      <image:caption>Stunning couture lehenga fashion session celebrating Indian royal heritage.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://chiranjitkar.com/portfolio/editorial/CKP04870.jpg</image:loc>
+      <image:title>Velvet Silhouette | Delhi Fashion Week Concept by Chiranjit Kar</image:title>
+      <image:caption>High-fashion editorial portrait showcasing refined poise and expression.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://chiranjitkar.com/portfolio/black-and-white/CKP05675_BW.jpg</image:loc>
+      <image:title>Monochrome Poise | Fine Art B&amp;W Studio Session by Chiranjit Kar</image:title>
+      <image:caption>High-contrast black and white fine art portrait exploring pure shadow and tonal gradients.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://chiranjitkar.com/portfolio/editorial/CKP04876.jpg</image:loc>
+      <image:title>Gilded Grace | High Fashion Studio Series by Chiranjit Kar</image:title>
+      <image:caption>Richly textured studio portrait with directional softbox lighting.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://chiranjitkar.com/portfolio/lifestyle-street/CKP06278_crop.jpg</image:loc>
+      <image:title>Metropolitan Pulse | Mumbai Lifestyle &amp; Street Style by Chiranjit Kar</image:title>
+      <image:caption>Dynamic street-style concept capturing urban energy and effortless movement.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://chiranjitkar.com/portfolio/ethnic-bridal/CKP05979.jpg</image:loc>
+      <image:title>Elegance Redefined | Traditional Couture Collection by Chiranjit Kar</image:title>
+      <image:caption>Experience the magic of traditional grace, intricate fabric details, and timeless regal poise.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://chiranjitkar.com/portfolio/beauty-portraits/CKP04592.jpg</image:loc>
+      <image:title>Luminous Aura | Beauty &amp; Skincare Series by Chiranjit Kar</image:title>
+      <image:caption>Soft glamour portrait focusing on skin texture and delicate highlights.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://chiranjitkar.com/portfolio/ethnic-bridal/CKP03897.jpg</image:loc>
+      <image:title>Heritage Splendor | Outdoor Traditional Shoot with Tanusree Kaur by Chiranjit Kar</image:title>
+      <image:caption>Timeless outdoor traditional ethnic portrait capturing heritage embroidery and elegance.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://chiranjitkar.com/portfolio/editorial/CKP04955.jpg</image:loc>
+      <image:title>Ethereal Muse | Creative Studio Concept by Chiranjit Kar</image:title>
+      <image:caption>Mood-driven editorial portrait capturing subtle emotional resonance.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://chiranjitkar.com/portfolio/beauty-portraits/CKP06295.jpg</image:loc>
+      <image:title>The Golden Hour Gaze | Modern Beauty Profile by Chiranjit Kar</image:title>
+      <image:caption>Warm-toned beauty profile showcasing delicate makeup and natural beauty.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://chiranjitkar.com/portfolio/editorial/CKP06165.jpeg</image:loc>
+      <image:title>Modern Vanguard | Contemporary Editorial by Chiranjit Kar</image:title>
+      <image:caption>Clean, vibrant editorial lookbook capture highlighting modern cuts and styling.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://chiranjitkar.com/portfolio/beauty-portraits/CKP04633.jpg</image:loc>
+      <image:title>Studio Sartorial Session | Male Fashion Portfolio with Prasenjit Kar by Chiranjit Kar</image:title>
+      <image:caption>Produced in premier Delhi fashion studios, featuring dynamic male casual fashion styling.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://chiranjitkar.com/portfolio/beauty-portraits/CKP04138_crop.jpg</image:loc>
+      <image:title>The Maverick Gaze | Male Editorial Headshot by Chiranjit Kar</image:title>
+      <image:caption>Intense close-up beauty portrait demonstrating exceptional depth of field.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://chiranjitkar.com/portfolio/beauty-portraits/CKP05522.jpg</image:loc>
+      <image:title>Subtle Radiance | Glamour Headshot by Chiranjit Kar</image:title>
+      <image:caption>Clean commercial beauty headshot suitable for agency modeling portfolios.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://chiranjitkar.com/portfolio/beauty-portraits/CKP04137.jpg</image:loc>
+      <image:title>Masculine Essence | Male Fashion Portfolio by Chiranjit Kar</image:title>
+      <image:caption>Striking male fashion portrait emphasizing chiseled facial features and sharp lighting.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://chiranjitkar.com/portfolio/beauty-portraits/CKP04628.jpg</image:loc>
+      <image:title>Urban Sartorialist | Male Studio Portfolio by Chiranjit Kar</image:title>
+      <image:caption>Classic men's tailoring and relaxed studio posing.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://chiranjitkar.com/portfolio/editorial/CKP02727.jpg</image:loc>
+      <image:title>Serpentine Elegance | High Fashion Studio Editorial by Chiranjit Kar</image:title>
+      <image:caption>Captivating high-fashion editorial portrait highlighting contemporary couture.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://chiranjitkar.com/portfolio/editorial/CKP02729.jpg</image:loc>
+      <image:title>Midnight Noir | Contemporary Fashion Concept by Chiranjit Kar</image:title>
+      <image:caption>Minimalist fashion studio session exploring silhouette and texture.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://chiranjitkar.com/portfolio/editorial/CKP02756.jpg</image:loc>
+      <image:title>Avant-Garde Form | Indoor Studio Fashion by Chiranjit Kar</image:title>
+      <image:caption>Studio lighting composition focusing on form, shadow, and garment flow.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://chiranjitkar.com/about.html</loc>
-    <lastmod>2026-10-26</lastmod>
+    <lastmod>2026-10-27</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
+    <priority>0.90</priority>
   </url>
   <url>
     <loc>https://chiranjitkar.com/services.html</loc>
-    <lastmod>2026-10-26</lastmod>
+    <lastmod>2026-10-27</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
+    <priority>0.90</priority>
   </url>
   <url>
     <loc>https://chiranjitkar.com/faqs.html</loc>
-    <lastmod>2026-10-26</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
+    <lastmod>2026-10-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.90</priority>
   </url>
   <url>
     <loc>https://chiranjitkar.com/contact.html</loc>
-    <lastmod>2026-10-26</lastmod>
+    <lastmod>2026-10-27</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.85</priority>
   </url>
   <url>
     <loc>https://chiranjitkar.com/agreements.html</loc>
-    <lastmod>2026-10-26</lastmod>
+    <lastmod>2026-10-27</lastmod>
     <changefreq>yearly</changefreq>
-    <priority>0.75</priority>
+    <priority>0.70</priority>
   </url>
 </urlset>
