@@ -246,12 +246,21 @@ html {
 /* Keep the first model's face below the taller fixed mobile navigation. */
 @media (max-width: 639px) {
     .hero-slide[data-slide="0"].scale-100 img {
-        animation-name: kenBurnsMobile;
+        animation-name: kenBurnsMobileSlideOne;
     }
 
-    @keyframes kenBurnsMobile {
-        0% { transform: translateY(44px) scale(1); }
-        100% { transform: translateY(44px) scale(1.08); }
+    .hero-slide[data-slide="3"].scale-100 img {
+        animation-name: kenBurnsMobileSlideFour;
+    }
+
+    @keyframes kenBurnsMobileSlideOne {
+        0% { transform: translateY(76px) scale(1); }
+        100% { transform: translateY(76px) scale(1.08); }
+    }
+
+    @keyframes kenBurnsMobileSlideFour {
+        0% { transform: translateY(64px) scale(1); }
+        100% { transform: translateY(64px) scale(1.08); }
     }
 }
 
@@ -288,4 +297,22 @@ html {
 .scrollbar-none {
     -ms-overflow-style: none;
     scrollbar-width: none;
+}
+
+/* =========================================================================
+   LUXURY MOBILE NAVIGATION OVERLAY
+   ========================================================================= */
+.mobile-menu-panel:not(.hidden) {
+    animation: luxuryMenuDrawer 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes luxuryMenuDrawer {
+    0% {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }

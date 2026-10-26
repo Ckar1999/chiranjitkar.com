@@ -5,6 +5,7 @@
 
 document.addEventListener('DOMContentLoaded', () => {
     initHeroSlider();
+    initMobileMenu();
     initLiquidCursor();
     initNavbarScroll();
     initPortfolioGrid();
@@ -15,6 +16,54 @@ document.addEventListener('DOMContentLoaded', () => {
     initBackToTop();
     initNewsletterForm();
 });
+
+// ==========================================
+// MOBILE NAVIGATION
+// ==========================================
+function initMobileMenu() {
+    const toggle = document.getElementById('mobile-menu-toggle');
+    const menu = document.getElementById('mobile-menu-links');
+    if (!toggle || !menu) return;
+
+    const openIcon = toggle.querySelector('.mobile-menu-icon-open');
+    const closeIcon = toggle.querySelector('.mobile-menu-icon-close');
+
+    function setOpen(isOpen) {
+        toggle.setAttribute('aria-expanded', String(isOpen));
+        toggle.setAttribute('aria-label', isOpen ? 'Close navigation menu' : 'Open navigation menu');
+        menu.classList.toggle('hidden', !isOpen);
+        menu.inert = !isOpen;
+        if (openIcon) openIcon.classList.toggle('hidden', isOpen);
+        if (closeIcon) closeIcon.classList.toggle('hidden', !isOpen);
+        document.body.classList.toggle('overflow-hidden', isOpen);
+    }
+
+    toggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        setOpen(toggle.getAttribute('aria-expanded') !== 'true');
+    });
+
+    menu.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', () => setOpen(false));
+    });
+
+    document.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && toggle.getAttribute('aria-expanded') === 'true') {
+            setOpen(false);
+            toggle.focus();
+        }
+    });
+
+    document.addEventListener('click', event => {
+        if (toggle.getAttribute('aria-expanded') === 'true' && !menu.contains(event.target) && !toggle.contains(event.target)) {
+            setOpen(false);
+        }
+    });
+
+    window.matchMedia('(min-width: 768px)').addEventListener('change', event => {
+        if (event.matches) setOpen(false);
+    });
+}
 
 // ==========================================
 // 1. FULL-BLEED CINEMATIC HERO SLIDER
