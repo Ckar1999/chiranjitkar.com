@@ -438,6 +438,43 @@ async function handle(request, env, route) {
     return json({invoices:rows.results||[]});
   }
 
+  if (parts[0] === 'bank-transactions' && method === 'GET') {
+    const auth=await requireStaff(request,env,['admin','sales']);if(auth.response)return auth.response;
+    const rows=await env.DB.prepare(`SELECT t.*,i.invoice_code,p.client_name FROM bank_transactions t LEFT JOIN invoices i ON i.id=t.invoice_id LEFT JOIN projects p ON p.id=i.project_id ORDER BY t.imported_at DESC LIMIT 100`).all();
+    return json({transactions:rows.results||[]});
+  }
+
+  if (parts[0] === 'bank-transactions' && method === 'POST') {
+    const auth=await requireStaff(request,env,['admin','sales']);if(auth.response)return auth.response;
+    const utr=String(body.utr||'').trim().toUpperCase().replace(/\s+/g,'');
+    const amount=Math.round(Number(body.amount));
+    const transactionAt=String(body.transaction_at||'');
+    const parsedAt=new Date(transactionAt);
+    if(!/^[A-Z0-9]{8,40}$/.test(utr))return fail('Enter a valid UTR / bank transaction reference.');
+    if(!Number.isSafeInteger(amount)||amount<=0)return fail('Transaction amount must be a positive whole number of rupees.');
+    if(!transactionAt||Number.isNaN(parsedAt.getTime()))return fail('Enter the transaction date and time from the bank alert.');
+    if(parsedAt.getTime()>Date.now()+5*60_000)return fail('Transaction date cannot be in the future.');
+    const transactionISO=parsedAt.toISOString();
+    const importedAt=now();
+    const eligible=await env.DB.prepare(`SELECT id,project_id,amount,amount_paid,created_at,due_at FROM invoices WHERE status NOT IN ('void','paid') AND amount-amount_paid=? AND (ABS(julianday(COALESCE(due_at,created_at))-julianday(?))*24)<=24 ORDER BY created_at DESC LIMIT 2`).bind(amount,transactionISO).all();
+    const candidates=eligible.results||[];
+    const status=candidates.length===1?'matched':candidates.length?'review':'unmatched';
+    const invoice=candidates.length===1?candidates[0]:null;
+    const txId=id();
+    try {
+      await env.DB.prepare('INSERT INTO bank_transactions(id,utr,amount,transaction_at,source,status,invoice_id,imported_by,imported_at,note) VALUES(?,?,?,?,?,?,?,?,?,?)').bind(txId,utr,amount,transactionISO,'manual_bank_alert',status,invoice?.id||null,auth.staff.id,importedAt,candidates.length>1?'Multiple exact-amount invoices fall within the 24-hour window.':candidates.length===0?'No exact unpaid invoice found within the 24-hour window.':'').run();
+    } catch(error) {
+      if(String(error?.message||'').includes('UNIQUE'))return fail('This UTR has already been recorded.',409);
+      throw error;
+    }
+    if(invoice){
+      const paid=invoice.amount_paid+amount;
+      await env.DB.prepare(`UPDATE invoices SET amount_paid=?,status=CASE WHEN ? >= amount THEN 'paid' ELSE 'partially_paid' END,updated_at=? WHERE id=?`).bind(paid,paid,importedAt,invoice.id).run();
+      await logEvent(env,invoice.project_id,auth.staff.id,'bank_payment_matched',{invoice_id:invoice.id,utr,amount,transaction_at:transactionISO});
+    }
+    return json({ok:true,status,invoice_id:invoice?.id||null,message:status==='matched'?'Payment matched and ledger updated.':status==='review'?'Multiple possible invoices found; transaction saved for review.':'No unique invoice matched; transaction saved without changing balances.'},201);
+  }
+
   if (parts[0] === 'invoices' && parts.length === 1 && method === 'POST') {
     const auth=await requireStaff(request,env,['admin','sales']);
     if(auth.response)return auth.response;

@@ -37,6 +37,7 @@
     $('#staff-form').addEventListener('submit', createStaff);
     $('#task-form').addEventListener('submit', createTask);
     $('#invoice-form').addEventListener('submit', createInvoice);
+    $('#bank-import-form').addEventListener('submit', importBankTransaction);
     $('#delivery-form').addEventListener('submit', createDelivery);
     $('#new-invoice-button').addEventListener('click', openInvoiceDialog);
     $('#add-staff-button').addEventListener('click', () => { $('#staff-created').hidden = true; $('#staff-form').reset(); $('#staff-dialog').showModal(); });
@@ -297,7 +298,18 @@
     try{const result=await api('invoices');const invoices=result.invoices||[];$('#invoice-list').innerHTML=invoices.length?invoices.map(invoice=>`<article class="invoice-card"><div><strong>${escapeHtml(invoice.client_name)}</strong><small>${escapeHtml(invoice.project_code)} · ${escapeHtml(invoice.invoice_code)}</small></div><div><span class="invoice-kind">${escapeHtml(invoice.kind)}</span><small>${escapeHtml(invoice.description)}</small></div><div><strong>${money(invoice.amount)}</strong><small>Paid ${money(invoice.amount_paid)} · Due ${money(invoice.amount-invoice.amount_paid)}</small></div><div class="invoice-controls"><label>Received ₹<input type="number" min="0" max="${invoice.amount}" step="1" value="${invoice.amount_paid}" data-invoice-paid="${invoice.id}"></label><label>Payment URL<input type="url" value="${escapeHtml(invoice.payment_url)}" data-invoice-url="${invoice.id}" placeholder="https://…"></label><button class="small-button" data-invoice-save="${invoice.id}">Save</button><button class="small-button" data-invoice-send="${invoice.id}" ${invoice.status==='sent'?'disabled':''}>${invoice.status==='sent'?'Sent':'Mark sent'}</button></div>${invoice.payment_url?`<a class="small-button" href="${escapeHtml(invoice.payment_url)}" target="_blank" rel="noopener noreferrer">Payment link ↗</a>`:''}</article>`).join(''):'<div class="empty-state">No invoices or charges yet.</div>';
       $$('[data-invoice-save]').forEach(button=>button.addEventListener('click',async()=>{const input=$(`[data-invoice-paid="${button.dataset.invoiceSave}"]`);const urlInput=$(`[data-invoice-url="${button.dataset.invoiceSave}"]`);try{await api(`invoices/${button.dataset.invoiceSave}`,{method:'PATCH',body:JSON.stringify({amount_paid:Number(input.value),payment_url:urlInput.value})});toast('Recorded payment saved.');await loadInvoices();await refresh();}catch(e){toast(e.message);}}));
       $$('[data-invoice-send]').forEach(button=>button.addEventListener('click',async()=>{try{await api(`invoices/${button.dataset.invoiceSend}`,{method:'PATCH',body:JSON.stringify({status:'sent'})});toast('Invoice marked as sent.');await loadInvoices();}catch(e){toast(e.message);}}));
+      await loadBankTransactions();
     }catch(error){toast(error.message);}
+  }
+  async function importBankTransaction(event){
+    event.preventDefault();const data=Object.fromEntries(new FormData(event.currentTarget));data.transaction_at=new Date(data.transaction_at).toISOString();
+    try{const result=await api('bank-transactions',{method:'POST',body:JSON.stringify(data)});toast(result.message);event.currentTarget.reset();await loadBankTransactions();await loadInvoices();await refresh();}
+    catch(error){toast(error.message);}
+  }
+  async function loadBankTransactions(){
+    if(!['admin','sales'].includes(state.staff.role))return;
+    try{const result=await api('bank-transactions');const rows=result.transactions||[];$('#bank-transaction-list').innerHTML=rows.length?`<h3 class="bank-history-title">Recent bank transactions</h3>`+rows.map(tx=>`<article class="bank-transaction ${escapeHtml(tx.status)}"><div><strong>${escapeHtml(tx.utr)}</strong><small>${humanDate(tx.transaction_at)} · ${tx.source==='manual_bank_alert'?'Bank alert entry':escapeHtml(tx.source)}</small></div><strong>${money(tx.amount)}</strong><span class="bank-status ${escapeHtml(tx.status)}">${tx.status==='matched'?'Matched':tx.status==='review'?'Needs review':'Unmatched'}</span><small>${tx.invoice_code?`${escapeHtml(tx.invoice_code)} · ${escapeHtml(tx.client_name||'')}`:escapeHtml(tx.note||'No invoice balance changed')}</small></article>`).join(''):'<div class="empty-state bank-empty">No bank transactions recorded yet.</div>';}
+    catch(error){toast(error.message);}
   }
   async function createDelivery(event){
     event.preventDefault();const data=Object.fromEntries(new FormData(event.currentTarget)),projectId=data.project_id;delete data.project_id;

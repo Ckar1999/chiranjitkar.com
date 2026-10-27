@@ -59,6 +59,7 @@ Passwords are stored as salted HMAC-SHA-256 hashes keyed with the server-only AP
 
 - Client approval codes are generated on the client's private session page and shown only on that page; the client shares the code with the photographer. Sending OTPs by SMS or email is not enabled.
 - The invoice ledger calculates and records charges, balances, and payment status. It does not process or automatically collect card/UPI payments; Sales can attach a payment-provider URL and reconcile the payment received.
+- UPI/bank alerts can be entered in Billing with UTR, amount, and transaction timestamp. A unique unpaid invoice is auto-matched only when the amount equals the full remaining balance and the transaction falls within 24 hours of the invoice due date (or invoice creation time when no due date is set). Duplicate UTRs are rejected; ambiguous and unmatched rows are retained for review without changing invoice balances. Inbox ingestion is not connected; an email/bank feed requires a separately configured provider integration.
 - Proof galleries and final media remain in your chosen secure file service. The portal stores HTTPS links to those resources; it does not upload or host large photo/video files itself.
 - Staff should add a project task for each editing/review/delivery handoff and assign an owner and due date. The workspace refreshes project/task activity periodically while open.
 
