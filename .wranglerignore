@@ -1,0 +1,6 @@
+.git/
+.wrangler/
+node_modules/
+migrations/
+wrangler.toml
+.DS_Store

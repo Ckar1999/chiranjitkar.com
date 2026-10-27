@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex,nofollow"><meta name="referrer" content="no-referrer"><meta name="theme-color" content="#100f0e"><title>Client Session | Chiranjit Kar Photography</title><link rel="stylesheet" href="studio.css"></head>
+<body>
+  <main class="session-shell">
+    <a class="brand" href="/">CK<span>CHIRANJIT KAR PHOTOGRAPHY</span></a>
+    <section id="session-loading" class="session-card"><span class="eyebrow">SECURE CLIENT SESSION</span><p class="muted">Loading your session details…</p></section>
+    <section id="session-error" class="session-card" hidden><span class="eyebrow">CLIENT SESSION</span><h1>Link unavailable</h1><p class="muted" id="session-error-text">This link is invalid or has expired. Contact the studio team for a new link.</p></section>
+    <section id="session-content" class="session-card" hidden>
+      <div class="session-top"><div><span class="eyebrow" id="session-project-code"></span><h1 id="session-title">Your photography session</h1><div class="muted" id="session-description"></div></div><span class="status scheduled" id="session-status">Scheduled</span></div>
+      <div class="session-stat-grid"><div class="session-stat"><small>Booked time</small><strong id="booked-time">—</strong></div><div class="session-stat"><small>Grace period</small><strong>30 minutes</strong></div><div class="session-stat"><small>Overtime rate</small><strong id="overtime-rate">₹0 / 30 min</strong></div></div>
+      <div id="client-timer-area" hidden><div class="eyebrow">SESSION TIMER</div><div id="client-timer" class="session-timer">00:00:00</div><p class="muted" id="timer-caption"></p></div>
+      <div class="client-warning" id="policy-copy">Your confirmed package duration is followed by a 30-minute grace period. After grace, every started 30-minute overtime block is charged at the agreed rate above. The system records the client-approved start and finish times.</div>
+      <div id="client-action-area" class="session-actions" hidden><button id="client-approve-button" class="button gold session-button"></button><p id="client-message" class="notice" role="status"></p><div id="client-code-area" hidden><span class="eyebrow">ONE-TIME APPROVAL CODE · EXPIRES IN 10 MINUTES</span><div id="client-code" class="client-code"></div><p class="muted" id="client-code-instruction">Share this code with your photographer to confirm this action. Keep it private until you are ready.</p></div></div>
+      <div id="session-summary" hidden></div>
+      <div id="client-deliveries" class="client-section" hidden><span class="eyebrow">DELIVERABLES</span><div id="delivery-items"></div></div>
+      <div id="client-billing" class="client-section" hidden><span class="eyebrow">BOOKING &amp; CHARGES</span><div id="invoice-items"></div></div>
+      <form id="client-feedback-form" class="client-section" hidden><span class="eyebrow">MESSAGE THE STUDIO</span><p class="muted">Send selection notes, revision feedback, or approval instructions. The studio team will see this in the project activity.</p><label>Feedback type<select name="kind"><option value="selection">Image / edit selection</option><option value="revision">Revision request</option><option value="approval">Approval</option><option value="testimonial">Testimonial</option></select></label><label>Your message<textarea name="body" rows="4" maxlength="5000" required></textarea></label><button class="button gold" type="submit">Send to studio</button><p id="feedback-message" class="notice" role="status"></p></form>
+      <p class="session-footer">This private link is for the named client. The approval code is generated on this page and is not visible to studio staff until you share it. If anything about the time or rate above looks wrong, contact the studio before approving.</p>
+    </section>
+  </main>
+  <script src="session.js" defer></script>
+</body>
+</html>

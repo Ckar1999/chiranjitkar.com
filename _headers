@@ -1,0 +1,16 @@
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: DENY
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+
+/studio.html
+  Cache-Control: no-store
+  Referrer-Policy: no-referrer
+
+/session.html
+  Cache-Control: no-store
+  Referrer-Policy: no-referrer
+
+/api/*
+  Cache-Control: no-store

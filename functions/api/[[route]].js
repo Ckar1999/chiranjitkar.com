@@ -1,0 +1,524 @@
+const COOKIE = '__Host-studio_session';
+const ROLES = new Set(['admin', 'sales', 'photographer', 'filmmaker', 'editor']);
+const PROJECT_STATES = new Set(['lead', 'confirmed', 'preproduction', 'scheduled', 'in_session', 'editing', 'client_review', 'delivered', 'archived']);
+
+const json = (data, status = 200, headers = {}) => Response.json(data, { status, headers: { 'Cache-Control': 'no-store', ...headers } });
+const fail = (message, status = 400) => json({ error: message }, status);
+const now = () => new Date().toISOString();
+const id = () => crypto.randomUUID();
+const bytes = (n = 32) => { const value = new Uint8Array(n); crypto.getRandomValues(value); return value; };
+const b64 = value => btoa(String.fromCharCode(...new Uint8Array(value))).replaceAll('+', '-').replaceAll('/', '_').replaceAll('=', '');
+const fromB64 = value => Uint8Array.from(atob(value.replaceAll('-', '+').replaceAll('_', '/') + '='.repeat((4 - value.length % 4) % 4)), c => c.charCodeAt(0));
+const digest = async value => b64(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value)));
+
+async function passwordHash(password, saltText, pepper) {
+  const salt = saltText ? fromB64(saltText) : bytes(16);
+  const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(`${pepper}:${b64(salt)}`), { name:'HMAC', hash:'SHA-256' }, false, ['sign']);
+  const hash = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(password));
+  return { hash: b64(hash), salt: b64(salt) };
+}
+
+function cookieValue(request) {
+  const part = (request.headers.get('Cookie') || '').split(';').map(v => v.trim()).find(v => v.startsWith(`${COOKIE}=`));
+  return part ? decodeURIComponent(part.slice(COOKIE.length + 1)) : '';
+}
+
+async function staffFor(request, env) {
+  const token = cookieValue(request);
+  if (!token) return null;
+  const tokenHash = await digest(token);
+  const result = await env.DB.prepare(`SELECT s.id, s.email, s.name, s.role FROM staff_sessions x JOIN staff s ON s.id=x.staff_id WHERE x.token_hash=? AND x.expires_at>? AND s.active=1`).bind(tokenHash, now()).first();
+  return result || null;
+}
+
+async function requireStaff(request, env, roles = null) {
+  const staff = await staffFor(request, env);
+  if (!staff) return { response: fail('Sign in to continue.', 401) };
+  if (roles && !roles.includes(staff.role)) return { response: fail('You do not have access to this action.', 403) };
+  return { staff };
+}
+
+async function canAccessProject(env, staff, projectId) {
+  if (['admin','sales'].includes(staff.role)) return true;
+  const row=await env.DB.prepare(`SELECT 1 AS ok FROM projects p WHERE p.id=? AND (p.created_by=? OR EXISTS(SELECT 1 FROM assignments a WHERE a.project_id=p.id AND a.staff_id=?) OR EXISTS(SELECT 1 FROM tasks t WHERE t.project_id=p.id AND t.assigned_to=?))`)
+    .bind(projectId,staff.id,staff.id,staff.id).first();
+  return Boolean(row);
+}
+
+async function logEvent(env, projectId, actorId, event, detail = {}) {
+  await env.DB.prepare('INSERT INTO activity(id,project_id,actor_id,event,detail,created_at) VALUES(?,?,?,?,?,?)')
+    .bind(id(), projectId, actorId || null, event, JSON.stringify(detail), now()).run();
+}
+
+async function clientProject(env, key) {
+  if (!key || key.length < 32 || key.length > 128) return null;
+  return env.DB.prepare('SELECT * FROM projects WHERE client_key_hash=?').bind(await digest(key)).first();
+}
+function clientToken(request){return String(request.headers.get('Authorization')||'').replace(/^Bearer\s+/i,'');}
+
+async function handle(request, env, route) {
+  if (!env.DB) return fail('Studio database is not connected yet.', 503);
+  const method = request.method.toUpperCase();
+  const parts = route.split('/').filter(Boolean).map(decodeURIComponent);
+  const body = ['POST', 'PATCH', 'PUT'].includes(method) ? await request.json().catch(() => ({})) : {};
+
+  if(parts[0]==='inquiries'&&parts.length===1&&method==='POST'){
+    if(String(body.website||'').trim())return json({ok:true,message:'Thanks, your inquiry has been received.'},201);
+    const name=String(body.name||'').trim(),email=String(body.email||'').trim().toLowerCase(),service=String(body.service||'').trim();
+    if(!name||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||!service)return fail('Please provide your name, a valid email, and the shoot category.');
+    const ip=request.headers.get('CF-Connecting-IP')||'unknown';const ipHash=await digest(`${env.APP_SECRET||'studio-rate-limit'}:${ip}`);
+    const since=new Date(Date.now()-60*60_000).toISOString();const recent=await env.DB.prepare('SELECT COUNT(*) AS n FROM inquiries WHERE ip_hash=? AND created_at>?').bind(ipHash,since).first();
+    if((recent?.n||0)>=5)return fail('Too many inquiries from this connection. Please contact the studio directly.',429);
+    const created=now();await env.DB.prepare('INSERT INTO inquiries(id,name,email,phone,city,service,brief,status,source,ip_hash,created_at,updated_at) VALUES(?,?,?,?,?,?,?,\'new\',\'website\',?,?,?)')
+      .bind(id(),name,email,String(body.phone||'').trim().slice(0,40),String(body.city||'').trim().slice(0,100),service.slice(0,150),String(body.brief||'').trim().slice(0,5000),ipHash,created,created).run();
+    return json({ok:true,message:'Thanks, your inquiry has been received. Our studio coordinator will review it and follow up.'},201);
+  }
+
+  if(parts[0]==='inquiries'&&parts.length===1&&method==='GET'){
+    const auth=await requireStaff(request,env,['admin','sales']);if(auth.response)return auth.response;
+    const rows=await env.DB.prepare('SELECT i.*,s.name AS assignee_name FROM inquiries i LEFT JOIN staff s ON s.id=i.assigned_to ORDER BY CASE i.status WHEN \'new\' THEN 0 WHEN \'contacted\' THEN 1 WHEN \'qualified\' THEN 2 ELSE 3 END,i.created_at DESC').all();
+    return json({inquiries:rows.results||[]});
+  }
+
+  if(parts[0]==='inquiries'&&parts[1]&&method==='PATCH'){
+    const auth=await requireStaff(request,env,['admin','sales']);if(auth.response)return auth.response;
+    const status=body.status;if(status&&!['new','contacted','qualified','closed'].includes(status))return fail('Invalid inquiry status.');
+    if(body.assigned_to){const assignee=await env.DB.prepare('SELECT id FROM staff WHERE id=? AND active=1').bind(body.assigned_to).first();if(!assignee)return fail('Select an active team member.');}
+    await env.DB.prepare('UPDATE inquiries SET status=COALESCE(?,status),assigned_to=COALESCE(?,assigned_to),updated_at=? WHERE id=?').bind(status||null,body.assigned_to||null,now(),parts[1]).run();
+    return json({ok:true});
+  }
+
+  if (parts[0] === 'auth' && parts[1] === 'login' && method === 'POST') {
+    const email = String(body.email || '').trim().toLowerCase();
+    const password = String(body.password || '');
+    if (!env.APP_SECRET) return fail('Studio authentication is not configured.',503);
+    if (!/^\S+@\S+\.\S+$/.test(email) || password.length < 20 || password.length > 200) return fail('Enter your work email and password (at least 20 characters).');
+    const since = new Date(Date.now() - 15 * 60_000).toISOString();
+    const tries = await env.DB.prepare('SELECT COUNT(*) AS n FROM login_attempts WHERE email=? AND attempted_at>? AND succeeded=0').bind(email, since).first();
+    if ((tries?.n || 0) >= 8) return fail('Too many attempts. Wait 15 minutes and try again.', 429);
+
+    let user = await env.DB.prepare('SELECT * FROM staff WHERE email=? AND active=1').bind(email).first();
+    if (!user) {
+      const count = await env.DB.prepare('SELECT COUNT(*) AS n FROM staff').first();
+      const bootstrapEmail = String(env.OWNER_EMAIL || '').trim().toLowerCase();
+      if ((count?.n || 0) === 0 && email === bootstrapEmail && env.OWNER_INITIAL_PASSWORD && password === env.OWNER_INITIAL_PASSWORD) {
+        const hashed = await passwordHash(password,null,env.APP_SECRET);
+        const staffId = id();
+        await env.DB.prepare('INSERT INTO staff(id,email,name,role,password_hash,password_salt,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?)')
+          .bind(staffId, email, 'Studio Owner', 'admin', hashed.hash, hashed.salt, now(), now()).run();
+        user = await env.DB.prepare('SELECT * FROM staff WHERE id=?').bind(staffId).first();
+      }
+    }
+
+    let success = false;
+    if (user) {
+      const candidate = await passwordHash(password, user.password_salt,env.APP_SECRET);
+      success = candidate.hash === user.password_hash;
+    }
+    await env.DB.prepare('INSERT INTO login_attempts(id,email,attempted_at,succeeded) VALUES(?,?,?,?)').bind(id(), email, now(), success ? 1 : 0).run();
+    if (!success) return fail('Email or password is incorrect.', 401);
+
+    const rawToken = b64(bytes(32));
+    await env.DB.prepare('INSERT INTO staff_sessions(token_hash,staff_id,expires_at,created_at) VALUES(?,?,?,?)')
+      .bind(await digest(rawToken), user.id, new Date(Date.now() + 8 * 60 * 60_000).toISOString(), now()).run();
+    const headers = { 'Set-Cookie': `${COOKIE}=${encodeURIComponent(rawToken)}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=28800` };
+    return json({ staff: { id: user.id, email: user.email, name: user.name, role: user.role } }, 200, headers);
+  }
+
+  if (parts[0] === 'auth' && parts[1] === 'logout' && method === 'POST') {
+    const token = cookieValue(request);
+    if (token) await env.DB.prepare('DELETE FROM staff_sessions WHERE token_hash=?').bind(await digest(token)).run();
+    return json({ ok: true }, 200, { 'Set-Cookie': `${COOKIE}=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0` });
+  }
+
+  if (parts[0] === 'auth' && parts[1] === 'me' && method === 'GET') {
+    const staff = await staffFor(request, env);
+    return staff ? json({ staff }) : fail('Not signed in.', 401);
+  }
+
+  if (parts[0] === 'auth' && parts[1] === 'password' && method === 'POST') {
+    const auth = await requireStaff(request, env);
+    if (auth.response) return auth.response;
+    const user = await env.DB.prepare('SELECT password_hash,password_salt FROM staff WHERE id=?').bind(auth.staff.id).first();
+    const current = await passwordHash(String(body.current_password || ''), user.password_salt,env.APP_SECRET);
+    if (current.hash !== user.password_hash) return fail('Current password is incorrect.', 401);
+    const nextPassword = String(body.new_password || '');
+    if (nextPassword.length < 20 || nextPassword.length > 200) return fail('Choose a new password with at least 20 characters.');
+    const hashed = await passwordHash(nextPassword,null,env.APP_SECRET);
+    await env.DB.prepare('UPDATE staff SET password_hash=?,password_salt=?,updated_at=? WHERE id=?').bind(hashed.hash, hashed.salt, now(), auth.staff.id).run();
+    await env.DB.prepare('DELETE FROM staff_sessions WHERE staff_id=?').bind(auth.staff.id).run();
+    return json({ ok: true }, 200, { 'Set-Cookie': `${COOKIE}=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0` });
+  }
+
+  if (parts[0] === 'client' && parts[1] === 'project' && method === 'GET') {
+    const project = await clientProject(env, clientToken(request));
+    if (!project) return fail('This client link is invalid or has been revoked.', 404);
+    const session = await env.DB.prepare("SELECT id,started_at,ended_at,elapsed_minutes,overtime_minutes,overtime_units,overtime_fee,status FROM sessions WHERE project_id=? ORDER BY started_at DESC LIMIT 1").bind(project.id).first();
+    const invoices = await env.DB.prepare("SELECT invoice_code,kind,description,amount,amount_paid,status,due_at,payment_url FROM invoices WHERE project_id=? AND status!='void' ORDER BY created_at").bind(project.id).all();
+    const deliveries = await env.DB.prepare('SELECT title,url,note,created_at FROM deliveries WHERE project_id=? ORDER BY created_at DESC').bind(project.id).all();
+    return json({ project: { project_code: project.project_code, client_name: project.client_name, service: project.service, package_name: project.package_name, shoot_at: project.shoot_at, booked_minutes: project.booked_minutes, grace_minutes: project.grace_minutes, overtime_step_minutes: project.overtime_step_minutes, overtime_rate: project.overtime_rate, status: project.status }, session, invoices: invoices.results || [], deliveries: deliveries.results || [] });
+  }
+
+  if (parts[0] === 'client' && parts[1] === 'challenge' && method === 'POST') {
+    const project = await clientProject(env, clientToken(request));
+    if (!project) return fail('This client link is invalid or has been revoked.', 404);
+    const kind = body.kind === 'end' ? 'end' : body.kind === 'start' ? 'start' : '';
+    if (!kind) return fail('Invalid approval action.');
+    if (!env.APP_SECRET) return fail('Session approval is not configured yet. Contact the studio.', 503);
+    const live = await env.DB.prepare("SELECT * FROM sessions WHERE project_id=? AND status='active' ORDER BY started_at DESC LIMIT 1").bind(project.id).first();
+    if (kind === 'start' && live) return fail('The session has already started.');
+    if (kind === 'start' && project.status !== 'scheduled') return fail('The studio must mark this booking as scheduled before session approval.');
+    if (kind === 'end' && !live) return fail('There is no active session to complete.');
+    const cooldown = await env.DB.prepare('SELECT created_at FROM otp_challenges WHERE project_id=? AND kind=? ORDER BY created_at DESC LIMIT 1').bind(project.id, kind).first();
+    if (cooldown && Date.now() - Date.parse(cooldown.created_at) < 60_000) return fail('Please wait one minute before requesting another approval code.', 429);
+    const code = String(crypto.getRandomValues(new Uint32Array(1))[0] % 1_000_000).padStart(6, '0');
+    const challengeId = id();
+    const codeHash = await digest(`${env.APP_SECRET || ''}:${challengeId}:${code}`);
+    const expiry = new Date(Date.now() + 10 * 60_000).toISOString();
+    await env.DB.prepare('INSERT INTO otp_challenges(id,project_id,session_id,kind,code_hash,expires_at,created_at) VALUES(?,?,?,?,?,?,?)')
+      .bind(challengeId, project.id, live?.id || null, kind, codeHash, expiry, now()).run();
+    await logEvent(env, project.id, null, `client_${kind}_approval_requested`, { expires_at: expiry });
+    return json({ code, expires_at: expiry, message: `Give this one-time ${kind === 'start' ? 'start' : 'finish'} approval code to the photographer. It expires in 10 minutes.` });
+  }
+
+  if (parts[0] === 'client' && parts[1] === 'feedback' && method === 'POST') {
+    const project=await clientProject(env,clientToken(request));
+    if(!project)return fail('This client link is invalid or has been revoked.',404);
+    const kind=['selection','revision','approval','testimonial'].includes(body.kind)?body.kind:'revision';
+    const feedback=String(body.body||'').trim();
+    if(!feedback||feedback.length>5000)return fail('Enter feedback of 1–5,000 characters.');
+    await env.DB.prepare('INSERT INTO client_feedback(id,project_id,kind,body,created_at) VALUES(?,?,?,?,?)').bind(id(),project.id,kind,feedback,now()).run();
+    await logEvent(env,project.id,null,`client_${kind}_received`,{message:feedback.slice(0,500)});
+    return json({ok:true},201);
+  }
+
+  if (parts[0] === 'projects' && parts.length === 1 && method === 'GET') {
+    const auth = await requireStaff(request, env);
+    if (auth.response) return auth.response;
+    const rows = await env.DB.prepare(`SELECT p.*, s.name AS created_by_name,
+      (SELECT group_concat(st.name || ' · ' || a.assignment, ', ') FROM assignments a JOIN staff st ON st.id=a.staff_id WHERE a.project_id=p.id) AS team,
+      (SELECT id FROM sessions se WHERE se.project_id=p.id AND se.status='active' LIMIT 1) AS active_session_id,
+      (SELECT started_at FROM sessions se WHERE se.project_id=p.id AND se.status='active' LIMIT 1) AS active_started_at,
+      (SELECT COUNT(*) FROM tasks t WHERE t.project_id=p.id AND t.status!='done') AS open_tasks,
+      (SELECT COALESCE(SUM(i.amount-i.amount_paid),0) FROM invoices i WHERE i.project_id=p.id AND i.status NOT IN ('void','paid')) AS balance_due
+      FROM projects p JOIN staff s ON s.id=p.created_by WHERE (? IN ('admin','sales') OR p.created_by=? OR EXISTS(SELECT 1 FROM assignments a WHERE a.project_id=p.id AND a.staff_id=?) OR EXISTS(SELECT 1 FROM tasks t WHERE t.project_id=p.id AND t.assigned_to=?)) ORDER BY CASE p.status WHEN 'lead' THEN 0 WHEN 'confirmed' THEN 1 WHEN 'preproduction' THEN 2 WHEN 'scheduled' THEN 3 WHEN 'in_session' THEN 4 WHEN 'editing' THEN 5 WHEN 'client_review' THEN 6 WHEN 'delivered' THEN 7 ELSE 8 END, p.shoot_at IS NULL, p.shoot_at ASC, p.created_at DESC`).bind(auth.staff.role,auth.staff.id,auth.staff.id,auth.staff.id).all();
+    const projects=(rows.results||[]).map(project=>{if(!['admin','sales'].includes(auth.staff.role)){delete project.package_price;delete project.deposit_amount;delete project.balance_due;}return project;});
+    return json({ projects });
+  }
+
+  if (parts[0] === 'dashboard' && method === 'GET') {
+    const auth = await requireStaff(request, env);
+    if (auth.response) return auth.response;
+    const counts = await env.DB.prepare('SELECT status,COUNT(*) AS count FROM projects GROUP BY status').all();
+    const active = await env.DB.prepare("SELECT COUNT(*) AS count FROM sessions WHERE status='active'").first();
+    const overdue = await env.DB.prepare("SELECT COUNT(*) AS count FROM projects WHERE status NOT IN ('delivered','archived') AND delivery_due_at IS NOT NULL AND delivery_due_at < ?").bind(now()).first();
+    const unpaid = await env.DB.prepare("SELECT COALESCE(SUM(amount-amount_paid),0) AS amount FROM invoices WHERE status NOT IN ('void','paid')").first();
+    const myTasks = await env.DB.prepare("SELECT COUNT(*) AS count FROM tasks WHERE assigned_to=? AND status!='done'").bind(auth.staff.id).first();
+    const overdueTasks = await env.DB.prepare("SELECT COUNT(*) AS count FROM tasks WHERE status!='done' AND due_at IS NOT NULL AND due_at<?").bind(now()).first();
+    return json({ counts: counts.results || [], active_sessions: active?.count || 0, overdue_deliveries: overdue?.count || 0, unpaid_balance: unpaid?.amount || 0, my_open_tasks: myTasks?.count||0, overdue_tasks: overdueTasks?.count||0, role: auth.staff.role });
+  }
+
+  if (parts[0] === 'staff' && parts.length === 1 && method === 'GET') {
+    const auth = await requireStaff(request, env, ['admin']);
+    if (auth.response) return auth.response;
+    const users = await env.DB.prepare('SELECT id,email,name,role,active,created_at FROM staff ORDER BY name').all();
+    return json({ staff: users.results || [] });
+  }
+
+  if (parts[0] === 'team' && parts.length === 1 && method === 'GET') {
+    const auth = await requireStaff(request, env);
+    if (auth.response) return auth.response;
+    const users = await env.DB.prepare('SELECT id,name,role FROM staff WHERE active=1 ORDER BY name').all();
+    return json({ staff: users.results || [] });
+  }
+
+  if (parts[0] === 'staff' && parts.length === 1 && method === 'POST') {
+    const auth = await requireStaff(request, env, ['admin']);
+    if (auth.response) return auth.response;
+    const email = String(body.email || '').trim().toLowerCase();
+    const name = String(body.name || '').trim();
+    const role = String(body.role || 'sales');
+    if (!/^\S+@\S+\.\S+$/.test(email) || !name || !ROLES.has(role)) return fail('Enter a valid staff name, email, and role.');
+    const tempPassword = b64(bytes(24));
+    const hashed = await passwordHash(tempPassword,null,env.APP_SECRET);
+    const staffId = id();
+    try {
+      await env.DB.prepare('INSERT INTO staff(id,email,name,role,password_hash,password_salt,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?)')
+        .bind(staffId, email, name, role, hashed.hash, hashed.salt, now(), now()).run();
+    } catch { return fail('A staff account already exists for that email.', 409); }
+    return json({ staff: { id: staffId, email, name, role }, temporary_password: tempPassword }, 201);
+  }
+
+  if (parts[0] === 'staff' && parts[1] && method === 'PATCH') {
+    const auth = await requireStaff(request, env, ['admin']);
+    if (auth.response) return auth.response;
+    const active = body.active === false ? 0 : 1;
+    const role = body.role;
+    if (role && !ROLES.has(role)) return fail('Invalid staff role.');
+    const target=await env.DB.prepare('SELECT id,role,active FROM staff WHERE id=?').bind(parts[1]).first();
+    if(!target)return fail('Team member not found.',404);
+    if(target.id===auth.staff.id&&(active===0||role&&role!=='admin'))return fail('You cannot disable your own administrator account.',409);
+    if(target.role==='admin'&&(active===0||role&&role!=='admin')){
+      const admins=await env.DB.prepare("SELECT COUNT(*) AS n FROM staff WHERE active=1 AND role='admin'").first();
+      if((admins?.n||0)<=1)return fail('Keep at least one active administrator account.',409);
+    }
+    await env.DB.prepare('UPDATE staff SET active=?,role=COALESCE(?,role),updated_at=? WHERE id=?').bind(active, role || null, now(), parts[1]).run();
+    await env.DB.prepare('DELETE FROM staff_sessions WHERE staff_id=?').bind(parts[1]).run();
+    return json({ ok: true });
+  }
+
+  if(parts[0]==='staff'&&parts[1]&&parts[2]==='reset-password'&&method==='POST'){
+    const auth=await requireStaff(request,env,['admin']);if(auth.response)return auth.response;
+    const user=await env.DB.prepare('SELECT id FROM staff WHERE id=?').bind(parts[1]).first();if(!user)return fail('Team member not found.',404);
+    const temporary=b64(bytes(24)),hashed=await passwordHash(temporary,null,env.APP_SECRET);
+    await env.DB.prepare('UPDATE staff SET password_hash=?,password_salt=?,updated_at=? WHERE id=?').bind(hashed.hash,hashed.salt,now(),parts[1]).run();
+    await env.DB.prepare('DELETE FROM staff_sessions WHERE staff_id=?').bind(parts[1]).run();
+    return json({temporary_password:temporary});
+  }
+
+  if (parts[0] === 'projects' && parts.length === 1 && method === 'POST') {
+    const auth = await requireStaff(request, env, ['admin','sales']);
+    if (auth.response) return auth.response;
+    const client_name = String(body.client_name || '').trim();
+    const client_email = String(body.client_email || '').trim().toLowerCase();
+    const service = String(body.service || '').trim();
+    if (!client_name || !/^\S+@\S+\.\S+$/.test(client_email) || !service) return fail('Client name, valid email, and service are required.');
+    const booked = Math.max(1, Math.min(1440, Number(body.booked_minutes) || 180));
+    const grace = 30;
+    const step = 30;
+    const rate = Math.max(0, Math.round(Number(body.overtime_rate) || 0));
+    const projectId = id();
+    const key = b64(bytes(32));
+    const projectCode = `CK-${new Date().getFullYear()}-${crypto.getRandomValues(new Uint32Array(1))[0].toString().slice(0, 6).padStart(6,'0')}`;
+    const created = now();
+    await env.DB.prepare(`INSERT INTO projects(id,project_code,client_name,client_email,client_phone,service,package_name,status,shoot_at,location,brief,booked_minutes,grace_minutes,overtime_step_minutes,overtime_rate,package_price,deposit_amount,client_key_hash,selection_due_at,delivery_due_at,created_by,created_at,updated_at)
+      VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).bind(
+      projectId, projectCode, client_name, client_email, String(body.client_phone || '').trim(), service,
+      String(body.package_name || '').trim(), body.status && PROJECT_STATES.has(body.status) ? body.status : 'lead',
+      body.shoot_at || null, String(body.location || '').trim(), String(body.brief || '').trim(), booked, grace, step, rate,
+      Math.max(0, Math.round(Number(body.package_price) || 0)), Math.max(0, Math.round(Number(body.deposit_amount) || 0)),
+      await digest(key), body.selection_due_at || null, body.delivery_due_at || null, auth.staff.id, created, created
+    ).run();
+    const assignments = Array.isArray(body.assignments) ? body.assignments : [];
+    for (const item of assignments) {
+      if (item?.staff_id && ROLES.has(item.role)) await env.DB.prepare('INSERT OR IGNORE INTO assignments(project_id,staff_id,assignment,assigned_at) VALUES(?,?,?,?)').bind(projectId, item.staff_id, item.role, created).run();
+    }
+    await logEvent(env, projectId, auth.staff.id, 'project_created', { project_code: projectCode, status: body.status || 'lead' });
+    if (Number(body.package_price) > 0) {
+      await env.DB.prepare('INSERT INTO invoices(id,project_id,invoice_code,kind,description,amount,amount_paid,status,due_at,payment_url,created_by,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)')
+        .bind(id(),projectId,`INV-${projectCode}-01`,'package',String(body.package_name||service),Math.round(Number(body.package_price)||0),Math.min(Math.round(Number(body.deposit_amount)||0),Math.round(Number(body.package_price)||0)),Number(body.deposit_amount)>=Number(body.package_price)?'paid':Number(body.deposit_amount)>0?'partially_paid':'draft',null,'',auth.staff.id,created,created).run();
+    }
+    return json({ project: { id: projectId, project_code: projectCode }, client_link: `${new URL(request.url).origin}/session.html#key=${encodeURIComponent(key)}` }, 201);
+  }
+
+  if (parts[0] === 'projects' && parts[1] && parts[2] === 'assignments' && method === 'POST') {
+    const auth = await requireStaff(request, env, ['admin','sales']);
+    if (auth.response) return auth.response;
+    const project = await env.DB.prepare('SELECT id FROM projects WHERE id=?').bind(parts[1]).first();
+    if (!project) return fail('Project not found.', 404);
+    const assignment = String(body.assignment || '');
+    const assignee = await env.DB.prepare('SELECT id FROM staff WHERE id=? AND active=1').bind(body.staff_id).first();
+    if (!assignee || !ROLES.has(assignment)) return fail('Select an active team member and valid role.');
+    const booking=await env.DB.prepare('SELECT shoot_at,booked_minutes FROM projects WHERE id=?').bind(parts[1]).first();
+    if(booking?.shoot_at){
+      const conflict=await env.DB.prepare(`SELECT p.project_code,p.shoot_at FROM assignments a JOIN projects p ON p.id=a.project_id WHERE a.staff_id=? AND a.project_id<>? AND p.shoot_at IS NOT NULL AND p.status NOT IN ('delivered','archived') AND datetime(p.shoot_at)<datetime(?,'+'||?||' minutes') AND datetime(p.shoot_at,'+'||p.booked_minutes||' minutes')>datetime(?) LIMIT 1`)
+        .bind(body.staff_id,parts[1],booking.shoot_at,booking.booked_minutes,booking.shoot_at).first();
+      if(conflict)return fail(`Schedule conflict: this team member is already assigned to ${conflict.project_code} at ${new Date(conflict.shoot_at).toISOString()}.`,409);
+    }
+    await env.DB.prepare('INSERT OR REPLACE INTO assignments(project_id,staff_id,assignment,assigned_at) VALUES(?,?,?,?)').bind(parts[1], body.staff_id, assignment, now()).run();
+    await logEvent(env, parts[1], auth.staff.id, 'team_assignment_updated', { staff_id: body.staff_id, assignment });
+    return json({ ok: true });
+  }
+
+  if (parts[0] === 'projects' && parts[1] && parts[2] === 'client-link' && method === 'POST') {
+    const auth = await requireStaff(request, env, ['admin','sales']);
+    if (auth.response) return auth.response;
+    const project = await env.DB.prepare('SELECT id,project_code FROM projects WHERE id=?').bind(parts[1]).first();
+    if (!project) return fail('Project not found.', 404);
+    const key = b64(bytes(32));
+    await env.DB.prepare('UPDATE projects SET client_key_hash=?,updated_at=? WHERE id=?').bind(await digest(key), now(), project.id).run();
+    await logEvent(env, project.id, auth.staff.id, 'client_link_regenerated', {});
+    return json({ client_link: `${new URL(request.url).origin}/session.html#key=${encodeURIComponent(key)}` });
+  }
+
+  if (parts[0] === 'projects' && parts[1] && parts.length === 2 && method === 'PATCH') {
+    const auth = await requireStaff(request, env, ['admin','sales','photographer','filmmaker','editor']);
+    if (auth.response) return auth.response;
+    if(!(await canAccessProject(env,auth.staff,parts[1])))return fail('Project not found.',404);
+    const allowed = ['status','shoot_at','location','brief','booked_minutes','overtime_rate','package_price','deposit_amount','selection_due_at','delivery_due_at','package_name'];
+    const sets = [];
+    const values = [];
+    for (const field of allowed) {
+      if (!(field in body)) continue;
+      if (field === 'status' && !PROJECT_STATES.has(body[field])) return fail('Invalid project status.');
+      if (['booked_minutes','overtime_rate','package_price','deposit_amount'].includes(field)) {
+        const v = Number(body[field]);
+        if (!Number.isFinite(v) || v < (field === 'booked_minutes' ? 1 : 0)) return fail(`Invalid ${field.replaceAll('_',' ')}.`);
+        values.push(Math.round(v));
+      } else values.push(body[field] || null);
+      sets.push(`${field}=?`);
+    }
+    if (!sets.length) return fail('No supported project fields supplied.');
+    sets.push('updated_at=?'); values.push(now(), parts[1]);
+    const result = await env.DB.prepare(`UPDATE projects SET ${sets.join(',')} WHERE id=?`).bind(...values).run();
+    if (!result.meta.changes) return fail('Project not found.', 404);
+    await logEvent(env, parts[1], auth.staff.id, 'project_updated', Object.fromEntries(allowed.filter(k => k in body).map(k => [k, body[k]])));
+    return json({ ok: true });
+  }
+
+  if (parts[0] === 'projects' && parts[1] && parts[2] === 'activity' && method === 'GET') {
+    const auth = await requireStaff(request, env);
+    if (auth.response) return auth.response;
+    if(!(await canAccessProject(env,auth.staff,parts[1])))return fail('Project not found.',404);
+    const rows = await env.DB.prepare('SELECT a.id,a.event,a.detail,a.created_at,s.name AS actor FROM activity a LEFT JOIN staff s ON s.id=a.actor_id WHERE a.project_id=? ORDER BY a.created_at DESC LIMIT 100').bind(parts[1]).all();
+    return json({ activity: rows.results || [] });
+  }
+
+  if (parts[0] === 'tasks' && parts.length === 1 && method === 'GET') {
+    const auth = await requireStaff(request, env);
+    if (auth.response) return auth.response;
+    const rows = await env.DB.prepare(`SELECT t.*,p.project_code,p.client_name,p.status AS project_status,s.name AS assignee_name FROM tasks t JOIN projects p ON p.id=t.project_id LEFT JOIN staff s ON s.id=t.assigned_to WHERE (?='admin' OR t.assigned_to=? OR ? IN ('sales')) ORDER BY CASE t.status WHEN 'blocked' THEN 0 WHEN 'in_progress' THEN 1 WHEN 'todo' THEN 2 ELSE 3 END, t.due_at IS NULL, t.due_at`).bind(auth.staff.role,auth.staff.id,auth.staff.role).all();
+    return json({ tasks: rows.results || [] });
+  }
+
+  if (parts[0] === 'tasks' && parts.length === 1 && method === 'POST') {
+    const auth = await requireStaff(request, env, ['admin','sales','photographer','filmmaker','editor']);
+    if (auth.response) return auth.response;
+    const title=String(body.title||'').trim(), projectId=String(body.project_id||'');
+    if(!title||!projectId)return fail('Task title and project are required.');
+    if(body.assigned_to){const member=await env.DB.prepare('SELECT id FROM staff WHERE id=? AND active=1').bind(body.assigned_to).first();if(!member)return fail('Select an active team member.');}
+    const taskId=id(),created=now(),priority=['low','normal','high','urgent'].includes(body.priority)?body.priority:'normal';
+    await env.DB.prepare('INSERT INTO tasks(id,project_id,title,description,assigned_to,due_at,status,priority,created_by,created_at,updated_at) VALUES(?,?,?,?,?,?,\'todo\',?,?,?,?)').bind(taskId,projectId,title,String(body.description||''),body.assigned_to||null,body.due_at||null,priority,auth.staff.id,created,created).run();
+    await logEvent(env,projectId,auth.staff.id,'task_created',{task_id:taskId,title,assigned_to:body.assigned_to||null,due_at:body.due_at||null});
+    return json({id:taskId},201);
+  }
+
+  if (parts[0] === 'tasks' && parts[1] && method === 'PATCH') {
+    const auth=await requireStaff(request,env);
+    if(auth.response)return auth.response;
+    const task=await env.DB.prepare('SELECT * FROM tasks WHERE id=?').bind(parts[1]).first();
+    if(!task)return fail('Task not found.',404);
+    if(auth.staff.role!=='admin'&&auth.staff.role!=='sales'&&task.assigned_to!==auth.staff.id)return fail('Only the assigned team member or a manager can update this task.',403);
+    if(body.status&&!['todo','in_progress','blocked','done'].includes(body.status))return fail('Invalid task status.');
+    if(body.status)await env.DB.prepare('UPDATE tasks SET status=?,updated_at=? WHERE id=?').bind(body.status,now(),parts[1]).run();
+    await logEvent(env,task.project_id,auth.staff.id,'task_updated',{task_id:task.id,status:body.status||task.status});
+    return json({ok:true});
+  }
+
+  if (parts[0] === 'invoices' && method === 'GET') {
+    const auth=await requireStaff(request,env,['admin','sales']);
+    if(auth.response)return auth.response;
+    const rows=await env.DB.prepare(`SELECT i.*,p.project_code,p.client_name FROM invoices i JOIN projects p ON p.id=i.project_id WHERE i.status!='void' ORDER BY i.created_at DESC`).all();
+    return json({invoices:rows.results||[]});
+  }
+
+  if (parts[0] === 'invoices' && parts.length === 1 && method === 'POST') {
+    const auth=await requireStaff(request,env,['admin','sales']);
+    if(auth.response)return auth.response;
+    const projectId=String(body.project_id||''), amount=Math.round(Number(body.amount)||0), kind=['add_on','adjustment'].includes(body.kind)?body.kind:'add_on';
+    if(!projectId||amount<0||!String(body.description||'').trim())return fail('Project, amount, and description are required.');
+    const project=await env.DB.prepare('SELECT project_code FROM projects WHERE id=?').bind(projectId).first();if(!project)return fail('Project not found.',404);
+    const invoiceId=id(),code=`INV-${project.project_code}-${crypto.getRandomValues(new Uint32Array(1))[0].toString().slice(0,5)}`;
+    await env.DB.prepare('INSERT INTO invoices(id,project_id,invoice_code,kind,description,amount,amount_paid,status,due_at,payment_url,created_by,created_at,updated_at) VALUES(?,?,?,?,?,?,0,\'draft\',?,?,?,?,?)').bind(invoiceId,projectId,code,kind,String(body.description).trim(),amount,body.due_at||null,String(body.payment_url||''),auth.staff.id,now(),now()).run();
+    await logEvent(env,projectId,auth.staff.id,'invoice_created',{invoice_code:code,amount,kind});return json({invoice_code:code},201);
+  }
+
+  if (parts[0] === 'invoices' && parts[1] && method === 'PATCH') {
+    const auth=await requireStaff(request,env,['admin','sales']);
+    if(auth.response)return auth.response;
+    const invoice=await env.DB.prepare('SELECT * FROM invoices WHERE id=?').bind(parts[1]).first();if(!invoice)return fail('Invoice not found.',404);
+    const paid=body.amount_paid===undefined?invoice.amount_paid:Math.min(invoice.amount,Math.max(0,Math.round(Number(body.amount_paid)||0)));
+    const status=body.status&&['draft','sent','partially_paid','paid','void'].includes(body.status)?body.status:paid>=invoice.amount&&invoice.amount>0?'paid':paid>0?'partially_paid':invoice.status==='sent'?'sent':'draft';
+    await env.DB.prepare('UPDATE invoices SET amount_paid=?,status=?,payment_url=COALESCE(?,payment_url),updated_at=? WHERE id=?').bind(paid,status,body.payment_url||null,now(),parts[1]).run();
+    await logEvent(env,invoice.project_id,auth.staff.id,'invoice_updated',{invoice_code:invoice.invoice_code,amount_paid:paid,status});return json({ok:true});
+  }
+
+  if (parts[0] === 'projects' && parts[1] && parts[2] === 'deliveries' && method === 'POST') {
+    const auth=await requireStaff(request,env,['admin','sales','editor','filmmaker']);
+    if(auth.response)return auth.response;
+    if(!(await canAccessProject(env,auth.staff,parts[1])))return fail('Project not found.',404);
+    let parsed;try{parsed=new URL(String(body.url||''));}catch{return fail('Enter a valid delivery link.');}
+    if(parsed.protocol!=='https:')return fail('Delivery links must use HTTPS.');
+    const title=String(body.title||'').trim();if(!title)return fail('Enter a delivery title.');
+    await env.DB.prepare('INSERT INTO deliveries(id,project_id,title,url,note,created_by,created_at) VALUES(?,?,?,?,?,?,?)').bind(id(),parts[1],title,parsed.href,String(body.note||''),auth.staff.id,now()).run();
+    await logEvent(env,parts[1],auth.staff.id,'delivery_link_added',{title});return json({ok:true},201);
+  }
+
+  if (parts[0] === 'projects' && parts[1] && parts[2] === 'session' && parts[3] === 'start' && method === 'POST') {
+    const auth = await requireStaff(request, env, ['admin','photographer']);
+    if (auth.response) return auth.response;
+    if(auth.staff.role!=='admin'&&!(await canAccessProject(env,auth.staff,parts[1])))return fail('Project not found.',404);
+    if (!env.APP_SECRET) return fail('Session approval is not configured yet.', 503);
+    const project = await env.DB.prepare('SELECT * FROM projects WHERE id=?').bind(parts[1]).first();
+    if (!project) return fail('Project not found.', 404);
+    const code = String(body.code || '').trim();
+    const challenge = await env.DB.prepare("SELECT * FROM otp_challenges WHERE project_id=? AND kind='start' AND consumed_at IS NULL AND expires_at>? ORDER BY created_at DESC LIMIT 1").bind(project.id, now()).first();
+    if (!challenge) return fail('Ask the client to generate a fresh start code from their session link.', 409);
+    if (challenge.attempts >= 5) return fail('That code has been locked. Ask the client to generate another one.', 429);
+    const candidate = await digest(`${env.APP_SECRET || ''}:${challenge.id}:${code}`);
+    if (candidate !== challenge.code_hash) {
+      await env.DB.prepare('UPDATE otp_challenges SET attempts=attempts+1 WHERE id=?').bind(challenge.id).run();
+      return fail('The client code is incorrect. Check it and try again.', 401);
+    }
+    const active = await env.DB.prepare("SELECT id FROM sessions WHERE project_id=? AND status='active'").bind(project.id).first();
+    if (active) return fail('This project already has an active session.', 409);
+    const sessionId = id();
+    const started = now();
+    await env.DB.prepare('UPDATE otp_challenges SET consumed_at=? WHERE id=?').bind(started, challenge.id).run();
+    await env.DB.prepare("INSERT INTO sessions(id,project_id,started_at,status,created_by) VALUES(?,?,?,'active',?)").bind(sessionId, project.id, started, auth.staff.id).run();
+    await env.DB.prepare("UPDATE projects SET status='in_session',updated_at=? WHERE id=?").bind(started, project.id).run();
+    await logEvent(env, project.id, auth.staff.id, 'session_started', { session_id: sessionId, started_at: started, client_approved: true });
+    return json({ ok: true, session_id: sessionId, started_at: started });
+  }
+
+  if (parts[0] === 'projects' && parts[1] && parts[2] === 'session' && parts[3] === 'complete' && method === 'POST') {
+    const auth = await requireStaff(request, env, ['admin','photographer']);
+    if (auth.response) return auth.response;
+    if(auth.staff.role!=='admin'&&!(await canAccessProject(env,auth.staff,parts[1])))return fail('Project not found.',404);
+    if (!env.APP_SECRET) return fail('Session approval is not configured yet.', 503);
+    const project = await env.DB.prepare('SELECT * FROM projects WHERE id=?').bind(parts[1]).first();
+    if (!project) return fail('Project not found.', 404);
+    const session = await env.DB.prepare("SELECT * FROM sessions WHERE project_id=? AND status='active' ORDER BY started_at DESC LIMIT 1").bind(project.id).first();
+    if (!session) return fail('There is no active session for this project.', 409);
+    const code = String(body.code || '').trim();
+    const challenge = await env.DB.prepare("SELECT * FROM otp_challenges WHERE project_id=? AND session_id=? AND kind='end' AND consumed_at IS NULL AND expires_at>? ORDER BY created_at DESC LIMIT 1").bind(project.id, session.id, now()).first();
+    if (!challenge) return fail('Ask the client to generate a fresh finish code from their session link.', 409);
+    if (challenge.attempts >= 5) return fail('That code has been locked. Ask the client to generate another one.', 429);
+    const candidate = await digest(`${env.APP_SECRET || ''}:${challenge.id}:${code}`);
+    if (candidate !== challenge.code_hash) {
+      await env.DB.prepare('UPDATE otp_challenges SET attempts=attempts+1 WHERE id=?').bind(challenge.id).run();
+      return fail('The client code is incorrect. Check it and try again.', 401);
+    }
+    const ended = now();
+    const elapsed = Math.max(0, Math.ceil((Date.parse(ended) - Date.parse(session.started_at)) / 60_000));
+    const overtime = Math.max(0, elapsed - project.booked_minutes - project.grace_minutes);
+    const units = overtime ? Math.ceil(overtime / project.overtime_step_minutes) : 0;
+    const fee = units * project.overtime_rate;
+    await env.DB.prepare('UPDATE otp_challenges SET consumed_at=? WHERE id=?').bind(ended, challenge.id).run();
+    await env.DB.prepare("UPDATE sessions SET ended_at=?,elapsed_minutes=?,overtime_minutes=?,overtime_units=?,overtime_fee=?,end_approved_by_client=1,status='complete' WHERE id=?")
+      .bind(ended, elapsed, overtime, units, fee, session.id).run();
+    await env.DB.prepare("UPDATE projects SET status='editing',updated_at=? WHERE id=?").bind(ended, project.id).run();
+    if(fee>0){
+      const prior=await env.DB.prepare('SELECT id FROM invoices WHERE session_id=?').bind(session.id).first();
+      if(!prior)await env.DB.prepare('INSERT INTO invoices(id,project_id,session_id,invoice_code,kind,description,amount,amount_paid,status,due_at,payment_url,created_by,created_at,updated_at) VALUES(?,?,?,?,?,?,?,0,\'draft\',NULL,\'\',?,?,?)')
+        .bind(id(),project.id,session.id,`INV-${project.project_code}-OT-${Date.now().toString().slice(-5)}`, 'overtime',`${units} × ${project.overtime_step_minutes}-minute overtime block${units===1?'':'s'} after 30-minute grace`,fee,auth.staff.id,ended,ended).run();
+    }
+    await logEvent(env, project.id, auth.staff.id, 'session_completed', { session_id: session.id, ended_at: ended, elapsed_minutes: elapsed, grace_minutes: project.grace_minutes, overtime_minutes: overtime, overtime_units: units, overtime_rate: project.overtime_rate, overtime_fee: fee, client_approved: true });
+    return json({ ok: true, session: { ended_at: ended, elapsed_minutes: elapsed, overtime_minutes: overtime, overtime_units: units, overtime_rate: project.overtime_rate, overtime_fee: fee } });
+  }
+
+  return fail('API route not found.', 404);
+}
+
+export async function onRequest(context) {
+  const { request, env, params } = context;
+  const origin = request.headers.get('Origin');
+  if (origin && origin !== new URL(request.url).origin) return fail('Cross-origin request rejected.', 403);
+  try {
+    const route = Array.isArray(params.route) ? params.route.join('/') : String(params.route || '');
+    return await handle(request, env, route);
+  } catch (error) {
+    console.error('Studio API error:', error?.message || error);
+    return fail('The request could not be completed. Please retry or contact your studio administrator.', 500);
+  }
+}

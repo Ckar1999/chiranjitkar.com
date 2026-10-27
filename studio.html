@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="theme-color" content="#100f0e">
+  <title>Studio Workspace | Chiranjit Kar Photography</title>
+  <link rel="stylesheet" href="studio.css">
+</head>
+<body>
+  <main id="login-view" class="auth-shell">
+    <form id="login-form" class="auth-card">
+      <div class="eyebrow">CHIRANJIT KAR PHOTOGRAPHY · TEAM</div>
+      <h1>Studio workspace</h1>
+      <p class="muted">Sign in with your studio account.</p>
+      <label>Work email<input name="email" type="email" autocomplete="username" required></label>
+      <label>Password<input name="password" type="password" autocomplete="current-password" minlength="20" required></label>
+      <button class="button gold" type="submit">Sign in</button>
+      <p class="notice" id="login-message" role="status"></p>
+    </form>
+  </main>
+
+  <div id="app-view" class="app-shell" hidden>
+    <aside class="sidebar">
+      <a class="brand" href="/">CK<span>STUDIO</span></a>
+      <div class="workspace-label">OPERATIONS</div>
+      <nav class="side-nav" aria-label="Workspace">
+        <button class="nav-item active" data-view="overview"><span>◫</span> Overview</button>
+        <button class="nav-item sales-only" data-view="inquiries"><span>✉</span> Inquiries <b id="nav-inquiry-count">0</b></button>
+        <button class="nav-item" data-view="projects"><span>▤</span> Projects <b id="nav-project-count">0</b></button>
+        <button class="nav-item" data-view="schedule"><span>▦</span> Schedule</button>
+        <button class="nav-item" data-view="tasks"><span>✓</span> Tasks <b id="nav-task-count">0</b></button>
+        <button class="nav-item finance-only" data-view="billing"><span>₹</span> Billing</button>
+        <button class="nav-item admin-only" data-view="team"><span>♙</span> Team</button>
+      </nav>
+      <div class="sidebar-bottom"><div class="avatar" id="user-avatar">CK</div><div class="user-meta"><strong id="user-name">Team member</strong><small id="user-role">Studio</small></div><button id="password-button" title="Change password" aria-label="Change password">⌑</button><button id="logout-button" title="Sign out" aria-label="Sign out">↗</button></div>
+    </aside>
+    <section class="main-area">
+      <header class="topbar"><div><span class="eyebrow" id="date-label">STUDIO OPERATIONS</span><h1 id="view-title">Overview</h1></div><div class="top-actions"><span class="online-dot">Workspace</span><button id="new-project-button" class="button gold" data-roles="admin,sales">＋ New project</button></div></header>
+      <div class="page-content">
+        <div id="overview-view" class="view">
+          <div class="welcome-row"><div><h2 id="welcome-title">Good day</h2><p class="muted">Here’s what needs attention across the studio.</p></div><span class="today-pill" id="today-label"></span></div>
+          <div id="metric-grid" class="metric-grid"></div>
+          <div class="section-heading"><div><h2>Active projects</h2><p class="muted">Current work, ownership, and next steps.</p></div><button class="text-button" data-open-view="projects">All projects <span>→</span></button></div>
+          <div id="overview-projects" class="project-list"></div>
+        </div>
+        <div id="inquiries-view" class="view" hidden><div class="section-heading"><div><h2>New business</h2><p class="muted">Website inquiries ready for Sales follow-up.</p></div></div><div id="inquiries-list" class="inquiry-list"></div></div>
+        <div id="projects-view" class="view" hidden>
+          <div class="toolbar"><div class="filter-row" id="status-filters"></div><input id="project-search" class="search" type="search" placeholder="Search client or project…" aria-label="Search projects"></div>
+          <div id="projects-list" class="project-list"></div>
+        </div>
+        <div id="schedule-view" class="view" hidden><div class="section-heading"><div><h2>Shoot schedule</h2><p class="muted">Upcoming shoots ordered by date.</p></div></div><div id="schedule-list" class="project-list"></div></div>
+        <div id="tasks-view" class="view" hidden><div class="section-heading"><div><h2>Production tasks</h2><p class="muted">Assigned handoffs, deadlines, and blockers across projects.</p></div></div><div id="tasks-list" class="task-list"></div></div>
+        <div id="billing-view" class="view" hidden><div class="section-heading"><div><h2>Billing ledger</h2><p class="muted">Invoice status, balances, and overtime charges for Sales to reconcile.</p></div><button id="new-invoice-button" class="button gold">＋ Add charge</button></div><div id="invoice-list" class="invoice-list"></div></div>
+        <div id="team-view" class="view" hidden><div class="section-heading"><div><h2>Studio team</h2><p class="muted">Role-based access for your production team.</p></div><button id="add-staff-button" class="button gold">＋ Add member</button></div><div id="team-list" class="team-list"></div></div>
+      </div>
+    </section>
+  </div>
+
+  <dialog id="project-dialog" class="dialog"><form id="project-form" class="dialog-card">
+    <div class="dialog-head"><div><span class="eyebrow">NEW CLIENT PROJECT</span><h2>Create a project</h2></div><button type="button" class="icon-button" data-close-dialog aria-label="Close">×</button></div>
+    <div class="form-grid">
+      <label>Client name<input name="client_name" required></label><label>Client email<input name="client_email" type="email" required></label>
+      <label>Phone / WhatsApp<input name="client_phone" type="tel"></label><label>Service<select name="service" required><option value="">Choose service</option><option>Photography</option><option>Filmmaking</option><option>Photography + Film</option><option>Commercial campaign</option><option>Model portfolio</option><option>Other</option></select></label>
+      <label>Package<input name="package_name" placeholder="Package or custom scope"></label><label>Session duration (hours)<input name="booked_hours" type="number" min="0.5" max="24" step="0.5" value="3" required></label>
+      <label>Overtime charge per 30 min (₹)<input name="overtime_rate" type="number" min="0" step="100" placeholder="Set agreed rate" required></label><label>Package fee (₹)<input name="package_price" type="number" min="0" step="500"></label>
+      <label>Deposit received (₹)<input name="deposit_amount" type="number" min="0" step="500" value="0"></label><label>Shoot date &amp; time<input name="shoot_at" type="datetime-local"></label>
+      <label>Location<input name="location" placeholder="Studio / venue / city"></label><label>Delivery due<input name="delivery_due_at" type="date"></label>
+      <label class="wide">Creative brief<textarea name="brief" rows="3" placeholder="Goals, references, looks, shot list…"></textarea></label>
+    </div>
+    <p class="policy-note">Client approval is required to start and finish the timer. Each booking includes its booked duration, then 30 minutes of grace. After grace, each started 30-minute overtime block is charged at the agreed rate above.</p>
+    <div class="dialog-actions"><button type="button" class="button quiet" data-close-dialog>Cancel</button><button class="button gold" type="submit">Create project</button></div>
+    <div id="project-created" class="created-link" hidden></div>
+  </form></dialog>
+
+  <dialog id="action-dialog" class="dialog"><form id="action-form" class="dialog-card compact-dialog"><div class="dialog-head"><div><span class="eyebrow" id="action-eyebrow">SESSION APPROVAL</span><h2 id="action-title">Enter client code</h2></div><button type="button" class="icon-button" data-close-dialog aria-label="Close">×</button></div><p id="action-help" class="muted"></p><label>6-digit client code<input name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required autocomplete="one-time-code"></label><div class="dialog-actions"><button type="button" class="button quiet" data-close-dialog>Cancel</button><button type="submit" class="button gold">Confirm</button></div><p id="action-message" class="notice" role="status"></p></form></dialog>
+
+  <dialog id="staff-dialog" class="dialog"><form id="staff-form" class="dialog-card compact-dialog"><div class="dialog-head"><div><span class="eyebrow">TEAM ACCESS</span><h2>Add team member</h2></div><button type="button" class="icon-button" data-close-dialog aria-label="Close">×</button></div><label>Name<input name="name" required></label><label>Work email<input name="email" type="email" required></label><label>Role<select name="role"><option value="sales">Sales</option><option value="photographer">Photographer</option><option value="filmmaker">Filmmaker</option><option value="editor">Editor / Retoucher</option><option value="admin">Administrator</option></select></label><p class="policy-note">A temporary password will appear once after creation. Share it privately, then have the team member change it after signing in.</p><div class="dialog-actions"><button type="button" class="button quiet" data-close-dialog>Cancel</button><button type="submit" class="button gold">Create account</button></div><div id="staff-created" class="created-link" hidden></div></form></dialog>
+  <dialog id="password-dialog" class="dialog"><form id="password-form" class="dialog-card compact-dialog"><div class="dialog-head"><div><span class="eyebrow">ACCOUNT SECURITY</span><h2>Change password</h2></div><button type="button" class="icon-button" data-close-dialog aria-label="Close">×</button></div><label>Current password<input name="current_password" type="password" autocomplete="current-password" required></label><label>New password<input name="new_password" type="password" autocomplete="new-password" minlength="20" required></label><p class="policy-note">Use at least 20 characters. You will need to sign in again after changing it.</p><div class="dialog-actions"><button type="button" class="button quiet" data-close-dialog>Cancel</button><button type="submit" class="button gold">Update password</button></div></form></dialog>
+  <dialog id="task-dialog" class="dialog"><form id="task-form" class="dialog-card compact-dialog"><div class="dialog-head"><div><span class="eyebrow">PRODUCTION HANDOFF</span><h2>Create task</h2></div><button type="button" class="icon-button" data-close-dialog aria-label="Close">×</button></div><input name="project_id" type="hidden"><label>Task title<input name="title" required placeholder="Selects, retouch pass, edit review…"></label><label>Assigned to<select name="assigned_to"><option value="">Unassigned</option></select></label><label>Priority<select name="priority"><option value="normal">Normal</option><option value="high">High</option><option value="urgent">Urgent</option><option value="low">Low</option></select></label><label>Due date<input name="due_at" type="datetime-local"></label><label>Notes<textarea name="description" rows="3"></textarea></label><div class="dialog-actions"><button type="button" class="button quiet" data-close-dialog>Cancel</button><button type="submit" class="button gold">Create task</button></div></form></dialog>
+  <dialog id="invoice-dialog" class="dialog"><form id="invoice-form" class="dialog-card compact-dialog"><div class="dialog-head"><div><span class="eyebrow">BILLING</span><h2>Add a project charge</h2></div><button type="button" class="icon-button" data-close-dialog aria-label="Close">×</button></div><label>Project<select name="project_id" required></select></label><label>Description<input name="description" required placeholder="Additional shoot time, extra edits…"></label><label>Charge amount (₹)<input name="amount" type="number" min="0" required></label><label>Payment link (optional)<input name="payment_url" type="url" placeholder="https://…"></label><div class="dialog-actions"><button type="button" class="button quiet" data-close-dialog>Cancel</button><button type="submit" class="button gold">Add to ledger</button></div></form></dialog>
+  <dialog id="delivery-dialog" class="dialog"><form id="delivery-form" class="dialog-card compact-dialog"><div class="dialog-head"><div><span class="eyebrow">CLIENT DELIVERY</span><h2>Share a deliverable</h2></div><button type="button" class="icon-button" data-close-dialog aria-label="Close">×</button></div><input name="project_id" type="hidden"><label>Delivery title<input name="title" required placeholder="Final photographs, film cut, proof gallery…"></label><label>Secure HTTPS link<input name="url" type="url" required placeholder="https://…"></label><label>Client note<textarea name="note" rows="3" placeholder="Download or review instructions…"></textarea></label><p class="policy-note">Use an access-controlled link from your file service. Anyone with the client portal link can view deliverables posted here.</p><div class="dialog-actions"><button type="button" class="button quiet" data-close-dialog>Cancel</button><button type="submit" class="button gold">Publish delivery</button></div></form></dialog>
+  <div id="toast" class="toast" role="status"></div>
+  <script src="studio.js" defer></script>
+</body>
+</html>
