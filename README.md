@@ -49,6 +49,10 @@ The site now includes a private operations workspace at `/studio.html` and a pri
 | Filmmaker | Assigned projects, tasks, and video review/delivery links |
 | Editor / Retoucher | Assigned projects, tasks, and proof/delivery links |
 
+### Admin settings
+
+Administrators can open **Settings** in the studio workspace to update the studio name, support contacts, default session duration, and default overtime rate. Those booking defaults populate new project forms and apply only to projects created afterward; Sales can set different terms per booking. The 30-minute grace period and each-started-30-minute overtime calculation remain fixed as agreed. The Settings page also shows which client approval, messaging, payment, and media services are active or still manual.
+
 Passwords are stored as salted HMAC-SHA-256 hashes keyed with the server-only APP_SECRET; staff passwords must be at least 20 characters. Staff sessions use secure, HTTP-only cookies and expire after eight hours. Activity events record project changes and client approval events. Administrators can invite or disable staff accounts and reset passwords; temporary passwords are shown once and should be shared privately. Team members can change their password from the account control in the workspace.
 
 ### Current service boundaries

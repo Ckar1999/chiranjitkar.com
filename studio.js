@@ -1,7 +1,7 @@
 (() => {
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
-  const state = { staff: null, projects: [], team: [], inquiries: [], metrics: null, view: 'overview', filter: 'all', search: '', timers: new Map(), action: null, pendingInquiry: null };
+  const state = { staff: null, projects: [], team: [], inquiries: [], settings: null, metrics: null, view: 'overview', filter: 'all', search: '', timers: new Map(), action: null, pendingInquiry: null };
   const statusNames = { lead:'New inquiry', confirmed:'Confirmed', preproduction:'Pre-production', scheduled:'Scheduled', in_session:'In session', editing:'Editing', client_review:'Client review', delivered:'Delivered', archived:'Archived' };
   const roleNames = { admin:'Administrator', sales:'Sales', photographer:'Photographer', filmmaker:'Filmmaker', editor:'Editor / Retoucher' };
   const filters = ['all','lead','confirmed','preproduction','scheduled','in_session','editing','client_review','delivered'];
@@ -30,7 +30,9 @@
     $('#logout-button').addEventListener('click', logout);
     $('#password-button').addEventListener('click', () => $('#password-dialog').showModal());
     $('#password-form').addEventListener('submit', changePassword);
-    $('#new-project-button').addEventListener('click', () => { $('#project-created').hidden = true; $('#project-form').reset(); $('#project-dialog').showModal(); });
+    $('#settings-form').addEventListener('submit', saveSettings);
+    $('#settings-password-button').addEventListener('click', () => $('#password-dialog').showModal());
+    $('#new-project-button').addEventListener('click', () => { $('#project-created').hidden = true; $('#project-form').reset(); applyProjectDefaults(); $('#project-form button[type=submit]').disabled=false; $('#project-dialog').showModal(); });
     $('#project-form').addEventListener('submit', createProject);
     $('#staff-form').addEventListener('submit', createStaff);
     $('#task-form').addEventListener('submit', createTask);
@@ -76,6 +78,7 @@
     await refresh();
     if (state.staff.role==='admin') await loadTeam();
     if (['admin','sales'].includes(state.staff.role)) await loadInquiries();
+    await loadSettings();
     clearInterval(state.syncTimer);
     state.syncTimer=setInterval(()=>{if(document.visibilityState!=='visible'||!state.staff)return;refresh();if(state.view==='tasks')loadTasks();if(state.view==='inquiries'&&['admin','sales'].includes(state.staff.role))loadInquiries();},45000);
   }
@@ -162,6 +165,32 @@
       $$('[data-member-toggle]').forEach(button=>button.addEventListener('click',async()=>{try{await api(`staff/${button.dataset.memberToggle}`,{method:'PATCH',body:JSON.stringify({active:button.dataset.active!=='1'})});toast('Team access updated.');await loadTeam();}catch(e){toast(e.message);}}));
       $$('[data-member-reset]').forEach(button=>button.addEventListener('click',async()=>{if(!confirm('Reset this team member’s password? Their current sessions will be signed out.'))return;try{const result=await api(`staff/${button.dataset.memberReset}/reset-password`,{method:'POST',body:'{}'});try{await navigator.clipboard.writeText(result.temporary_password);toast('Temporary password copied. Share it privately.');}catch{prompt('Copy and share this temporary password privately:',result.temporary_password);}}catch(e){toast(e.message);}}));
     } catch(error) { toast(error.message); }
+  }
+
+  async function loadSettings(){
+    try{
+      const result=await api('settings');state.settings=result.settings;
+      const form=$('#settings-form');Object.entries(state.settings).forEach(([key,value])=>{if(form.elements[key])form.elements[key].value=value;});
+      $('#integration-cards').innerHTML=Object.entries(result.integrations).map(([key,value])=>{
+        const labels={client_codes:'Session approvals',sms_email:'SMS & email delivery',payments:'Payment processing',media_storage:'Photo & video storage'};
+        const tags={client_portal:'Portal codes',not_connected:'Not connected',manual_ledger:'Manual ledger',external_links:'External links'};
+        return `<article class="integration-card"><div class="integration-head"><strong>${escapeHtml(labels[key]||key)}</strong><span class="integration-state ${value.status==='client_portal'?'ready':''}"><i></i>${escapeHtml(tags[value.status]||value.status)}</span></div><p>${escapeHtml(value.detail)}</p></article>`;
+      }).join('');
+      applyProjectDefaults();
+    }catch(error){toast(error.message);}
+  }
+
+  function applyProjectDefaults(){
+    const form=$('#project-form');if(!form||!state.settings)return;
+    form.elements.booked_hours.value=(Number(state.settings.default_duration_minutes)||180)/60;
+    form.elements.overtime_rate.value=Number(state.settings.default_overtime_rate)||0;
+  }
+
+  async function saveSettings(event){
+    event.preventDefault();const data=Object.fromEntries(new FormData(event.currentTarget));
+    data.default_duration_minutes=Number(data.default_duration_minutes);data.default_overtime_rate=Number(data.default_overtime_rate);
+    try{await api('settings',{method:'PUT',body:JSON.stringify(data)});toast('Admin settings saved.');await loadSettings();}
+    catch(error){toast(error.message);}
   }
 
   async function loadInquiries(){
@@ -287,12 +316,13 @@
   }
 
   function setView(view) {
-    if(!['overview','inquiries','projects','schedule','tasks','billing','team'].includes(view)||view==='team'&&state.staff?.role!=='admin'||['billing','inquiries'].includes(view)&&!['admin','sales'].includes(state.staff?.role)) return;
+    if(!['overview','inquiries','projects','schedule','tasks','billing','team','settings'].includes(view)||['team','settings'].includes(view)&&state.staff?.role!=='admin'||['billing','inquiries'].includes(view)&&!['admin','sales'].includes(state.staff?.role)) return;
     state.view=view; $$('.view').forEach(el=>el.hidden=el.id!==`${view}-view`); $$('.nav-item').forEach(el=>el.classList.toggle('active',el.dataset.view===view));
-    $('#view-title').textContent={overview:'Overview',inquiries:'Inquiries',projects:'Projects',schedule:'Schedule',tasks:'Tasks',billing:'Billing',team:'Team'}[view];
+    $('#view-title').textContent={overview:'Overview',inquiries:'Inquiries',projects:'Projects',schedule:'Schedule',tasks:'Tasks',billing:'Billing',team:'Team',settings:'Settings'}[view];
     if(view==='team') loadTeam(); if(view==='schedule')renderSchedule();
     if(view==='tasks')loadTasks();if(view==='billing')loadInvoices();
     if(view==='inquiries')loadInquiries();
+    if(view==='settings')loadSettings();
   }
   document.addEventListener('DOMContentLoaded',boot);
 })();

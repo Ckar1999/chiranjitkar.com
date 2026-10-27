@@ -218,6 +218,28 @@ async function handle(request, env, route) {
     return json({ counts: counts.results || [], active_sessions: active?.count || 0, overdue_deliveries: overdue?.count || 0, unpaid_balance: unpaid?.amount || 0, my_open_tasks: myTasks?.count||0, overdue_tasks: overdueTasks?.count||0, role: auth.staff.role });
   }
 
+  if(parts[0]==='settings'&&method==='GET'){
+    const auth=await requireStaff(request,env);if(auth.response)return auth.response;
+    const rows=await env.DB.prepare('SELECT setting_key,setting_value FROM studio_settings').all();
+    const settings={studio_name:'Chiranjit Kar Photography',support_email:'iamchiranjitkar@hotmail.com',support_phone:'+917005238823',timezone:'Asia/Kolkata',default_duration_minutes:180,default_overtime_rate:0};
+    for(const row of rows.results||[]){const key=row.setting_key;settings[key]=['default_duration_minutes','default_overtime_rate'].includes(key)?Number(row.setting_value):row.setting_value;}
+    return json({settings,policy:{grace_minutes:30,overtime_step_minutes:30,currency:'INR'},integrations:{client_codes:{status:'client_portal',detail:'Client generates the one-time code on their private link; staff enters it to confirm start or finish.'},sms_email:{status:'not_connected',detail:'No SMS or transactional email provider is connected. Send client portal links through your existing contact channel.'},payments:{status:'manual_ledger',detail:'Invoices and payment status are tracked here. No payment processor is connected.'},media_storage:{status:'external_links',detail:'Use a secure file service and add HTTPS review/delivery links to each project.'}}});
+  }
+
+  if(parts[0]==='settings'&&method==='PUT'){
+    const auth=await requireStaff(request,env,['admin']);if(auth.response)return auth.response;
+    const name=String(body.studio_name||'').trim(),email=String(body.support_email||'').trim(),phone=String(body.support_phone||'').trim();
+    const duration=Math.round(Number(body.default_duration_minutes)),rate=Math.round(Number(body.default_overtime_rate));
+    if(!name||name.length>120)return fail('Studio name is required and must be under 120 characters.');
+    if(email&&!/^\S+@\S+\.\S+$/.test(email))return fail('Enter a valid support email address.');
+    if(phone.length>40)return fail('Phone number must be under 40 characters.');
+    if(!Number.isFinite(duration)||duration<30||duration>1440)return fail('Default session duration must be 30 minutes to 24 hours.');
+    if(!Number.isFinite(rate)||rate<0||rate>10000000)return fail('Default overtime rate must be zero or greater.');
+    const entries={studio_name:name,support_email:email,support_phone:phone,timezone:'Asia/Kolkata',default_duration_minutes:String(duration),default_overtime_rate:String(rate)};
+    await env.DB.batch(Object.entries(entries).map(([key,value])=>env.DB.prepare('INSERT INTO studio_settings(setting_key,setting_value,updated_by,updated_at) VALUES(?,?,?,?) ON CONFLICT(setting_key) DO UPDATE SET setting_value=excluded.setting_value,updated_by=excluded.updated_by,updated_at=excluded.updated_at').bind(key,value,auth.staff.id,now())));
+    return json({ok:true});
+  }
+
   if (parts[0] === 'staff' && parts.length === 1 && method === 'GET') {
     const auth = await requireStaff(request, env, ['admin']);
     if (auth.response) return auth.response;
@@ -283,10 +305,14 @@ async function handle(request, env, route) {
     const client_email = String(body.client_email || '').trim().toLowerCase();
     const service = String(body.service || '').trim();
     if (!client_name || !/^\S+@\S+\.\S+$/.test(client_email) || !service) return fail('Client name, valid email, and service are required.');
-    const booked = Math.max(1, Math.min(1440, Number(body.booked_minutes) || 180));
+    const savedDefaults=await env.DB.prepare("SELECT setting_key,setting_value FROM studio_settings WHERE setting_key IN ('default_duration_minutes','default_overtime_rate')").all();
+    const defaults=Object.fromEntries((savedDefaults.results||[]).map(item=>[item.setting_key,Number(item.setting_value)]));
+    const bookedInput=Number(body.booked_minutes);
+    const booked = Math.max(1, Math.min(1440, bookedInput || defaults.default_duration_minutes || 180));
     const grace = 30;
     const step = 30;
-    const rate = Math.max(0, Math.round(Number(body.overtime_rate) || 0));
+    const rateInput=Number(body.overtime_rate);
+    const rate = Math.max(0, Math.round(Number.isFinite(rateInput)&&body.overtime_rate!==''?rateInput:(defaults.default_overtime_rate||0)));
     const projectId = id();
     const key = b64(bytes(32));
     const projectCode = `CK-${new Date().getFullYear()}-${crypto.getRandomValues(new Uint32Array(1))[0].toString().slice(0, 6).padStart(6,'0')}`;
