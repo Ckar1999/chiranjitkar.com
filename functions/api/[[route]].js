@@ -1,4 +1,5 @@
 const COOKIE = '__Host-studio_session';
+const CLIENT_COOKIE = 'client_session';
 const ROLES = new Set(['admin', 'sales', 'photographer', 'filmmaker', 'editor']);
 const PROJECT_STATES = new Set(['lead', 'confirmed', 'preproduction', 'scheduled', 'in_session', 'editing', 'client_review', 'delivered', 'archived']);
 
@@ -11,6 +12,19 @@ const b64 = value => btoa(String.fromCharCode(...new Uint8Array(value))).replace
 const fromB64 = value => Uint8Array.from(atob(value.replaceAll('-', '+').replaceAll('_', '/') + '='.repeat((4 - value.length % 4) % 4)), c => c.charCodeAt(0));
 const digest = async value => b64(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value)));
 
+function clientCookieHeader(token, request, maxAge = 30 * 24 * 3600) {
+  const host = new URL(request.url).hostname.toLowerCase();
+  const domainPart = host.endsWith('chiranjitkar.com') ? '; Domain=.chiranjitkar.com' : '';
+  return `${CLIENT_COOKIE}=${encodeURIComponent(token)}${domainPart}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${maxAge}`;
+}
+
+function clientPortalUrl(request, hash = '') {
+  const host = new URL(request.url).hostname.toLowerCase();
+  const origin = host.endsWith('chiranjitkar.com') ? 'https://client.chiranjitkar.com' : new URL(request.url).origin;
+  const path = host.endsWith('chiranjitkar.com') ? '/' : '/session.html';
+  return `${origin}${path}${hash ? '#' + hash : ''}`;
+}
+
 async function passwordHash(password, saltText, pepper) {
   const salt = saltText ? fromB64(saltText) : bytes(16);
   const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(`${pepper}:${b64(salt)}`), { name:'HMAC', hash:'SHA-256' }, false, ['sign']);
@@ -18,9 +32,17 @@ async function passwordHash(password, saltText, pepper) {
   return { hash: b64(hash), salt: b64(salt) };
 }
 
-function cookieValue(request) {
-  const part = (request.headers.get('Cookie') || '').split(';').map(v => v.trim()).find(v => v.startsWith(`${COOKIE}=`));
-  return part ? decodeURIComponent(part.slice(COOKIE.length + 1)) : '';
+function cookieValue(request, name = COOKIE) {
+  const part = (request.headers.get('Cookie') || '').split(';').map(v => v.trim()).find(v => v.startsWith(`${name}=`));
+  return part ? decodeURIComponent(part.slice(name.length + 1)) : '';
+}
+
+async function clientAuth(request, env) {
+  const token = cookieValue(request, CLIENT_COOKIE) || cookieValue(request, '__Host-client_session') || clientToken(request);
+  if (!token) return null;
+  const tokenHash = await digest(token);
+  const result = await env.DB.prepare(`SELECT c.* FROM client_sessions s JOIN clients c ON c.id=s.client_id WHERE s.token_hash=? AND s.expires_at>?`).bind(tokenHash, now()).first();
+  return result || null;
 }
 
 async function staffFor(request, env) {
@@ -50,6 +72,23 @@ async function logEvent(env, projectId, actorId, event, detail = {}) {
     .bind(id(), projectId, actorId || null, event, JSON.stringify(detail), now()).run();
 }
 
+async function awardReferralReward(env, projectId) {
+  const rewardId=id(), created=now();
+  await env.DB.batch([
+    env.DB.prepare(`INSERT OR IGNORE INTO referral_rewards(id,referrer_client_id,referred_email,referred_project_id,package_invoice_id,package_amount,reward_amount,reward_percent,created_at)
+      SELECT ?,p.referrer_client_id,p.client_email,p.id,i.id,i.amount,CAST(i.amount*5/100 AS INTEGER),5,?
+      FROM projects p JOIN invoices i ON i.project_id=p.id AND i.kind='package' AND i.status='paid' AND i.amount_paid>=i.amount
+      WHERE p.id=? AND p.referrer_client_id IS NOT NULL AND i.amount>0
+        AND LOWER(p.client_email)!=(SELECT LOWER(email) FROM clients WHERE id=p.referrer_client_id)
+        AND NOT EXISTS(SELECT 1 FROM referral_rewards r WHERE LOWER(r.referred_email)=LOWER(p.client_email))
+        AND NOT EXISTS(SELECT 1 FROM projects oldp JOIN invoices oldi ON oldi.project_id=oldp.id AND oldi.kind='package' AND oldi.status='paid' WHERE LOWER(oldp.client_email)=LOWER(p.client_email) AND oldp.id!=p.id AND oldp.created_at<p.created_at)`)
+      .bind(rewardId,created,projectId),
+    env.DB.prepare(`INSERT OR IGNORE INTO wallet_transactions(id,client_id,reward_id,kind,amount,description,created_at)
+      SELECT ?,referrer_client_id,id,'referral_reward',reward_amount,'5% referral reward after referred client’s first paid package',created_at FROM referral_rewards WHERE referred_project_id=? AND reward_amount>0`)
+      .bind(id(),projectId)
+  ]);
+}
+
 async function reconcileBankTransaction(env, input, staffId, source='manual_bank_alert') {
   const utr=String(input.utr||'').trim().toUpperCase().replace(/\s+/g,'');
   const amount=Math.round(Number(input.amount));
@@ -59,7 +98,7 @@ async function reconcileBankTransaction(env, input, staffId, source='manual_bank
   if(Number.isNaN(parsedAt.getTime()))return {error:fail('Enter the transaction date and time from the bank alert.')};
   if(parsedAt.getTime()>Date.now()+5*60_000)return {error:fail('Transaction date cannot be in the future.')};
   const transactionISO=parsedAt.toISOString(), importedAt=now();
-  const eligible=await env.DB.prepare(`SELECT id,project_id,amount,amount_paid,created_at,due_at FROM invoices WHERE status NOT IN ('void','paid') AND amount-amount_paid=? AND (ABS(julianday(COALESCE(due_at,created_at))-julianday(?))*24)<=24 ORDER BY created_at DESC LIMIT 2`).bind(amount,transactionISO).all();
+  const eligible=await env.DB.prepare(`SELECT id,project_id,kind,amount,amount_paid,created_at,due_at FROM invoices WHERE status NOT IN ('void','paid') AND amount-amount_paid=? AND (ABS(julianday(COALESCE(due_at,created_at))-julianday(?))*24)<=24 ORDER BY created_at DESC LIMIT 2`).bind(amount,transactionISO).all();
   const candidates=eligible.results||[], status=candidates.length===1?'matched':candidates.length?'review':'unmatched', invoice=candidates.length===1?candidates[0]:null;
   try {
     await env.DB.prepare('INSERT INTO bank_transactions(id,utr,amount,transaction_at,source,status,invoice_id,imported_by,imported_at,note,source_message_id) VALUES(?,?,?,?,?,?,?,?,?,?,?)').bind(id(),utr,amount,transactionISO,source,status,invoice?.id||null,staffId||null,importedAt,candidates.length>1?'Multiple exact-amount invoices fall within the 24-hour window.':candidates.length===0?'No exact unpaid invoice found within the 24-hour window.':'',source==='manual_bank_alert'?null:String(input.email_message_id)).run();
@@ -70,6 +109,7 @@ async function reconcileBankTransaction(env, input, staffId, source='manual_bank
   if(invoice){
     const paid=invoice.amount_paid+amount;
     await env.DB.prepare(`UPDATE invoices SET amount_paid=?,status=CASE WHEN ? >= amount THEN 'paid' ELSE 'partially_paid' END,updated_at=? WHERE id=?`).bind(paid,paid,importedAt,invoice.id).run();
+    if(paid>=invoice.amount&&invoice.kind==='package')await awardReferralReward(env,invoice.project_id);
     await logEvent(env,invoice.project_id,staffId,'bank_payment_matched',{invoice_id:invoice.id,utr,amount,transaction_at:transactionISO,source});
   }
   return {result:{ok:true,status,invoice_id:invoice?.id||null,message:status==='matched'?'Payment matched and ledger updated.':status==='review'?'Multiple possible invoices found; transaction saved for review.':'No unique invoice matched; transaction saved without changing balances.'}};
@@ -101,13 +141,14 @@ async function handle(request, env, route) {
 
   if(parts[0]==='inquiries'&&parts.length===1&&method==='POST'){
     if(String(body.website||'').trim())return json({ok:true,message:'Thanks, your inquiry has been received.'},201);
-    const name=String(body.name||'').trim(),email=String(body.email||'').trim().toLowerCase(),service=String(body.service||'').trim();
+    const name=String(body.name||'').trim(),email=String(body.email||'').trim().toLowerCase(),service=String(body.service||'').trim(),referralCode=String(body.referral_code||'').trim().toUpperCase();
     if(!name||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||!service)return fail('Please provide your name, a valid email, and the shoot category.');
+    if(referralCode&&!await env.DB.prepare('SELECT id FROM clients WHERE referral_code=?').bind(referralCode).first())return fail('This referral link is invalid or expired.');
     const ip=request.headers.get('CF-Connecting-IP')||'unknown';const ipHash=await digest(`${env.APP_SECRET||'studio-rate-limit'}:${ip}`);
     const since=new Date(Date.now()-60*60_000).toISOString();const recent=await env.DB.prepare('SELECT COUNT(*) AS n FROM inquiries WHERE ip_hash=? AND created_at>?').bind(ipHash,since).first();
     if((recent?.n||0)>=5)return fail('Too many inquiries from this connection. Please contact the studio directly.',429);
-    const created=now();await env.DB.prepare('INSERT INTO inquiries(id,name,email,phone,city,service,brief,status,source,ip_hash,created_at,updated_at) VALUES(?,?,?,?,?,?,?,\'new\',\'website\',?,?,?)')
-      .bind(id(),name,email,String(body.phone||'').trim().slice(0,40),String(body.city||'').trim().slice(0,100),service.slice(0,150),String(body.brief||'').trim().slice(0,5000),ipHash,created,created).run();
+    const created=now();await env.DB.prepare('INSERT INTO inquiries(id,name,email,phone,city,service,brief,status,source,ip_hash,referral_code,created_at,updated_at) VALUES(?,?,?,?,?,?,?,\'new\',\'website\',?,?,?,?)')
+      .bind(id(),name,email,String(body.phone||'').trim().slice(0,40),String(body.city||'').trim().slice(0,100),service.slice(0,150),String(body.brief||'').trim().slice(0,5000),ipHash,referralCode,created,created).run();
     return json({ok:true,message:'Thanks, your inquiry has been received. Our studio coordinator will review it and follow up.'},201);
   }
 
@@ -187,18 +228,171 @@ async function handle(request, env, route) {
     return json({ ok: true }, 200, { 'Set-Cookie': `${COOKIE}=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0` });
   }
 
+  if (parts[0] === 'client' && parts[1] === 'google-auth' && method === 'POST') {
+    const credential = String(body.credential || '').trim();
+    if (!credential) return fail('Google credential is required.');
+
+    let gUser = null;
+    try {
+      const verifyRes = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(credential)}`);
+      if (!verifyRes.ok) return fail('Google credential verification failed.', 401);
+      gUser = await verifyRes.json();
+    } catch (e) {
+      return fail('Could not reach Google authentication servers.', 502);
+    }
+
+    if(gUser.aud!=='590487797563-iuln56iefm3lgpdmq8rh0egqbke0ugp9.apps.googleusercontent.com')return fail('Google credential was issued for a different application.',401);
+
+    const email = String(gUser.email || '').toLowerCase().trim();
+    const name = String(gUser.name || gUser.given_name || email.split('@')[0]).trim();
+    const picture = String(gUser.picture || '').trim();
+    const sub = String(gUser.sub || '').trim();
+    const verified = String(gUser.email_verified) === 'true';
+
+    if (!email || !verified) return fail('A verified Google account email is required.', 401);
+
+    const nowISO = now();
+    let client = await env.DB.prepare('SELECT * FROM clients WHERE google_sub=? OR email=?').bind(sub, email).first();
+    const clientId = client?.id || id();
+
+    if (!client) {
+      await env.DB.prepare('INSERT INTO clients(id, email, name, picture, google_sub, phone, created_at, updated_at) VALUES(?,?,?,?,?,?,?,?)')
+        .bind(clientId, email, name, picture, sub, '', nowISO, nowISO).run();
+      client = { id: clientId, email, name, picture, google_sub: sub, phone: '', created_at: nowISO, updated_at: nowISO };
+    } else {
+      await env.DB.prepare('UPDATE clients SET name=?, picture=?, google_sub=?, updated_at=? WHERE id=?')
+        .bind(name, picture, sub, nowISO, client.id).run();
+      client = { ...client, name, picture, google_sub: sub, updated_at: nowISO };
+    }
+
+    if(!client.referral_code){
+      for(let attempt=0;attempt<3&&!client.referral_code;attempt++){
+        const candidate='CK'+Array.from(bytes(5),v=>v.toString(16).padStart(2,'0')).join('').toUpperCase();
+        try{await env.DB.prepare('UPDATE clients SET referral_code=? WHERE id=? AND referral_code IS NULL').bind(candidate,client.id).run();}catch{}
+        client=await env.DB.prepare('SELECT * FROM clients WHERE id=?').bind(client.id).first();
+      }
+    }
+
+    const token = b64(bytes(32));
+    const tokenHash = await digest(token);
+    const expiresAt = new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString();
+
+    await env.DB.prepare('INSERT INTO client_sessions(token_hash, client_id, expires_at, created_at) VALUES(?,?,?,?)')
+      .bind(tokenHash, client.id, expiresAt, nowISO).run();
+
+    const cookie = clientCookieHeader(token, request, 30 * 24 * 3600);
+    return json({ ok: true, client, token, expires_at: expiresAt }, 200, { 'Set-Cookie': cookie });
+  }
+
+  if (parts[0] === 'client' && parts[1] === 'me' && method === 'GET') {
+    const client = await clientAuth(request, env);
+    if (!client) return fail('Not signed in.', 401);
+
+    const projects = await env.DB.prepare(`
+      SELECT id, project_code, client_name, client_email, service, package_name, status, shoot_at, location, brief, booked_minutes, grace_minutes, overtime_step_minutes, overtime_rate, package_price, deposit_amount, created_at
+      FROM projects WHERE LOWER(client_email)=LOWER(?)
+      ORDER BY CASE status WHEN 'in_session' THEN 0 WHEN 'scheduled' THEN 1 WHEN 'confirmed' THEN 2 WHEN 'editing' THEN 3 WHEN 'client_review' THEN 4 WHEN 'delivered' THEN 5 ELSE 6 END, shoot_at DESC, created_at DESC
+    `).bind(client.email).all();
+
+    const projectList = [];
+    for (const p of (projects.results || [])) {
+      const session = await env.DB.prepare("SELECT id,started_at,ended_at,elapsed_minutes,overtime_minutes,overtime_units,overtime_fee,status FROM sessions WHERE project_id=? ORDER BY started_at DESC LIMIT 1").bind(p.id).first();
+      const invoices = await env.DB.prepare("SELECT id,invoice_code,kind,description,amount,amount_paid,status,due_at,payment_url FROM invoices WHERE project_id=? AND status!='void' ORDER BY created_at").bind(p.id).all();
+      const deliveries = await env.DB.prepare('SELECT title,url,note,created_at FROM deliveries WHERE project_id=? ORDER BY created_at DESC').bind(p.id).all();
+      projectList.push({
+        ...p,
+        session,
+        invoices: invoices.results || [],
+        deliveries: deliveries.results || []
+      });
+    }
+
+    return json({ ok: true, client, projects: projectList });
+  }
+
+  if(parts[0]==='client'&&parts[1]==='wallet'&&parts.length===2&&method==='GET'){
+    const client=await clientAuth(request,env);if(!client)return fail('Sign in to view your wallet.',401);
+    let referralCode=client.referral_code;
+    if(!referralCode){
+      for(let attempt=0;attempt<3&&!referralCode;attempt++){
+        const candidate='CK'+Array.from(bytes(5),v=>v.toString(16).padStart(2,'0')).join('').toUpperCase();
+        try{await env.DB.prepare('UPDATE clients SET referral_code=? WHERE id=? AND referral_code IS NULL').bind(candidate,client.id).run();}catch{}
+        const row=await env.DB.prepare('SELECT referral_code FROM clients WHERE id=?').bind(client.id).first();referralCode=row?.referral_code||null;
+      }
+    }
+    const transactions=await env.DB.prepare('SELECT kind,amount,description,created_at FROM wallet_transactions WHERE client_id=? ORDER BY created_at DESC LIMIT 50').bind(client.id).all();
+    const balance=await env.DB.prepare('SELECT COALESCE(SUM(amount),0) AS amount FROM wallet_transactions WHERE client_id=?').bind(client.id).first();
+    return json({referral_code:referralCode,share_url:`https://book.chiranjitkar.com/?ref=${encodeURIComponent(referralCode||'')}`,balance:balance?.amount||0,transactions:transactions.results||[]});
+  }
+
+  if(parts[0]==='client'&&parts[1]==='wallet'&&parts[2]==='apply'&&method==='POST'){
+    const client=await clientAuth(request,env);if(!client)return fail('Sign in to use wallet credit.',401);
+    const invoiceId=String(body.invoice_id||'');
+    const invoice=await env.DB.prepare(`SELECT i.id,i.project_id,i.amount,i.amount_paid,i.status FROM invoices i JOIN projects p ON p.id=i.project_id WHERE i.id=? AND i.kind='package' AND LOWER(p.client_email)=LOWER(?) AND i.status NOT IN ('void','paid')`).bind(invoiceId,client.email).first();
+    if(!invoice)return fail('No payable package invoice was found for your account.',404);
+    const wallet=await env.DB.prepare('SELECT COALESCE(SUM(amount),0) AS amount FROM wallet_transactions WHERE client_id=?').bind(client.id).first();
+    const useAmount=Math.min(Number(wallet?.amount||0),invoice.amount-invoice.amount_paid);
+    if(useAmount<=0)return fail('There is no available wallet credit to apply.');
+    const txId=id(),created=now(),paidAfter=invoice.amount_paid+useAmount;
+    try{
+      const results=await env.DB.batch([
+        env.DB.prepare(`INSERT INTO wallet_transactions(id,client_id,invoice_id,project_id,kind,amount,description,created_at)
+          SELECT ?,?,?,?,'booking_redemption',?,'Wallet credit applied to package',?
+          WHERE (SELECT COALESCE(SUM(amount),0) FROM wallet_transactions WHERE client_id=?)>=?
+            AND EXISTS(SELECT 1 FROM invoices WHERE id=? AND amount_paid=? AND amount-amount_paid>=? AND status NOT IN ('void','paid'))`)
+          .bind(txId,client.id,invoice.id,invoice.project_id,-useAmount,created,client.id,useAmount,invoice.id,invoice.amount_paid,useAmount),
+        env.DB.prepare(`UPDATE invoices SET amount_paid=?,status=CASE WHEN ? >= amount THEN 'paid' ELSE 'partially_paid' END,updated_at=? WHERE id=? AND EXISTS(SELECT 1 FROM wallet_transactions WHERE id=?)`)
+          .bind(paidAfter,paidAfter,created,invoice.id,txId)
+      ]);
+      if(!(results[0]?.meta?.changes>0))return fail('Wallet or package balance changed. Refresh and try again.',409);
+    }catch(error){if(String(error?.message||'').includes('UNIQUE'))return fail('Wallet credit has already been applied to this package.',409);throw error;}
+    await awardReferralReward(env,invoice.project_id);
+    return json({ok:true,applied:useAmount,message:`${new Intl.NumberFormat('en-IN').format(useAmount)} rupees of wallet credit applied.`});
+  }
+
+  if (parts[0] === 'client' && parts[1] === 'logout' && method === 'POST') {
+    const token = cookieValue(request, CLIENT_COOKIE) || cookieValue(request, '__Host-client_session') || clientToken(request);
+    if (token) {
+      await env.DB.prepare('DELETE FROM client_sessions WHERE token_hash=?').bind(await digest(token)).run().catch(() => ({}));
+    }
+    const host = new URL(request.url).hostname.toLowerCase();
+    const domainPart = host.endsWith('chiranjitkar.com') ? '; Domain=.chiranjitkar.com' : '';
+    const headers = new Headers({ 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+    headers.append('Set-Cookie', `${CLIENT_COOKIE}=${domainPart}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`);
+    headers.append('Set-Cookie', `__Host-client_session=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`);
+    return new Response(JSON.stringify({ ok: true }), { status: 200, headers });
+  }
+
   if (parts[0] === 'client' && parts[1] === 'project' && method === 'GET') {
-    const project = await clientProject(env, clientToken(request));
-    if (!project) return fail('This client link is invalid or has been revoked.', 404);
+    let project = await clientProject(env, clientToken(request));
+    if (!project) {
+      const client = await clientAuth(request, env);
+      const code = String(new URL(request.url).searchParams.get('code') || '').trim();
+      if (client) {
+        if (code) {
+          project = await env.DB.prepare('SELECT * FROM projects WHERE (project_code=? OR id=?) AND LOWER(client_email)=LOWER(?)').bind(code, code, client.email).first();
+        } else {
+          project = await env.DB.prepare('SELECT * FROM projects WHERE LOWER(client_email)=LOWER(?) ORDER BY shoot_at DESC, created_at DESC LIMIT 1').bind(client.email).first();
+        }
+      }
+    }
+    if (!project) return fail('This client project was not found.', 404);
     const session = await env.DB.prepare("SELECT id,started_at,ended_at,elapsed_minutes,overtime_minutes,overtime_units,overtime_fee,status FROM sessions WHERE project_id=? ORDER BY started_at DESC LIMIT 1").bind(project.id).first();
-    const invoices = await env.DB.prepare("SELECT invoice_code,kind,description,amount,amount_paid,status,due_at,payment_url FROM invoices WHERE project_id=? AND status!='void' ORDER BY created_at").bind(project.id).all();
+    const invoices = await env.DB.prepare("SELECT id,invoice_code,kind,description,amount,amount_paid,status,due_at,payment_url FROM invoices WHERE project_id=? AND status!='void' ORDER BY created_at").bind(project.id).all();
     const deliveries = await env.DB.prepare('SELECT title,url,note,created_at FROM deliveries WHERE project_id=? ORDER BY created_at DESC').bind(project.id).all();
-    return json({ project: { project_code: project.project_code, client_name: project.client_name, service: project.service, package_name: project.package_name, shoot_at: project.shoot_at, booked_minutes: project.booked_minutes, grace_minutes: project.grace_minutes, overtime_step_minutes: project.overtime_step_minutes, overtime_rate: project.overtime_rate, status: project.status }, session, invoices: invoices.results || [], deliveries: deliveries.results || [] });
+    return json({ project: { id: project.id, project_code: project.project_code, client_name: project.client_name, service: project.service, package_name: project.package_name, shoot_at: project.shoot_at, booked_minutes: project.booked_minutes, grace_minutes: project.grace_minutes, overtime_step_minutes: project.overtime_step_minutes, overtime_rate: project.overtime_rate, status: project.status }, session, invoices: invoices.results || [], deliveries: deliveries.results || [] });
   }
 
   if (parts[0] === 'client' && parts[1] === 'challenge' && method === 'POST') {
-    const project = await clientProject(env, clientToken(request));
-    if (!project) return fail('This client link is invalid or has been revoked.', 404);
+    let project = await clientProject(env, clientToken(request));
+    if (!project) {
+      const client = await clientAuth(request, env);
+      const pId = String(body.project_id || body.project_code || '').trim();
+      if (client && pId) {
+        project = await env.DB.prepare('SELECT * FROM projects WHERE (id=? OR project_code=?) AND LOWER(client_email)=LOWER(?)').bind(pId, pId, client.email).first();
+      }
+    }
+    if (!project) return fail('This client session was not found.', 404);
     const kind = body.kind === 'end' ? 'end' : body.kind === 'start' ? 'start' : '';
     if (!kind) return fail('Invalid approval action.');
     if (!env.APP_SECRET) return fail('Session approval is not configured yet. Contact the studio.', 503);
@@ -219,8 +413,15 @@ async function handle(request, env, route) {
   }
 
   if (parts[0] === 'client' && parts[1] === 'feedback' && method === 'POST') {
-    const project=await clientProject(env,clientToken(request));
-    if(!project)return fail('This client link is invalid or has been revoked.',404);
+    let project = await clientProject(env, clientToken(request));
+    if (!project) {
+      const client = await clientAuth(request, env);
+      const pId = String(body.project_id || body.project_code || '').trim();
+      if (client && pId) {
+        project = await env.DB.prepare('SELECT * FROM projects WHERE (id=? OR project_code=?) AND LOWER(client_email)=LOWER(?)').bind(pId, pId, client.email).first();
+      }
+    }
+    if (!project) return fail('This client project was not found.', 404);
     const kind=['selection','revision','approval','testimonial'].includes(body.kind)?body.kind:'revision';
     const feedback=String(body.body||'').trim();
     if(!feedback||feedback.length>5000)return fail('Enter feedback of 1–5,000 characters.');
@@ -350,6 +551,16 @@ async function handle(request, env, route) {
     const client_email = String(body.client_email || '').trim().toLowerCase();
     const service = String(body.service || '').trim();
     if (!client_name || !/^\S+@\S+\.\S+$/.test(client_email) || !service) return fail('Client name, valid email, and service are required.');
+    let referrerClientId=null;
+    const referralCode=String(body.referral_code||'').trim().toUpperCase();
+    if(referralCode){
+      const referrer=await env.DB.prepare('SELECT id,email FROM clients WHERE referral_code=?').bind(referralCode).first();
+      if(!referrer)return fail('Referral code is invalid.');
+      if(referrer.email.toLowerCase()===client_email)return fail('A client cannot refer themselves.');
+      const priorPurchase=await env.DB.prepare(`SELECT 1 AS purchased FROM projects p JOIN invoices i ON i.project_id=p.id WHERE LOWER(p.client_email)=? AND i.kind='package' AND i.status='paid' LIMIT 1`).bind(client_email).first();
+      if(priorPurchase)return fail('Referral credit applies only to a friend’s first paid package.');
+      referrerClientId=referrer.id;
+    }
     const savedDefaults=await env.DB.prepare("SELECT setting_key,setting_value FROM studio_settings WHERE setting_key IN ('default_duration_minutes','default_overtime_rate')").all();
     const defaults=Object.fromEntries((savedDefaults.results||[]).map(item=>[item.setting_key,Number(item.setting_value)]));
     const bookedInput=Number(body.booked_minutes);
@@ -362,13 +573,13 @@ async function handle(request, env, route) {
     const key = b64(bytes(32));
     const projectCode = `CK-${new Date().getFullYear()}-${crypto.getRandomValues(new Uint32Array(1))[0].toString().slice(0, 6).padStart(6,'0')}`;
     const created = now();
-    await env.DB.prepare(`INSERT INTO projects(id,project_code,client_name,client_email,client_phone,service,package_name,status,shoot_at,location,brief,booked_minutes,grace_minutes,overtime_step_minutes,overtime_rate,package_price,deposit_amount,client_key_hash,selection_due_at,delivery_due_at,created_by,created_at,updated_at)
-      VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).bind(
+    await env.DB.prepare(`INSERT INTO projects(id,project_code,client_name,client_email,client_phone,service,package_name,status,shoot_at,location,brief,booked_minutes,grace_minutes,overtime_step_minutes,overtime_rate,package_price,deposit_amount,client_key_hash,selection_due_at,delivery_due_at,created_by,created_at,updated_at,referrer_client_id)
+      VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).bind(
       projectId, projectCode, client_name, client_email, String(body.client_phone || '').trim(), service,
       String(body.package_name || '').trim(), body.status && PROJECT_STATES.has(body.status) ? body.status : 'lead',
       body.shoot_at || null, String(body.location || '').trim(), String(body.brief || '').trim(), booked, grace, step, rate,
       Math.max(0, Math.round(Number(body.package_price) || 0)), Math.max(0, Math.round(Number(body.deposit_amount) || 0)),
-      await digest(key), body.selection_due_at || null, body.delivery_due_at || null, auth.staff.id, created, created
+      await digest(key), body.selection_due_at || null, body.delivery_due_at || null, auth.staff.id, created, created, referrerClientId
     ).run();
     const assignments = Array.isArray(body.assignments) ? body.assignments : [];
     for (const item of assignments) {
@@ -378,8 +589,9 @@ async function handle(request, env, route) {
     if (Number(body.package_price) > 0) {
       await env.DB.prepare('INSERT INTO invoices(id,project_id,invoice_code,kind,description,amount,amount_paid,status,due_at,payment_url,created_by,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)')
         .bind(id(),projectId,`INV-${projectCode}-01`,'package',String(body.package_name||service),Math.round(Number(body.package_price)||0),Math.min(Math.round(Number(body.deposit_amount)||0),Math.round(Number(body.package_price)||0)),Number(body.deposit_amount)>=Number(body.package_price)?'paid':Number(body.deposit_amount)>0?'partially_paid':'draft',null,'',auth.staff.id,created,created).run();
+      if(Number(body.deposit_amount)>=Number(body.package_price)&&Number(body.package_price)>0)await awardReferralReward(env,projectId);
     }
-    return json({ project: { id: projectId, project_code: projectCode }, client_link: `${new URL(request.url).origin}/session.html#key=${encodeURIComponent(key)}` }, 201);
+    return json({ project: { id: projectId, project_code: projectCode }, client_link: clientPortalUrl(request, `key=${encodeURIComponent(key)}`) }, 201);
   }
 
   if (parts[0] === 'projects' && parts[1] && parts[2] === 'assignments' && method === 'POST') {
@@ -409,7 +621,7 @@ async function handle(request, env, route) {
     const key = b64(bytes(32));
     await env.DB.prepare('UPDATE projects SET client_key_hash=?,updated_at=? WHERE id=?').bind(await digest(key), now(), project.id).run();
     await logEvent(env, project.id, auth.staff.id, 'client_link_regenerated', {});
-    return json({ client_link: `${new URL(request.url).origin}/session.html#key=${encodeURIComponent(key)}` });
+    return json({ client_link: clientPortalUrl(request, `key=${encodeURIComponent(key)}`) });
   }
 
   if (parts[0] === 'projects' && parts[1] && parts.length === 2 && method === 'PATCH') {
@@ -514,6 +726,7 @@ async function handle(request, env, route) {
     const paid=body.amount_paid===undefined?invoice.amount_paid:Math.min(invoice.amount,Math.max(0,Math.round(Number(body.amount_paid)||0)));
     const status=body.status&&['draft','sent','partially_paid','paid','void'].includes(body.status)?body.status:paid>=invoice.amount&&invoice.amount>0?'paid':paid>0?'partially_paid':invoice.status==='sent'?'sent':'draft';
     await env.DB.prepare('UPDATE invoices SET amount_paid=?,status=?,payment_url=COALESCE(?,payment_url),updated_at=? WHERE id=?').bind(paid,status,body.payment_url||null,now(),parts[1]).run();
+    if(invoice.kind==='package'&&paid>=invoice.amount)await awardReferralReward(env,invoice.project_id);
     await logEvent(env,invoice.project_id,auth.staff.id,'invoice_updated',{invoice_code:invoice.invoice_code,amount_paid:paid,status});return json({ok:true});
   }
 

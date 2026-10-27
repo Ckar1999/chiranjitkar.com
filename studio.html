@@ -75,6 +75,7 @@
     <div class="dialog-head"><div><span class="eyebrow">NEW CLIENT PROJECT</span><h2>Create a project</h2></div><button type="button" class="icon-button" data-close-dialog aria-label="Close">×</button></div>
     <div class="form-grid">
       <label>Client name<input name="client_name" required></label><label>Client email<input name="client_email" type="email" required></label>
+      <label>Referral code (optional)<input name="referral_code" maxlength="16" placeholder="From the client’s referral link"></label>
       <label>Phone / WhatsApp<input name="client_phone" type="tel"></label><label>Service<select name="service" required><option value="">Choose service</option><option>Photography</option><option>Filmmaking</option><option>Photography + Film</option><option>Commercial campaign</option><option>Model portfolio</option><option>Other</option></select></label>
       <label>Package<input name="package_name" placeholder="Package or custom scope"></label><label>Session duration (hours)<input name="booked_hours" type="number" min="0.5" max="24" step="0.5" value="3" required></label>
       <label>Overtime charge per 30 min (₹)<input name="overtime_rate" type="number" min="0" step="100" placeholder="Set agreed rate" required></label><label>Package fee (₹)<input name="package_price" type="number" min="0" step="500"></label>

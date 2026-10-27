@@ -207,7 +207,7 @@
     if(!['admin','sales'].includes(state.staff.role))return;
     try{
       const result=await api('inquiries');state.inquiries=result.inquiries||[];$('#nav-inquiry-count').textContent=state.inquiries.filter(i=>i.status==='new').length;renderMetrics();
-      $('#inquiries-list').innerHTML=state.inquiries.length?state.inquiries.map(item=>`<article class="inquiry-card"><div><span class="status ${item.status==='new'?'lead':item.status==='qualified'?'confirmed':'editing'}">${escapeHtml(item.status)}</span><strong>${escapeHtml(item.name)}</strong><small>${escapeHtml(item.email)} · ${escapeHtml(item.phone||'No phone')}</small></div><div><span class="inquiry-service">${escapeHtml(item.service)}</span><small>${escapeHtml(item.city||'Location not specified')} · Received ${humanDate(item.created_at)}</small><p>${escapeHtml(item.brief||'No brief supplied.')}</p></div><div class="inquiry-actions"><button class="small-button" data-lead-status="contacted" data-id="${item.id}">Mark contacted</button><button class="small-button gold-outline" data-convert-lead="${item.id}">Create project</button></div></article>`).join(''):'<div class="empty-state">No inquiries yet. Website forms will appear here.</div>';
+      $('#inquiries-list').innerHTML=state.inquiries.length?state.inquiries.map(item=>`<article class="inquiry-card"><div><span class="status ${item.status==='new'?'lead':item.status==='qualified'?'confirmed':'editing'}">${escapeHtml(item.status)}</span><strong>${escapeHtml(item.name)}</strong><small>${escapeHtml(item.email)} · ${escapeHtml(item.phone||'No phone')}</small></div><div><span class="inquiry-service">${escapeHtml(item.service)}</span><small>${escapeHtml(item.city||'Location not specified')} · Received ${humanDate(item.created_at)}${item.referral_code?` · Referral ${escapeHtml(item.referral_code)}`:''}</small><p>${escapeHtml(item.brief||'No brief supplied.')}</p></div><div class="inquiry-actions"><button class="small-button" data-lead-status="contacted" data-id="${item.id}">Mark contacted</button><button class="small-button gold-outline" data-convert-lead="${item.id}">Create project</button></div></article>`).join(''):'<div class="empty-state">No inquiries yet. Website forms will appear here.</div>';
       $$('[data-lead-status]').forEach(button=>button.addEventListener('click',async()=>{try{await api(`inquiries/${button.dataset.id}`,{method:'PATCH',body:JSON.stringify({status:button.dataset.leadStatus})});toast('Inquiry marked contacted.');await loadInquiries();}catch(e){toast(e.message);}}));
       $$('[data-convert-lead]').forEach(button=>button.addEventListener('click',()=>prefillProjectFromInquiry(button.dataset.convertLead)));
     }catch(error){toast(error.message);}
@@ -217,6 +217,7 @@
     const item=state.inquiries.find(i=>i.id===inquiryId);if(!item)return;state.pendingInquiry=item;
     $('#project-form').reset();const form=$('#project-form');
     form.elements.client_name.value=item.name;form.elements.client_email.value=item.email;form.elements.client_phone.value=item.phone;form.elements.service.value=item.service;form.elements.location.value=item.city;form.elements.brief.value=item.brief;
+    form.elements.referral_code.value=item.referral_code||'';
     $('#project-created').hidden=true;$('#project-dialog').showModal();
   }
 

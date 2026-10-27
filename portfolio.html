@@ -102,6 +102,7 @@
                 <a href="services.html" class="text-neutral-400 hover:text-white transition-colors text-xs uppercase tracking-[0.2em]">Services</a>
                 <a href="faqs.html" class="text-neutral-400 hover:text-white transition-colors text-xs uppercase tracking-[0.2em]">FAQs</a>
                 <a href="contact.html" class="text-neutral-400 hover:text-white transition-colors text-xs uppercase tracking-[0.2em]">Contact</a>
+                <a href="session.html" class="text-gold-400 hover:text-white transition-colors text-xs uppercase tracking-[0.2em] font-semibold">Client Portal</a>
             </nav>
 
             <!-- CTA & Mobile Trigger -->
@@ -273,40 +274,48 @@
     </section>
 
     <!-- LIGHTBOX MODAL -->
-    <div id="lightbox" class="fixed inset-0 z-50 bg-black/95 backdrop-blur-2xl hidden flex items-center justify-center p-4 sm:p-8">
-        <button id="lightbox-close" class="absolute top-6 right-6 w-12 h-12 rounded-full liquid-glass border border-white/20 text-white flex items-center justify-center hover:bg-white/20 transition-all z-20">
-            <i data-lucide="x" class="w-6 h-6"></i>
-        </button>
-        <button id="lightbox-prev" class="absolute left-4 sm:left-8 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full liquid-glass border border-white/20 text-white flex items-center justify-center hover:bg-white/20 transition-all z-20">
-            <i data-lucide="chevron-left" class="w-6 h-6"></i>
-        </button>
-        <button id="lightbox-next" class="absolute right-4 sm:right-8 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full liquid-glass border border-white/20 text-white flex items-center justify-center hover:bg-white/20 transition-all z-20">
-            <i data-lucide="chevron-right" class="w-6 h-6"></i>
+    <div id="lightbox" class="fixed inset-0 z-50 bg-black/95 backdrop-blur-2xl hidden overflow-y-auto overflow-x-hidden p-4 sm:p-6 md:p-8">
+        <!-- Sticky Close Button -->
+        <button id="lightbox-close" class="fixed top-3.5 right-3.5 sm:top-6 sm:right-6 w-10 h-10 sm:w-12 sm:h-12 rounded-full liquid-glass border border-white/25 text-white flex items-center justify-center hover:bg-gold-400 hover:text-noir-950 transition-all z-30 shadow-2xl backdrop-blur-xl" aria-label="Close image modal">
+            <i data-lucide="x" class="w-5 h-5 sm:w-6 sm:h-6"></i>
         </button>
 
-        <div class="relative max-w-6xl w-full max-h-[90vh] flex flex-col lg:flex-row items-center gap-6 sm:gap-10">
-            <div class="relative w-full lg:w-3/5 max-h-[75vh] flex items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-noir-900 shadow-2xl">
-                <img id="lightbox-img" src="" alt="" class="max-w-full max-h-[75vh] object-contain transition-all duration-300">
-            </div>
-            <div class="w-full lg:w-2/5 flex flex-col text-left">
-                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gold-400/10 border border-gold-400/30 text-gold-300 text-[10px] uppercase tracking-widest font-semibold w-fit mb-4" id="lightbox-tag">
-                    Category
-                </div>
-                <h3 id="lightbox-title" class="font-cinzel text-2xl sm:text-3xl font-bold text-white mb-2">Title</h3>
-                <p id="lightbox-subtitle" class="text-gold-200 font-editorial text-lg italic mb-4">Subtitle</p>
-                <p id="lightbox-desc" class="text-neutral-400 text-sm leading-relaxed mb-6 font-light">Description</p>
+        <div class="min-h-full w-full flex flex-col items-center justify-start lg:justify-center pt-10 pb-6 sm:py-6">
+            <div class="relative max-w-6xl w-full flex flex-col lg:flex-row items-center lg:items-start gap-6 sm:gap-10 my-auto">
                 
-                <div class="p-4 rounded-xl bg-white/[0.02] border border-white/10 mb-6 space-y-2 text-xs text-neutral-300">
-                    <div class="flex justify-between"><span class="text-neutral-500 uppercase tracking-wider text-[10px]">Model / Subject:</span> <span id="lightbox-model" class="font-medium text-neutral-200">Model Name</span></div>
-                    <div class="flex justify-between"><span class="text-neutral-500 uppercase tracking-wider text-[10px]">Aspect Ratio:</span> <span id="lightbox-ratio" class="font-medium text-neutral-200">4:5</span></div>
-                    <div class="flex justify-between"><span class="text-neutral-500 uppercase tracking-wider text-[10px]">Copyright:</span> <span class="font-medium text-neutral-200">&copy; Chiranjit Kar</span></div>
+                <!-- Image Container with Integrated Prev/Next Controls -->
+                <div class="relative w-full lg:w-3/5 flex items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-noir-900/90 shadow-2xl p-1.5 sm:p-2">
+                    <img id="lightbox-img" src="" alt="" class="max-w-full max-h-[50vh] sm:max-h-[68vh] lg:max-h-[80vh] w-auto h-auto object-contain rounded-xl transition-all duration-300">
+                    
+                    <button id="lightbox-prev" class="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-11 sm:h-11 rounded-full liquid-glass border border-white/20 text-white flex items-center justify-center hover:bg-gold-400 hover:text-noir-950 transition-all z-20 shadow-lg" aria-label="Previous photograph">
+                        <i data-lucide="chevron-left" class="w-5 h-5 sm:w-6 sm:h-6"></i>
+                    </button>
+                    <button id="lightbox-next" class="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-11 sm:h-11 rounded-full liquid-glass border border-white/20 text-white flex items-center justify-center hover:bg-gold-400 hover:text-noir-950 transition-all z-20 shadow-lg" aria-label="Next photograph">
+                        <i data-lucide="chevron-right" class="w-5 h-5 sm:w-6 sm:h-6"></i>
+                    </button>
                 </div>
 
-                <div class="flex items-center gap-4">
-                    <a id="lightbox-whatsapp" href="#" target="_blank" rel="noopener noreferrer" class="flex-1 py-3 px-6 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 text-white font-semibold text-xs uppercase tracking-wider text-center hover:brightness-110 transition-all flex items-center justify-center gap-2 shadow-lg">
-                        <i data-lucide="message-circle" class="w-4 h-4"></i>
-                        <span>Inquire About This Look</span>
-                    </a>
+                <!-- Details Column -->
+                <div class="w-full lg:w-2/5 flex flex-col text-left">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gold-400/10 border border-gold-400/30 text-gold-300 text-[10px] uppercase tracking-widest font-semibold w-fit mb-3" id="lightbox-tag">
+                        Category
+                    </div>
+                    <h3 id="lightbox-title" class="font-cinzel text-xl sm:text-3xl font-bold text-white mb-1.5">Title</h3>
+                    <p id="lightbox-subtitle" class="text-gold-200 font-editorial text-base sm:text-lg italic mb-3">Subtitle</p>
+                    <p id="lightbox-desc" class="text-neutral-400 text-xs sm:text-sm leading-relaxed mb-5 font-light">Description</p>
+                    
+                    <div class="p-3.5 sm:p-4 rounded-xl bg-white/[0.02] border border-white/10 mb-5 space-y-2 text-xs text-neutral-300">
+                        <div class="flex justify-between"><span class="text-neutral-500 uppercase tracking-wider text-[10px]">Model / Subject:</span> <span id="lightbox-model" class="font-medium text-neutral-200">Model Name</span></div>
+                        <div class="flex justify-between"><span class="text-neutral-500 uppercase tracking-wider text-[10px]">Aspect Ratio:</span> <span id="lightbox-ratio" class="font-medium text-neutral-200">4:5</span></div>
+                        <div class="flex justify-between"><span class="text-neutral-500 uppercase tracking-wider text-[10px]">Copyright:</span> <span class="font-medium text-neutral-200">&copy; Chiranjit Kar</span></div>
+                    </div>
+
+                    <div class="flex items-center gap-4">
+                        <a id="lightbox-whatsapp" href="#" target="_blank" rel="noopener noreferrer" class="flex-1 py-3 px-6 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 text-white font-semibold text-xs uppercase tracking-wider text-center hover:brightness-110 transition-all flex items-center justify-center gap-2 shadow-lg">
+                            <i data-lucide="message-circle" class="w-4 h-4"></i>
+                            <span>Inquire About This Look</span>
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>

@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="theme-color" content="#100f0e">
+  <title>Book a Session | Chiranjit Kar Photography</title>
+  <link rel="stylesheet" href="/studio.css">
+</head>
+<body>
+  <main class="booking-shell">
+    <nav class="booking-nav"><a class="brand" href="https://chiranjitkar.com/">CK<span>CHIRANJIT KAR PHOTOGRAPHY</span></a><a class="text-button" href="https://client.chiranjitkar.com/">Client portal →</a></nav>
+    <section class="booking-intro"><span class="eyebrow">BOOKING REQUEST</span><h1>Let’s plan your session.</h1><p>Share what you’re looking for and our Sales team will contact you to confirm the package, availability, and final booking details.</p></section>
+    <form id="booking-request-form" class="booking-form">
+      <input type="hidden" name="referral_code" id="booking-referral-code">
+      <label class="booking-honeypot" aria-hidden="true">Leave blank<input name="website" tabindex="-1" autocomplete="off"></label>
+      <div class="booking-fields">
+        <label>Your name<input name="name" autocomplete="name" required maxlength="120"></label>
+        <label>Email address<input name="email" type="email" autocomplete="email" required maxlength="200"></label>
+        <label>Phone / WhatsApp<input name="phone" type="tel" autocomplete="tel" required maxlength="40"></label>
+        <label>Preferred city<select name="city" required><option value="">Choose city</option><option>Delhi NCR</option><option>Mumbai</option><option>Agartala</option><option>Destination / Other</option></select></label>
+        <label>Service<select name="service" required><option value="">Choose service</option><option>Photography</option><option>Filmmaking</option><option>Photography + Film</option><option>Commercial campaign</option><option>Model portfolio</option><option>Editorial &amp; Fashion</option><option>Bridal production</option><option>Other</option></select></label>
+        <label>Package or session type<input name="package_name" maxlength="160" placeholder="If you have one in mind"></label>
+        <label>Preferred session date<input name="preferred_date" type="date"></label>
+        <label class="booking-wide">What would you like us to know?<textarea name="brief" rows="5" maxlength="4000" placeholder="Looks, event details, references, timing, or questions…"></textarea></label>
+      </div>
+      <p class="booking-notice">Submitting this form sends a booking request, not a confirmed reservation. The studio will confirm availability and agreed package terms with you.</p>
+      <button class="button gold" type="submit">Send booking request</button>
+      <p id="booking-message" class="notice" role="status"></p>
+    </form>
+  </main>
+  <script>
+    const form=document.querySelector('#booking-request-form');
+    const params=new URLSearchParams(location.search);
+    document.querySelector('#booking-referral-code').value=(params.get('ref')||'').trim().toUpperCase();
+    form.addEventListener('submit',async event=>{
+      event.preventDefault();
+      const button=form.querySelector('button[type="submit"]');
+      const message=document.querySelector('#booking-message');
+      const data=Object.fromEntries(new FormData(form));
+      data.brief=[data.package_name?`Package/session: ${data.package_name}`:'',data.preferred_date?`Preferred date: ${data.preferred_date}`:'',data.brief].filter(Boolean).join('\n\n');
+      delete data.package_name;delete data.preferred_date;
+      button.disabled=true;message.textContent='Sending your booking request…';
+      try{
+        const response=await fetch('/api/inquiries',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+        const result=await response.json();if(!response.ok)throw new Error(result.error||'Could not send your request.');
+        message.textContent='✓ '+result.message;form.reset();
+      }catch(error){message.textContent=error.message||'Could not send your request. Contact the studio directly.';}
+      finally{button.disabled=false;}
+    });
+  </script>
+</body>
+</html>

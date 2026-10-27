@@ -28,6 +28,7 @@ Host: https://chiranjitkar.com
 Sitemap: https://chiranjitkar.com/sitemap.xml
 
 # Private studio and client workspaces
+Disallow: /studio
 Disallow: /studio.html
 Disallow: /session.html
 Disallow: /api/

@@ -28,7 +28,7 @@ This folder contains the complete, structured content, FAQs, services, pricing, 
 
 ## Studio Operations Workspace
 
-The site now includes a private operations workspace at `/studio.html` and a private client session page at `/session.html`. Website inquiries are stored in the Cloudflare D1 database and appear in the Sales inbox. A team member can convert an inquiry into a project, set its booked session length and overtime rate, assign staff, create production tasks, record charges and payments, and publish review or delivery links to the client portal.
+The public booking request is hosted at `book.chiranjitkar.com`, the signed-in client portal at `client.chiranjitkar.com`, and the internal team workspace at `chiranjitkar.com/studio`. All three are served by the same Cloudflare Pages project and share the same D1 database. Website inquiries are stored in D1 and appear in the Sales inbox. A team member can convert an inquiry into a project, set its booked session length and overtime rate, assign staff, create production tasks, record charges and payments, and publish review or delivery links to the client portal.
 
 ### Workflow
 
@@ -52,6 +52,10 @@ The site now includes a private operations workspace at `/studio.html` and a pri
 ### Admin settings
 
 Administrators can open **Settings** in the studio workspace to update the studio name, support contacts, default session duration, and default overtime rate. Those booking defaults populate new project forms and apply only to projects created afterward; Sales can set different terms per booking. The 30-minute grace period and each-started-30-minute overtime calculation remain fixed as agreed. The Settings page also shows which client approval, messaging, payment, and media services are active or still manual.
+
+### Client referral rewards
+
+Signed-in clients receive a unique referral code and share link in the client portal. A friend submits an inquiry through that link; Sales sees the code and carries it into the project. Once the friend's package invoice is fully paid, the referrer receives a single 5% wallet credit for that first package. The client can apply available credit to a future package invoice from the portal. UTR/imported payment matching and staff-entered payment updates both trigger the reward; duplicate rewards for a referred email or booking are prevented.
 
 Passwords are stored as salted HMAC-SHA-256 hashes keyed with the server-only APP_SECRET; staff passwords must be at least 20 characters. Staff sessions use secure, HTTP-only cookies and expire after eight hours. Activity events record project changes and client approval events. Administrators can invite or disable staff accounts and reset passwords; temporary passwords are shown once and should be shared privately. Team members can change their password from the account control in the workspace.
 
