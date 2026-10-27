@@ -50,6 +50,31 @@ async function logEvent(env, projectId, actorId, event, detail = {}) {
     .bind(id(), projectId, actorId || null, event, JSON.stringify(detail), now()).run();
 }
 
+async function reconcileBankTransaction(env, input, staffId, source='manual_bank_alert') {
+  const utr=String(input.utr||'').trim().toUpperCase().replace(/\s+/g,'');
+  const amount=Math.round(Number(input.amount));
+  const parsedAt=new Date(String(input.transaction_at||''));
+  if(!/^[A-Z0-9]{8,40}$/.test(utr))return {error:fail('Enter a valid UTR / bank transaction reference.')};
+  if(!Number.isSafeInteger(amount)||amount<=0)return {error:fail('Transaction amount must be a positive whole number of rupees.')};
+  if(Number.isNaN(parsedAt.getTime()))return {error:fail('Enter the transaction date and time from the bank alert.')};
+  if(parsedAt.getTime()>Date.now()+5*60_000)return {error:fail('Transaction date cannot be in the future.')};
+  const transactionISO=parsedAt.toISOString(), importedAt=now();
+  const eligible=await env.DB.prepare(`SELECT id,project_id,amount,amount_paid,created_at,due_at FROM invoices WHERE status NOT IN ('void','paid') AND amount-amount_paid=? AND (ABS(julianday(COALESCE(due_at,created_at))-julianday(?))*24)<=24 ORDER BY created_at DESC LIMIT 2`).bind(amount,transactionISO).all();
+  const candidates=eligible.results||[], status=candidates.length===1?'matched':candidates.length?'review':'unmatched', invoice=candidates.length===1?candidates[0]:null;
+  try {
+    await env.DB.prepare('INSERT INTO bank_transactions(id,utr,amount,transaction_at,source,status,invoice_id,imported_by,imported_at,note,source_message_id) VALUES(?,?,?,?,?,?,?,?,?,?,?)').bind(id(),utr,amount,transactionISO,source,status,invoice?.id||null,staffId||null,importedAt,candidates.length>1?'Multiple exact-amount invoices fall within the 24-hour window.':candidates.length===0?'No exact unpaid invoice found within the 24-hour window.':'',source==='manual_bank_alert'?null:String(input.email_message_id)).run();
+  } catch(error) {
+      if(String(error?.message||'').includes('UNIQUE'))return {error:fail('This UTR or email alert has already been recorded.',409)};
+    throw error;
+  }
+  if(invoice){
+    const paid=invoice.amount_paid+amount;
+    await env.DB.prepare(`UPDATE invoices SET amount_paid=?,status=CASE WHEN ? >= amount THEN 'paid' ELSE 'partially_paid' END,updated_at=? WHERE id=?`).bind(paid,paid,importedAt,invoice.id).run();
+    await logEvent(env,invoice.project_id,staffId,'bank_payment_matched',{invoice_id:invoice.id,utr,amount,transaction_at:transactionISO,source});
+  }
+  return {result:{ok:true,status,invoice_id:invoice?.id||null,message:status==='matched'?'Payment matched and ledger updated.':status==='review'?'Multiple possible invoices found; transaction saved for review.':'No unique invoice matched; transaction saved without changing balances.'}};
+}
+
 async function clientProject(env, key) {
   if (!key || key.length < 32 || key.length > 128) return null;
   return env.DB.prepare('SELECT * FROM projects WHERE client_key_hash=?').bind(await digest(key)).first();
@@ -61,6 +86,18 @@ async function handle(request, env, route) {
   const method = request.method.toUpperCase();
   const parts = route.split('/').filter(Boolean).map(decodeURIComponent);
   const body = ['POST', 'PATCH', 'PUT'].includes(method) ? await request.json().catch(() => ({})) : {};
+
+  if(parts[0]==='webhooks'&&parts[1]==='bank-alerts'&&parts.length===2&&method==='POST'){
+    const supplied=String(request.headers.get('Authorization')||'').replace(/^Bearer\s+/i,'');
+    const saved=await env.DB.prepare("SELECT setting_value,updated_by FROM studio_settings WHERE setting_key='gmail_webhook_token_hash'").first();
+    if(!supplied||!saved||await digest(supplied)!==saved.setting_value)return fail('Invalid webhook authorization.',401);
+    const source=String(body.bank||'').toLowerCase();
+    if(!['hdfc','kotak'].includes(source))return fail('Bank must be hdfc or kotak.');
+    if(!String(body.email_message_id||'').trim())return fail('Email message ID is required for delivery deduplication.');
+    const outcome=await reconcileBankTransaction(env,body,saved.updated_by,`${source}_gmail_alert`);
+    if(outcome.error)return outcome.error;
+    return json(outcome.result,201);
+  }
 
   if(parts[0]==='inquiries'&&parts.length===1&&method==='POST'){
     if(String(body.website||'').trim())return json({ok:true,message:'Thanks, your inquiry has been received.'},201);
@@ -223,7 +260,8 @@ async function handle(request, env, route) {
     const rows=await env.DB.prepare('SELECT setting_key,setting_value FROM studio_settings').all();
     const settings={studio_name:'Chiranjit Kar Photography',support_email:'iamchiranjitkar@hotmail.com',support_phone:'+917005238823',timezone:'Asia/Kolkata',default_duration_minutes:180,default_overtime_rate:0};
     for(const row of rows.results||[]){const key=row.setting_key;settings[key]=['default_duration_minutes','default_overtime_rate'].includes(key)?Number(row.setting_value):row.setting_value;}
-    return json({settings,policy:{grace_minutes:30,overtime_step_minutes:30,currency:'INR'},integrations:{client_codes:{status:'client_portal',detail:'Client generates the one-time code on their private link; staff enters it to confirm start or finish.'},sms_email:{status:'not_connected',detail:'No SMS or transactional email provider is connected. Send client portal links through your existing contact channel.'},payments:{status:'manual_ledger',detail:'Invoices and payment status are tracked here. No payment processor is connected.'},media_storage:{status:'external_links',detail:'Use a secure file service and add HTTPS review/delivery links to each project.'}}});
+    const webhook=await env.DB.prepare("SELECT setting_value FROM studio_settings WHERE setting_key='gmail_webhook_token_hash'").first();
+    return json({settings,policy:{grace_minutes:30,overtime_step_minutes:30,currency:'INR'},integrations:{bank_alerts:{status:webhook?'webhook_ready':'needs_setup',detail:webhook?'Authenticated webhook receiver is configured. Connect an authorized Gmail alert relay to deliver parsed HDFC/Kotak transactions.':'Webhook receiver supports HDFC/Kotak alert payloads. Generate a one-time shared token and connect a Gmail alert relay.'},client_codes:{status:'client_portal',detail:'Client generates the one-time code on their private link; staff enters it to confirm start or finish.'},sms_email:{status:'not_connected',detail:'No SMS or transactional email provider is connected. Send client portal links through your existing contact channel.'},payments:{status:'manual_ledger',detail:'Invoices and payment status are recorded from UTR alerts. No payment processor is connected.'},media_storage:{status:'external_links',detail:'Use a secure file service and add HTTPS review/delivery links to each project.'}}});
   }
 
   if(parts[0]==='settings'&&method==='PUT'){
@@ -238,6 +276,13 @@ async function handle(request, env, route) {
     const entries={studio_name:name,support_email:email,support_phone:phone,timezone:'Asia/Kolkata',default_duration_minutes:String(duration),default_overtime_rate:String(rate)};
     await env.DB.batch(Object.entries(entries).map(([key,value])=>env.DB.prepare('INSERT INTO studio_settings(setting_key,setting_value,updated_by,updated_at) VALUES(?,?,?,?) ON CONFLICT(setting_key) DO UPDATE SET setting_value=excluded.setting_value,updated_by=excluded.updated_by,updated_at=excluded.updated_at').bind(key,value,auth.staff.id,now())));
     return json({ok:true});
+  }
+
+  if(parts[0]==='settings'&&parts[1]==='gmail-webhook-secret'&&method==='POST'){
+    const auth=await requireStaff(request,env,['admin']);if(auth.response)return auth.response;
+    const token=b64(bytes(32));
+    await env.DB.prepare("INSERT INTO studio_settings(setting_key,setting_value,updated_by,updated_at) VALUES('gmail_webhook_token_hash',?,?,?) ON CONFLICT(setting_key) DO UPDATE SET setting_value=excluded.setting_value,updated_by=excluded.updated_by,updated_at=excluded.updated_at").bind(await digest(token),auth.staff.id,now()).run();
+    return json({ok:true,token,webhook_url:'/api/webhooks/bank-alerts'});
   }
 
   if (parts[0] === 'staff' && parts.length === 1 && method === 'GET') {
@@ -446,33 +491,9 @@ async function handle(request, env, route) {
 
   if (parts[0] === 'bank-transactions' && method === 'POST') {
     const auth=await requireStaff(request,env,['admin','sales']);if(auth.response)return auth.response;
-    const utr=String(body.utr||'').trim().toUpperCase().replace(/\s+/g,'');
-    const amount=Math.round(Number(body.amount));
-    const transactionAt=String(body.transaction_at||'');
-    const parsedAt=new Date(transactionAt);
-    if(!/^[A-Z0-9]{8,40}$/.test(utr))return fail('Enter a valid UTR / bank transaction reference.');
-    if(!Number.isSafeInteger(amount)||amount<=0)return fail('Transaction amount must be a positive whole number of rupees.');
-    if(!transactionAt||Number.isNaN(parsedAt.getTime()))return fail('Enter the transaction date and time from the bank alert.');
-    if(parsedAt.getTime()>Date.now()+5*60_000)return fail('Transaction date cannot be in the future.');
-    const transactionISO=parsedAt.toISOString();
-    const importedAt=now();
-    const eligible=await env.DB.prepare(`SELECT id,project_id,amount,amount_paid,created_at,due_at FROM invoices WHERE status NOT IN ('void','paid') AND amount-amount_paid=? AND (ABS(julianday(COALESCE(due_at,created_at))-julianday(?))*24)<=24 ORDER BY created_at DESC LIMIT 2`).bind(amount,transactionISO).all();
-    const candidates=eligible.results||[];
-    const status=candidates.length===1?'matched':candidates.length?'review':'unmatched';
-    const invoice=candidates.length===1?candidates[0]:null;
-    const txId=id();
-    try {
-      await env.DB.prepare('INSERT INTO bank_transactions(id,utr,amount,transaction_at,source,status,invoice_id,imported_by,imported_at,note) VALUES(?,?,?,?,?,?,?,?,?,?)').bind(txId,utr,amount,transactionISO,'manual_bank_alert',status,invoice?.id||null,auth.staff.id,importedAt,candidates.length>1?'Multiple exact-amount invoices fall within the 24-hour window.':candidates.length===0?'No exact unpaid invoice found within the 24-hour window.':'').run();
-    } catch(error) {
-      if(String(error?.message||'').includes('UNIQUE'))return fail('This UTR has already been recorded.',409);
-      throw error;
-    }
-    if(invoice){
-      const paid=invoice.amount_paid+amount;
-      await env.DB.prepare(`UPDATE invoices SET amount_paid=?,status=CASE WHEN ? >= amount THEN 'paid' ELSE 'partially_paid' END,updated_at=? WHERE id=?`).bind(paid,paid,importedAt,invoice.id).run();
-      await logEvent(env,invoice.project_id,auth.staff.id,'bank_payment_matched',{invoice_id:invoice.id,utr,amount,transaction_at:transactionISO});
-    }
-    return json({ok:true,status,invoice_id:invoice?.id||null,message:status==='matched'?'Payment matched and ledger updated.':status==='review'?'Multiple possible invoices found; transaction saved for review.':'No unique invoice matched; transaction saved without changing balances.'},201);
+    const outcome=await reconcileBankTransaction(env,body,auth.staff.id);
+    if(outcome.error)return outcome.error;
+    return json(outcome.result,201);
   }
 
   if (parts[0] === 'invoices' && parts.length === 1 && method === 'POST') {

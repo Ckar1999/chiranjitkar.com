@@ -32,6 +32,7 @@
     $('#password-form').addEventListener('submit', changePassword);
     $('#settings-form').addEventListener('submit', saveSettings);
     $('#settings-password-button').addEventListener('click', () => $('#password-dialog').showModal());
+    $('#generate-webhook-secret').addEventListener('click', generateWebhookSecret);
     $('#new-project-button').addEventListener('click', () => { $('#project-created').hidden = true; $('#project-form').reset(); applyProjectDefaults(); $('#project-form button[type=submit]').disabled=false; $('#project-dialog').showModal(); });
     $('#project-form').addEventListener('submit', createProject);
     $('#staff-form').addEventListener('submit', createStaff);
@@ -173,9 +174,9 @@
       const result=await api('settings');state.settings=result.settings;
       const form=$('#settings-form');Object.entries(state.settings).forEach(([key,value])=>{if(form.elements[key])form.elements[key].value=value;});
       $('#integration-cards').innerHTML=Object.entries(result.integrations).map(([key,value])=>{
-        const labels={client_codes:'Session approvals',sms_email:'SMS & email delivery',payments:'Payment processing',media_storage:'Photo & video storage'};
-        const tags={client_portal:'Portal codes',not_connected:'Not connected',manual_ledger:'Manual ledger',external_links:'External links'};
-        return `<article class="integration-card"><div class="integration-head"><strong>${escapeHtml(labels[key]||key)}</strong><span class="integration-state ${value.status==='client_portal'?'ready':''}"><i></i>${escapeHtml(tags[value.status]||value.status)}</span></div><p>${escapeHtml(value.detail)}</p></article>`;
+        const labels={bank_alerts:'Gmail bank alerts',client_codes:'Session approvals',sms_email:'SMS & email delivery',payments:'Payment processing',media_storage:'Photo & video storage'};
+        const tags={webhook_ready:'Webhook ready',needs_setup:'Needs token',client_portal:'Portal codes',not_connected:'Not connected',manual_ledger:'Manual ledger',external_links:'External links'};
+        return `<article class="integration-card"><div class="integration-head"><strong>${escapeHtml(labels[key]||key)}</strong><span class="integration-state ${['client_portal','webhook_ready'].includes(value.status)?'ready':''}"><i></i>${escapeHtml(tags[value.status]||value.status)}</span></div><p>${escapeHtml(value.detail)}</p></article>`;
       }).join('');
       applyProjectDefaults();
     }catch(error){toast(error.message);}
@@ -192,6 +193,14 @@
     data.default_duration_minutes=Number(data.default_duration_minutes);data.default_overtime_rate=Number(data.default_overtime_rate);
     try{await api('settings',{method:'PUT',body:JSON.stringify(data)});toast('Admin settings saved.');await loadSettings();}
     catch(error){toast(error.message);}
+  }
+
+  async function generateWebhookSecret(){
+    if(!confirm('Rotate the bank-alert webhook token? Any existing mail automation using the previous token will stop working.'))return;
+    const button=$('#generate-webhook-secret');button.disabled=true;
+    try{const result=await api('settings/gmail-webhook-secret',{method:'POST',body:'{}'});const output=$('#webhook-secret-output');output.hidden=false;output.innerHTML=`<strong>Copy this token now. It is shown once.</strong><code>${escapeHtml(result.token)}</code><small>Webhook URL: ${escapeHtml(new URL(result.webhook_url,location.origin).href)}</small>`;toast('Webhook token created. Copy it into your trusted mail automation.');await loadSettings();}
+    catch(error){toast(error.message);}
+    finally{button.disabled=false;}
   }
 
   async function loadInquiries(){
