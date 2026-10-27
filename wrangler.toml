@@ -9,3 +9,8 @@ database_name = "chiranjitkar-studio-ops"
 database_id = "955a5918-4db8-426b-bfa6-fc5dff0f1ccc"
 
 [env.production]
+
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "chiranjitkar-studio-ops"
+database_id = "955a5918-4db8-426b-bfa6-fc5dff0f1ccc"
