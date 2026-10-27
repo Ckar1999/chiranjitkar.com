@@ -1,29 +1,39 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex,nofollow">
-  <meta name="theme-color" content="#100f0e">
-  <title>Studio Workspace | Chiranjit Kar Photography</title>
+  <meta name="theme-color" content="#070709">
+  <title>Studio Workspace &amp; Production Terminal | Chiranjit Kar Photography</title>
   <link rel="stylesheet" href="studio.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 </head>
 <body>
   <main id="login-view" class="auth-shell">
     <form id="login-form" class="auth-card">
-      <div class="eyebrow">CHIRANJIT KAR PHOTOGRAPHY · TEAM</div>
-      <h1>Studio workspace</h1>
-      <p class="muted">Sign in with your studio account.</p>
-      <label>Work email<input name="email" type="email" autocomplete="username" required></label>
-      <label>Password<input name="password" type="password" autocomplete="current-password" minlength="20" required></label>
-      <button class="button gold" type="submit">Sign in</button>
+      <div class="eyebrow">CHIRANJIT KAR PHOTOGRAPHY · INTERNAL OPS</div>
+      <h1>Studio Terminal</h1>
+      <p class="muted">Sign in with your authorized studio staff credentials.</p>
+      <label>Staff Work Email
+        <input name="email" type="email" autocomplete="username" placeholder="producer@chiranjitkar.com" required>
+      </label>
+      <label>Master Security Passphrase
+        <input name="password" type="password" autocomplete="current-password" minlength="20" placeholder="••••••••••••••••••••" required>
+      </label>
+      <button class="button gold" type="submit">Authenticate Session</button>
       <p class="notice" id="login-message" role="status"></p>
+      <div style="margin-top:22px; padding-top:16px; border-top:1px solid var(--line); font-size:10.5px; color:var(--muted-dark); text-align:center;">
+        🔒 Encrypted Staff Environment · Authorized Access Only
+      </div>
     </form>
   </main>
 
   <div id="app-view" class="app-shell" hidden>
     <aside class="sidebar">
-      <a class="brand" href="/">CK<span>STUDIO</span></a>
-      <div class="workspace-label">OPERATIONS</div>
+      <a class="brand" href="/">CK<span>STUDIO OPERATIONS</span></a>
+      <div class="workspace-label">MANAGEMENT</div>
       <nav class="side-nav" aria-label="Workspace">
         <button class="nav-item active" data-view="overview"><span>◫</span> Overview</button>
         <button class="nav-item sales-only" data-view="inquiries"><span>✉</span> Inquiries <b id="nav-inquiry-count">0</b></button>
@@ -34,67 +44,443 @@
         <button class="nav-item admin-only" data-view="team"><span>♙</span> Team</button>
         <button class="nav-item admin-only" data-view="settings"><span>⚙</span> Settings</button>
       </nav>
-      <div class="sidebar-bottom"><div class="avatar" id="user-avatar">CK</div><div class="user-meta"><strong id="user-name">Team member</strong><small id="user-role">Studio</small></div><button id="password-button" title="Change password" aria-label="Change password">⌑</button><button id="logout-button" title="Sign out" aria-label="Sign out">↗</button></div>
+      <div class="sidebar-bottom">
+        <div class="avatar" id="user-avatar">CK</div>
+        <div class="user-meta">
+          <strong id="user-name">Team member</strong>
+          <small id="user-role">Studio</small>
+        </div>
+        <button id="password-button" title="Change password" aria-label="Change password">⌑</button>
+        <button id="logout-button" title="Sign out" aria-label="Sign out">↗</button>
+      </div>
     </aside>
+
     <section class="main-area">
-      <header class="topbar"><div><span class="eyebrow" id="date-label">STUDIO OPERATIONS</span><h1 id="view-title">Overview</h1></div><div class="top-actions"><span class="online-dot">Workspace</span><button id="new-project-button" class="button gold" data-roles="admin,sales">＋ New project</button></div></header>
+      <header class="topbar">
+        <div>
+          <span class="eyebrow" id="date-label">STUDIO OPERATIONS</span>
+          <h1 id="view-title">Overview</h1>
+        </div>
+        <div class="top-actions">
+          <span class="online-dot">SYSTEM ACTIVE · ONLINE</span>
+          <button id="new-project-button" class="button gold" data-roles="admin,sales">＋ New Project</button>
+        </div>
+      </header>
+
       <div class="page-content">
         <div id="overview-view" class="view">
-          <div class="welcome-row"><div><h2 id="welcome-title">Good day</h2><p class="muted">Here’s what needs attention across the studio.</p></div><span class="today-pill" id="today-label"></span></div>
+          <div class="welcome-row">
+            <div>
+              <h2 id="welcome-title">Good day</h2>
+              <p class="muted">Operational snapshot of active productions, commissions, and staff workflows.</p>
+            </div>
+            <span class="today-pill" id="today-label"></span>
+          </div>
           <div id="metric-grid" class="metric-grid"></div>
-          <div class="section-heading"><div><h2>Active projects</h2><p class="muted">Current work, ownership, and next steps.</p></div><button class="text-button" data-open-view="projects">All projects <span>→</span></button></div>
+          <div class="section-heading">
+            <div>
+              <h2>Active Productions</h2>
+              <p class="muted">Current commercial assignments, ownership, and live stage status.</p>
+            </div>
+            <button class="text-button" data-open-view="projects">All Projects <span>→</span></button>
+          </div>
           <div id="overview-projects" class="project-list"></div>
         </div>
-        <div id="inquiries-view" class="view" hidden><div class="section-heading"><div><h2>New business</h2><p class="muted">Website inquiries ready for Sales follow-up.</p></div></div><div id="inquiries-list" class="inquiry-list"></div></div>
+
+        <div id="inquiries-view" class="view" hidden>
+          <div class="section-heading">
+            <div>
+              <h2>Client Commissions &amp; Proposals</h2>
+              <p class="muted">Review booking requests and fashion collaboration proposals from talent and creative partners.</p>
+            </div>
+            <label class="inquiry-filter-label">Filter Stream
+              <select id="inquiry-type-filter" class="small-button">
+                <option value="all">All Submissions</option>
+                <option value="booking">Direct Bookings</option>
+                <option value="brand_collab">Brand Partnerships</option>
+                <option value="model_collab">Model / Talent Collaborations</option>
+              </select>
+            </label>
+          </div>
+          <div id="inquiries-list" class="inquiry-list"></div>
+        </div>
+
         <div id="projects-view" class="view" hidden>
-          <div class="toolbar"><div class="filter-row" id="status-filters"></div><input id="project-search" class="search" type="search" placeholder="Search client or project…" aria-label="Search projects"></div>
+          <div class="toolbar">
+            <div class="filter-row" id="status-filters"></div>
+            <input id="project-search" class="search" type="search" placeholder="Search client, code, service…" aria-label="Search projects">
+          </div>
           <div id="projects-list" class="project-list"></div>
         </div>
-        <div id="schedule-view" class="view" hidden><div class="section-heading"><div><h2>Shoot schedule</h2><p class="muted">Upcoming shoots ordered by date.</p></div></div><div id="schedule-list" class="project-list"></div></div>
-        <div id="tasks-view" class="view" hidden><div class="section-heading"><div><h2>Production tasks</h2><p class="muted">Assigned handoffs, deadlines, and blockers across projects.</p></div></div><div id="tasks-list" class="task-list"></div></div>
-        <div id="billing-view" class="view" hidden><div class="section-heading"><div><h2>Billing ledger</h2><p class="muted">Invoices and UPI transaction reconciliation. UTR, exact amount, and a 24-hour invoice window are required.</p></div><button id="new-invoice-button" class="button gold">＋ Add charge</button></div><section class="bank-import-card"><div><span class="eyebrow">BANK ALERT RECONCILIATION</span><h2>Record HDFC / UPI transaction</h2><p>Enter values from the bank notification. A unique exact match updates the ledger; ambiguous or unmatched transactions are saved for review. Duplicate UTRs are rejected.</p></div><form id="bank-import-form" class="bank-import-form"><label>UTR / transaction reference<input name="utr" required minlength="8" maxlength="40" autocomplete="off"></label><label>Amount received (₹)<input name="amount" type="number" min="1" step="1" required></label><label>Transaction date &amp; time<input name="transaction_at" type="datetime-local" required></label><button class="button gold" type="submit">Match transaction</button></form></section><div id="bank-transaction-list" class="bank-transaction-list"></div><div id="invoice-list" class="invoice-list"></div></div>
-        <div id="team-view" class="view" hidden><div class="section-heading"><div><h2>Studio team</h2><p class="muted">Role-based access for your production team.</p></div><button id="add-staff-button" class="button gold">＋ Add member</button></div><div id="team-list" class="team-list"></div></div>
+
+        <div id="schedule-view" class="view" hidden>
+          <div class="section-heading">
+            <div>
+              <h2>Production Calendar</h2>
+              <p class="muted">Upcoming photoshoot sessions and studio call times ordered chronologically.</p>
+            </div>
+          </div>
+          <div id="schedule-list" class="project-list"></div>
+        </div>
+
+        <div id="tasks-view" class="view" hidden>
+          <div class="section-heading">
+            <div>
+              <h2>Production Tasks &amp; Handoffs</h2>
+              <p class="muted">Assigned deliverables, retouching passes, and edit review milestones.</p>
+            </div>
+          </div>
+          <div id="tasks-list" class="task-list"></div>
+        </div>
+
+        <div id="billing-view" class="view" hidden>
+          <div class="section-heading">
+            <div>
+              <h2>Financial Ledger &amp; Invoices</h2>
+              <p class="muted">Package invoicing, overtime billing, and 24/7 bank alert transaction reconciliation.</p>
+            </div>
+            <button id="new-invoice-button" class="button gold">＋ Add Charge</button>
+          </div>
+
+          <section class="bank-import-card">
+            <div>
+              <span class="eyebrow">TRANSACTION RECONCILIATION</span>
+              <h2>Record Bank / UPI Credit</h2>
+              <p>Directly match bank credits from HDFC or UPI notifications. Unambiguous exact matches reconcile open package invoices; unlinked alerts are preserved for manual review.</p>
+            </div>
+            <form id="bank-import-form" class="bank-import-form">
+              <label>UTR / Transaction Reference
+                <input name="utr" required minlength="8" maxlength="40" autocomplete="off" placeholder="e.g. 429812908123">
+              </label>
+              <label>Amount Received (₹)
+                <input name="amount" type="number" min="1" step="1" required placeholder="50000">
+              </label>
+              <label>Transaction Timestamp
+                <input name="transaction_at" type="datetime-local" required>
+              </label>
+              <button class="button gold" type="submit">Reconcile Transaction</button>
+            </form>
+          </section>
+
+          <div id="bank-transaction-list" class="bank-transaction-list"></div>
+          <div id="invoice-list" class="invoice-list"></div>
+        </div>
+
+        <div id="team-view" class="view" hidden>
+          <div class="section-heading">
+            <div>
+              <h2>Production Team Access</h2>
+              <p class="muted">Role-based privileges for producers, photographers, cinematographers, and editors.</p>
+            </div>
+            <button id="add-staff-button" class="button gold">＋ Add Member</button>
+          </div>
+          <div id="team-list" class="team-list"></div>
+        </div>
+
         <div id="settings-view" class="view" hidden>
-          <div class="section-heading"><div><h2>Admin settings</h2><p class="muted">Studio identity, booking defaults, policy, and connected services.</p></div><span class="admin-badge">ADMIN ONLY</span></div>
+          <div class="section-heading">
+            <div>
+              <h2>Administrative Controls</h2>
+              <p class="muted">Studio global configuration, default rates, policy windows, and automated services.</p>
+            </div>
+            <span class="admin-badge" style="font-size:9.5px; border:1px solid var(--line-gold); padding:3px 10px; border-radius:999px;">ADMINISTRATOR ONLY</span>
+          </div>
+
           <form id="settings-form" class="settings-grid">
-            <section class="settings-card"><div class="settings-card-head"><div><span class="eyebrow">STUDIO PROFILE</span><h3>Client-facing details</h3><p class="muted">Used for workspace defaults and future client communications.</p></div><span class="settings-icon">◈</span></div><label>Studio name<input name="studio_name" maxlength="120" required></label><label>Support email<input name="support_email" type="email"></label><label>Support phone / WhatsApp<input name="support_phone" type="tel" maxlength="40"></label><label>Studio timezone<select name="timezone" disabled><option value="Asia/Kolkata">India Standard Time · Asia/Kolkata</option></select><small class="field-help">Shoot times are entered in the admin's local time and stored in UTC.</small></label></section>
-            <section class="settings-card"><div class="settings-card-head"><div><span class="eyebrow">BOOKING DEFAULTS</span><h3>New project settings</h3><p class="muted">Sales can override these values for each confirmed booking.</p></div><span class="settings-icon">◷</span></div><label>Default session duration<input name="default_duration_minutes" type="number" min="30" max="1440" step="30" required><small class="field-help">Minutes, between 30 minutes and 24 hours.</small></label><label>Default overtime charge per 30 minutes<input name="default_overtime_rate" type="number" min="0" max="10000000" step="100" required><small class="field-help">INR. Set to the rate you normally quote; Sales may override it per project.</small></label><div class="locked-policy"><div><span>Grace period</span><strong>30 minutes</strong></div><div><span>Overtime billing block</span><strong>Every started 30 minutes</strong></div><small>These match your agreed policy and are fixed on all bookings.</small></div></section>
-            <div class="settings-submit"><p class="muted">Settings apply to new projects; existing booking terms stay unchanged.</p><button class="button gold" type="submit">Save settings</button></div>
+            <section class="settings-card">
+              <div class="settings-card-head">
+                <div>
+                  <span class="eyebrow">IDENTITY &amp; COMMS</span>
+                  <h3>Studio Profile</h3>
+                  <p class="muted">Official business details for client invoices and communications.</p>
+                </div>
+                <span class="settings-icon">◈</span>
+              </div>
+              <label>Studio Brand Name
+                <input name="studio_name" maxlength="120" required>
+              </label>
+              <label>Official Support Email
+                <input name="support_email" type="email">
+              </label>
+              <label>Direct Studio WhatsApp
+                <input name="support_phone" type="tel" maxlength="40">
+              </label>
+              <label>Operating Timezone
+                <select name="timezone" disabled>
+                  <option value="Asia/Kolkata">India Standard Time · Asia/Kolkata (IST)</option>
+                </select>
+                <small class="field-help">Timestamps are converted dynamically between admin local and UTC storage.</small>
+              </label>
+            </section>
+
+            <section class="settings-card">
+              <div class="settings-card-head">
+                <div>
+                  <span class="eyebrow">RATES &amp; OVERTIME</span>
+                  <h3>Commission Defaults</h3>
+                  <p class="muted">Standard production parameters applied to new client reservations.</p>
+                </div>
+                <span class="settings-icon">◷</span>
+              </div>
+              <label>Default Duration (Minutes)
+                <input name="default_duration_minutes" type="number" min="30" max="1440" step="30" required>
+                <small class="field-help">Standard booked production window.</small>
+              </label>
+              <label>Default Overtime Rate (₹ / 30 Min)
+                <input name="default_overtime_rate" type="number" min="0" max="10000000" step="100" required>
+                <small class="field-help">Charged per started 30-minute block following grace expiration.</small>
+              </label>
+              <div class="locked-policy" style="border:1px solid var(--line); border-radius:10px; padding:14px; margin-top:14px; background:rgba(10,10,14,0.5);">
+                <div><span>Fixed Grace Period</span><strong style="color:var(--gold-bright);">30 Minutes</strong></div>
+                <div><span>Billing Increment</span><strong style="color:var(--gold-bright);">Every Started 30 Min</strong></div>
+                <small style="color:var(--muted); margin-top:6px; display:block;">Enforced globally across all client contracts and live timers.</small>
+              </div>
+            </section>
+
+            <div class="settings-submit">
+              <p class="muted" style="margin:0; font-size:11.5px;">Updates apply immediately to incoming inquiries. Existing agreements remain locked.</p>
+              <button class="button gold" type="submit">Save Configurations</button>
+            </div>
           </form>
-          <div class="section-heading settings-section-title"><div><h2>Services &amp; integrations</h2><p class="muted">Connection status for the rest of the studio system.</p></div></div>
+
+          <div class="section-heading settings-section-title" style="margin-top:32px;">
+            <div>
+              <h2>Services &amp; Background Automation</h2>
+              <p class="muted">Connected Cloudflare D1, Google Cloud, and email alert sync pipelines.</p>
+            </div>
+          </div>
           <div id="integration-cards" class="integration-grid"></div>
-          <section class="settings-card webhook-setup"><div class="settings-card-head"><div><span class="eyebrow">BANK ALERT AUTOMATION</span><h3>Gmail webhook secret · HDFC &amp; Kotak</h3><p class="muted">Generate a one-time bearer token for a trusted email automation. Copy it immediately; it cannot be shown again.</p></div><span class="settings-icon">⌁</span></div><button type="button" id="generate-webhook-secret" class="button gold">Generate / rotate webhook secret</button><div id="webhook-secret-output" class="webhook-secret-output" hidden></div><p class="field-help">Endpoint: <code>/api/webhooks/bank-alerts</code>. Gmail notifications alone do not include email contents; a Gmail API or trusted mail automation must fetch and parse bank alerts, then send bank, email message ID, UTR, amount, and transaction time. Rotating the token disables the old sender token.</p></section>
-          <div class="section-heading settings-section-title"><div><h2>Access &amp; team security</h2><p class="muted">Manage staff access and sign-in controls.</p></div><button class="button quiet" data-open-view="team">Manage team →</button></div>
-          <div class="security-summary"><div><strong>Role-based access</strong><span>Admin · Sales · Photographer · Filmmaker · Editor / Retoucher</span></div><div><strong>Staff sign-in</strong><span>20+ character passwords · Secure 8-hour sessions</span></div><div><strong>Account recovery</strong><span>Admins can reset a team member's password or disable access.</span></div><div><strong>Change own password</strong><button class="text-button" id="settings-password-button">Open password controls →</button></div></div>
+
+          <section class="settings-card webhook-setup" style="margin-top:18px;">
+            <div class="settings-card-head">
+              <div>
+                <span class="eyebrow">AUTOMATED RECONCILIATION</span>
+                <h3>Bank Alert Sync Secret · HDFC &amp; UPI</h3>
+                <p class="muted">Cryptographic bearer secret for Google Apps Script background bank alert scanner.</p>
+              </div>
+              <span class="settings-icon">⌁</span>
+            </div>
+            <button type="button" id="generate-webhook-secret" class="button gold">Generate / Rotate Secret</button>
+            <div id="webhook-secret-output" class="webhook-secret-output" hidden></div>
+            <p class="field-help" style="margin-top:10px;">Target Endpoint: <code>https://chiranjitkar.com/api/webhooks/bank-alerts</code>. Rotating will require updating the Apps Script trigger credential.</p>
+          </section>
+
+          <div class="section-heading settings-section-title" style="margin-top:32px;">
+            <div>
+              <h2>Security Architecture</h2>
+              <p class="muted">Access management, role privileges, and credentials.</p>
+            </div>
+            <button class="button quiet" data-open-view="team">Manage Team <span>→</span></button>
+          </div>
+          <div class="security-summary">
+            <div>
+              <strong>Role Privileges</strong>
+              <span>Admin · Sales · Photographer · Filmmaker · Editor</span>
+            </div>
+            <div>
+              <strong>Staff Session Tokens</strong>
+              <span>20+ Character Passwords · Secure 8-Hour Host-Bound Cookie</span>
+            </div>
+            <div>
+              <strong>Personal Passphrase</strong>
+              <button class="text-button" id="settings-password-button">Update Password <span>→</span></button>
+            </div>
+          </div>
         </div>
       </div>
     </section>
   </div>
 
-  <dialog id="project-dialog" class="dialog"><form id="project-form" class="dialog-card">
-    <div class="dialog-head"><div><span class="eyebrow">NEW CLIENT PROJECT</span><h2>Create a project</h2></div><button type="button" class="icon-button" data-close-dialog aria-label="Close">×</button></div>
-    <div class="form-grid">
-      <label>Client name<input name="client_name" required></label><label>Client email<input name="client_email" type="email" required></label>
-      <label>Referral code (optional)<input name="referral_code" maxlength="16" placeholder="From the client’s referral link"></label>
-      <label>Phone / WhatsApp<input name="client_phone" type="tel"></label><label>Service<select name="service" required><option value="">Choose service</option><option>Photography</option><option>Filmmaking</option><option>Photography + Film</option><option>Commercial campaign</option><option>Model portfolio</option><option>Other</option></select></label>
-      <label>Package<input name="package_name" placeholder="Package or custom scope"></label><label>Session duration (hours)<input name="booked_hours" type="number" min="0.5" max="24" step="0.5" value="3" required></label>
-      <label>Overtime charge per 30 min (₹)<input name="overtime_rate" type="number" min="0" step="100" placeholder="Set agreed rate" required></label><label>Package fee (₹)<input name="package_price" type="number" min="0" step="500"></label>
-      <label>Deposit received (₹)<input name="deposit_amount" type="number" min="0" step="500" value="0"></label><label>Shoot date &amp; time<input name="shoot_at" type="datetime-local"></label>
-      <label>Location<input name="location" placeholder="Studio / venue / city"></label><label>Delivery due<input name="delivery_due_at" type="date"></label>
-      <label class="wide">Creative brief<textarea name="brief" rows="3" placeholder="Goals, references, looks, shot list…"></textarea></label>
-    </div>
-    <p class="policy-note">Client approval is required to start and finish the timer. Each booking includes its booked duration, then 30 minutes of grace. After grace, each started 30-minute overtime block is charged at the agreed rate above.</p>
-    <div class="dialog-actions"><button type="button" class="button quiet" data-close-dialog>Cancel</button><button class="button gold" type="submit">Create project</button></div>
-    <div id="project-created" class="created-link" hidden></div>
-  </form></dialog>
+  <!-- Dialogs & Modals -->
+  <dialog id="project-dialog" class="dialog">
+    <form id="project-form" class="dialog-card">
+      <div class="dialog-head">
+        <div>
+          <span class="eyebrow">NEW COMMISSION</span>
+          <h2>Create Production File</h2>
+        </div>
+        <button type="button" class="icon-button" data-close-dialog aria-label="Close">×</button>
+      </div>
+      <div class="form-grid">
+        <label>Client Name<input name="client_name" required placeholder="Elena Rostova"></label>
+        <label>Client Email<input name="client_email" type="email" required placeholder="client@agency.com"></label>
+        <label>Referral Code (Optional)<input name="referral_code" maxlength="16" placeholder="CK12345678"></label>
+        <label>Phone / WhatsApp<input name="client_phone" type="tel" placeholder="+91 98765 43210"></label>
+        <label>Creative Service
+          <select name="service" required>
+            <option value="">Select service</option>
+            <option>Photography</option>
+            <option>Filmmaking</option>
+            <option>Photography + Film</option>
+            <option>Commercial campaign</option>
+            <option>Model portfolio</option>
+            <option>Other</option>
+          </select>
+        </label>
+        <label>Scope / Package Name<input name="package_name" placeholder="Campaign 5 Looks, Editorial Full Day"></label>
+        <label>Booked Duration (Hours)<input name="booked_hours" type="number" min="0.5" max="24" step="0.5" value="3" required></label>
+        <label>Overtime Rate (₹ / 30 Min)<input name="overtime_rate" type="number" min="0" step="100" placeholder="e.g. 3000" required></label>
+        <label>Total Package Fee (₹)<input name="package_price" type="number" min="0" step="500" placeholder="50000"></label>
+        <label>Deposit Paid (₹)<input name="deposit_amount" type="number" min="0" step="500" value="0"></label>
+        <label>Shoot Date &amp; Call Time<input name="shoot_at" type="datetime-local"></label>
+        <label>Location / Stage<input name="location" placeholder="Studio Stage 2 / Location Base"></label>
+        <label>Delivery Due Date<input name="delivery_due_at" type="date"></label>
+        <label class="wide">Creative Direction &amp; Brief
+          <textarea name="brief" rows="3" placeholder="Shot list, lighting references, talent details, deliverables required…"></textarea>
+        </label>
+      </div>
+      <p class="policy-note">Client approval is cryptographically required to start and finish the timer. Each shoot includes its booked duration plus a 30-minute grace window before overtime commences.</p>
+      <div class="dialog-actions">
+        <button type="button" class="button quiet" data-close-dialog>Cancel</button>
+        <button class="button gold" type="submit">Establish Production</button>
+      </div>
+      <div id="project-created" class="created-link" hidden></div>
+    </form>
+  </dialog>
 
-  <dialog id="action-dialog" class="dialog"><form id="action-form" class="dialog-card compact-dialog"><div class="dialog-head"><div><span class="eyebrow" id="action-eyebrow">SESSION APPROVAL</span><h2 id="action-title">Enter client code</h2></div><button type="button" class="icon-button" data-close-dialog aria-label="Close">×</button></div><p id="action-help" class="muted"></p><label>6-digit client code<input name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required autocomplete="one-time-code"></label><div class="dialog-actions"><button type="button" class="button quiet" data-close-dialog>Cancel</button><button type="submit" class="button gold">Confirm</button></div><p id="action-message" class="notice" role="status"></p></form></dialog>
+  <dialog id="action-dialog" class="dialog">
+    <form id="action-form" class="dialog-card compact-dialog">
+      <div class="dialog-head">
+        <div>
+          <span class="eyebrow" id="action-eyebrow">ENCRYPTED APPROVAL</span>
+          <h2 id="action-title">Verify Client Security Code</h2>
+        </div>
+        <button type="button" class="icon-button" data-close-dialog aria-label="Close">×</button>
+      </div>
+      <p id="action-help" class="muted"></p>
+      <label>6-Digit One-Time Client Code
+        <input name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required autocomplete="one-time-code" placeholder="000000">
+      </label>
+      <div class="dialog-actions">
+        <button type="button" class="button quiet" data-close-dialog>Cancel</button>
+        <button type="submit" class="button gold">Authorize Action</button>
+      </div>
+      <p id="action-message" class="notice" role="status"></p>
+    </form>
+  </dialog>
 
-  <dialog id="staff-dialog" class="dialog"><form id="staff-form" class="dialog-card compact-dialog"><div class="dialog-head"><div><span class="eyebrow">TEAM ACCESS</span><h2>Add team member</h2></div><button type="button" class="icon-button" data-close-dialog aria-label="Close">×</button></div><label>Name<input name="name" required></label><label>Work email<input name="email" type="email" required></label><label>Role<select name="role"><option value="sales">Sales</option><option value="photographer">Photographer</option><option value="filmmaker">Filmmaker</option><option value="editor">Editor / Retoucher</option><option value="admin">Administrator</option></select></label><p class="policy-note">A temporary password will appear once after creation. Share it privately, then have the team member change it after signing in.</p><div class="dialog-actions"><button type="button" class="button quiet" data-close-dialog>Cancel</button><button type="submit" class="button gold">Create account</button></div><div id="staff-created" class="created-link" hidden></div></form></dialog>
-  <dialog id="password-dialog" class="dialog"><form id="password-form" class="dialog-card compact-dialog"><div class="dialog-head"><div><span class="eyebrow">ACCOUNT SECURITY</span><h2>Change password</h2></div><button type="button" class="icon-button" data-close-dialog aria-label="Close">×</button></div><label>Current password<input name="current_password" type="password" autocomplete="current-password" required></label><label>New password<input name="new_password" type="password" autocomplete="new-password" minlength="20" required></label><p class="policy-note">Use at least 20 characters. You will need to sign in again after changing it.</p><div class="dialog-actions"><button type="button" class="button quiet" data-close-dialog>Cancel</button><button type="submit" class="button gold">Update password</button></div></form></dialog>
-  <dialog id="task-dialog" class="dialog"><form id="task-form" class="dialog-card compact-dialog"><div class="dialog-head"><div><span class="eyebrow">PRODUCTION HANDOFF</span><h2>Create task</h2></div><button type="button" class="icon-button" data-close-dialog aria-label="Close">×</button></div><input name="project_id" type="hidden"><label>Task title<input name="title" required placeholder="Selects, retouch pass, edit review…"></label><label>Assigned to<select name="assigned_to"><option value="">Unassigned</option></select></label><label>Priority<select name="priority"><option value="normal">Normal</option><option value="high">High</option><option value="urgent">Urgent</option><option value="low">Low</option></select></label><label>Due date<input name="due_at" type="datetime-local"></label><label>Notes<textarea name="description" rows="3"></textarea></label><div class="dialog-actions"><button type="button" class="button quiet" data-close-dialog>Cancel</button><button type="submit" class="button gold">Create task</button></div></form></dialog>
-  <dialog id="invoice-dialog" class="dialog"><form id="invoice-form" class="dialog-card compact-dialog"><div class="dialog-head"><div><span class="eyebrow">BILLING</span><h2>Add a project charge</h2></div><button type="button" class="icon-button" data-close-dialog aria-label="Close">×</button></div><label>Project<select name="project_id" required></select></label><label>Description<input name="description" required placeholder="Additional shoot time, extra edits…"></label><label>Charge amount (₹)<input name="amount" type="number" min="0" required></label><label>Payment link (optional)<input name="payment_url" type="url" placeholder="https://…"></label><div class="dialog-actions"><button type="button" class="button quiet" data-close-dialog>Cancel</button><button type="submit" class="button gold">Add to ledger</button></div></form></dialog>
-  <dialog id="delivery-dialog" class="dialog"><form id="delivery-form" class="dialog-card compact-dialog"><div class="dialog-head"><div><span class="eyebrow">CLIENT DELIVERY</span><h2>Share a deliverable</h2></div><button type="button" class="icon-button" data-close-dialog aria-label="Close">×</button></div><input name="project_id" type="hidden"><label>Delivery title<input name="title" required placeholder="Final photographs, film cut, proof gallery…"></label><label>Secure HTTPS link<input name="url" type="url" required placeholder="https://…"></label><label>Client note<textarea name="note" rows="3" placeholder="Download or review instructions…"></textarea></label><p class="policy-note">Use an access-controlled link from your file service. Anyone with the client portal link can view deliverables posted here.</p><div class="dialog-actions"><button type="button" class="button quiet" data-close-dialog>Cancel</button><button type="submit" class="button gold">Publish delivery</button></div></form></dialog>
+  <dialog id="staff-dialog" class="dialog">
+    <form id="staff-form" class="dialog-card compact-dialog">
+      <div class="dialog-head">
+        <div>
+          <span class="eyebrow">CREW DIRECTORY</span>
+          <h2>Add Production Member</h2>
+        </div>
+        <button type="button" class="icon-button" data-close-dialog aria-label="Close">×</button>
+      </div>
+      <label>Full Name<input name="name" required placeholder="Alex Vance"></label>
+      <label>Work Email<input name="email" type="email" required placeholder="alex@chiranjitkar.com"></label>
+      <label>Studio Role
+        <select name="role">
+          <option value="sales">Sales Executive</option>
+          <option value="photographer">Lead Photographer</option>
+          <option value="filmmaker">Director / Cinematographer</option>
+          <option value="editor">Editor &amp; Colorist</option>
+          <option value="admin">Studio Administrator</option>
+        </select>
+      </label>
+      <p class="policy-note">A temporary security passphrase will be generated upon creation. Transmit via secure channels.</p>
+      <div class="dialog-actions">
+        <button type="button" class="button quiet" data-close-dialog>Cancel</button>
+        <button type="submit" class="button gold">Provision Account</button>
+      </div>
+      <div id="staff-created" class="created-link" hidden></div>
+    </form>
+  </dialog>
+
+  <dialog id="password-dialog" class="dialog">
+    <form id="password-form" class="dialog-card compact-dialog">
+      <div class="dialog-head">
+        <div>
+          <span class="eyebrow">AUTHENTICATION CREDENTIAL</span>
+          <h2>Update Password</h2>
+        </div>
+        <button type="button" class="icon-button" data-close-dialog aria-label="Close">×</button>
+      </div>
+      <label>Current Passphrase
+        <input name="current_password" type="password" autocomplete="current-password" required>
+      </label>
+      <label>New Passphrase (20+ Characters)
+        <input name="new_password" type="password" autocomplete="new-password" minlength="20" required>
+      </label>
+      <p class="policy-note">Requires 20+ characters. An automatic re-authentication will be initiated.</p>
+      <div class="dialog-actions">
+        <button type="button" class="button quiet" data-close-dialog>Cancel</button>
+        <button type="submit" class="button gold">Commit Passphrase</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="task-dialog" class="dialog">
+    <form id="task-form" class="dialog-card compact-dialog">
+      <div class="dialog-head">
+        <div>
+          <span class="eyebrow">PRODUCTION WORKFLOW</span>
+          <h2>Assign Production Task</h2>
+        </div>
+        <button type="button" class="icon-button" data-close-dialog aria-label="Close">×</button>
+      </div>
+      <input name="project_id" type="hidden">
+      <label>Task Description<input name="title" required placeholder="Color grading pass, editorial select review…"></label>
+      <label>Crew Member<select name="assigned_to"><option value="">Unassigned</option></select></label>
+      <label>Priority Tier
+        <select name="priority">
+          <option value="normal">Standard Priority</option>
+          <option value="high">High Priority</option>
+          <option value="urgent">Urgent / Milestone Blocker</option>
+          <option value="low">Low Priority</option>
+        </select>
+      </label>
+      <label>Deadline Timestamp<input name="due_at" type="datetime-local"></label>
+      <label>Production Notes<textarea name="description" rows="3"></textarea></label>
+      <div class="dialog-actions">
+        <button type="button" class="button quiet" data-close-dialog>Cancel</button>
+        <button type="submit" class="button gold">Dispatch Task</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="invoice-dialog" class="dialog">
+    <form id="invoice-form" class="dialog-card compact-dialog">
+      <div class="dialog-head">
+        <div>
+          <span class="eyebrow">FINANCIAL LEDGER</span>
+          <h2>Issue Project Charge</h2>
+        </div>
+        <button type="button" class="icon-button" data-close-dialog aria-label="Close">×</button>
+      </div>
+      <label>Target Project<select name="project_id" required></select></label>
+      <label>Item Description<input name="description" required placeholder="Overtime block (1 hr), Additional retouch look…"></label>
+      <label>Charge Amount (₹)<input name="amount" type="number" min="0" required></label>
+      <label>Payment Link (Optional)<input name="payment_url" type="url" placeholder="https://…"></label>
+      <div class="dialog-actions">
+        <button type="button" class="button quiet" data-close-dialog>Cancel</button>
+        <button type="submit" class="button gold">Post to Ledger</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="delivery-dialog" class="dialog">
+    <form id="delivery-form" class="dialog-card compact-dialog">
+      <div class="dialog-head">
+        <div>
+          <span class="eyebrow">CLIENT REPOSITORY</span>
+          <h2>Publish Deliverable</h2>
+        </div>
+        <button type="button" class="icon-button" data-close-dialog aria-label="Close">×</button>
+      </div>
+      <input name="project_id" type="hidden">
+      <label>Deliverable Title<input name="title" required placeholder="Final High-Res Retouched Masters, 4K Color Grade Cut…"></label>
+      <label>Secure Storage Link (HTTPS)<input name="url" type="url" required placeholder="https://drive.google.com/… or cloud storage link"></label>
+      <label>Client Delivery Note<textarea name="note" rows="3" placeholder="Instructions, resolution details, color space, expiry…"></textarea></label>
+      <p class="policy-note">Provision access-controlled cloud URLs. Files appear immediately in the client's verified dashboard.</p>
+      <div class="dialog-actions">
+        <button type="button" class="button quiet" data-close-dialog>Cancel</button>
+        <button type="submit" class="button gold">Publish to Client</button>
+      </div>
+    </form>
+  </dialog>
+
   <div id="toast" class="toast" role="status"></div>
   <script src="studio.js" defer></script>
 </body>

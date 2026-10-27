@@ -4,50 +4,109 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex,nofollow">
-  <meta name="theme-color" content="#100f0e">
-  <title>Book a Session | Chiranjit Kar Photography</title>
-  <link rel="stylesheet" href="/studio.css">
+  <meta name="theme-color" content="#070709">
+  <title>Packages &amp; Order | Chiranjit Kar Photography</title>
+  <link rel="stylesheet" href="/studio.css?v=package-order-v1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 </head>
 <body>
-  <main class="booking-shell">
-    <nav class="booking-nav"><a class="brand" href="https://chiranjitkar.com/">CK<span>CHIRANJIT KAR PHOTOGRAPHY</span></a><a class="text-button" href="https://client.chiranjitkar.com/">Client portal →</a></nav>
-    <section class="booking-intro"><span class="eyebrow">BOOKING REQUEST</span><h1>Let’s plan your session.</h1><p>Share what you’re looking for and our Sales team will contact you to confirm the package, availability, and final booking details.</p></section>
+  <main class="booking-shell booking-shell-wide">
+    <nav class="booking-nav">
+      <a class="brand" href="https://chiranjitkar.com/">CK<span>CHIRANJIT KAR STUDIO</span></a>
+      <div class="booking-nav-links">
+        <a class="text-button" href="https://book.chiranjitkar.com/collaborate">Fashion collaborations →</a>
+        <a class="text-button" href="https://client.chiranjitkar.com/">Client Portal →</a>
+      </div>
+    </nav>
+
+    <section class="booking-intro">
+      <span class="eyebrow">PACKAGES &amp; ORDERING</span>
+      <h1>Choose your photoshoot package.</h1>
+      <p>Compare all available packages, select one, then send your order request. The studio will confirm availability and send payment instructions before your booking is confirmed.</p>
+    </section>
+
+    <section class="package-catalog" aria-labelledby="package-catalog-title">
+      <div class="package-catalog-heading">
+        <div><span class="eyebrow">CHOOSE YOUR PRODUCTION</span><h2 id="package-catalog-title">Available packages</h2></div>
+        <a class="text-button" href="https://chiranjitkar.com/services.html">Full package details →</a>
+      </div>
+      <div id="booking-package-groups" class="package-groups" aria-live="polite"><p class="muted">Loading packages…</p></div>
+    </section>
+
     <form id="booking-request-form" class="booking-form">
       <input type="hidden" name="referral_code" id="booking-referral-code">
+      <input type="hidden" name="package_id" id="booking-package-id">
+      <input type="hidden" name="package_name" id="booking-package-name">
       <label class="booking-honeypot" aria-hidden="true">Leave blank<input name="website" tabindex="-1" autocomplete="off"></label>
+
       <div class="booking-fields">
-        <label>Your name<input name="name" autocomplete="name" required maxlength="120"></label>
-        <label>Email address<input name="email" type="email" autocomplete="email" required maxlength="200"></label>
-        <label>Phone / WhatsApp<input name="phone" type="tel" autocomplete="tel" required maxlength="40"></label>
-        <label>Preferred city<select name="city" required><option value="">Choose city</option><option>Delhi NCR</option><option>Mumbai</option><option>Agartala</option><option>Destination / Other</option></select></label>
-        <label>Service<select name="service" required><option value="">Choose service</option><option>Photography</option><option>Filmmaking</option><option>Photography + Film</option><option>Commercial campaign</option><option>Model portfolio</option><option>Editorial &amp; Fashion</option><option>Bridal production</option><option>Other</option></select></label>
-        <label>Package or session type<input name="package_name" maxlength="160" placeholder="If you have one in mind"></label>
-        <label>Preferred session date<input name="preferred_date" type="date"></label>
-        <label class="booking-wide">What would you like us to know?<textarea name="brief" rows="5" maxlength="4000" placeholder="Looks, event details, references, timing, or questions…"></textarea></label>
+        <div class="booking-wide selected-package-summary" id="selected-package-summary">Choose a package above to start your order.</div>
+        <label>Full name<input name="name" autocomplete="name" required maxlength="120" placeholder="Your name / brand representative"></label>
+        <label>Email address<input name="email" type="email" autocomplete="email" required maxlength="200" placeholder="you@example.com"></label>
+        <label>Phone / WhatsApp<input name="phone" type="tel" autocomplete="tel" required maxlength="40" placeholder="+91 98765 43210"></label>
+        <label>Production city / base<select name="city" required><option value="">Select city or territory</option><option value="Delhi NCR">Delhi NCR</option><option value="Mumbai">Mumbai</option><option value="Agartala">Agartala</option><option value="Destination / Other">Destination / Other</option></select></label>
+        <label>Creative service<select name="service" required><option value="">Choose a package above</option><option value="Photography">Photography</option><option value="Model portfolio">Model portfolio</option><option value="Commercial campaign">Commercial campaign</option></select></label>
+        <label>Preferred production date<input name="preferred_date" type="date"></label>
+        <label class="booking-wide">Creative brief or notes<textarea name="brief" rows="5" maxlength="4000" placeholder="Share the concept, location, references, or anything the production team should know."></textarea></label>
       </div>
-      <p class="booking-notice">Submitting this form sends a booking request, not a confirmed reservation. The studio will confirm availability and agreed package terms with you.</p>
-      <button class="button gold" type="submit">Send booking request</button>
+
+      <p class="booking-notice"><strong>Order process</strong><br>This submits an order request, not an instant payment or confirmed booking. The team will confirm availability and send the invoice or payment instructions. Custom packages can be created by the studio team after reviewing your brief.</p>
+      <button class="button gold" id="place-order-button" type="submit" disabled>Place order</button>
       <p id="booking-message" class="notice" role="status"></p>
     </form>
   </main>
+
   <script>
     const form=document.querySelector('#booking-request-form');
     const params=new URLSearchParams(location.search);
+    const packageGroups=document.querySelector('#booking-package-groups');
+    const packageId=document.querySelector('#booking-package-id');
+    const packageName=document.querySelector('#booking-package-name');
+    const selectedSummary=document.querySelector('#selected-package-summary');
+    const placeOrderButton=document.querySelector('#place-order-button');
     document.querySelector('#booking-referral-code').value=(params.get('ref')||'').trim().toUpperCase();
+    const priceLabel=price=>new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:0}).format(price);
+
+    function selectPackage(item,button){
+      packageGroups.querySelectorAll('[data-package-select]').forEach(control=>control.closest('.package-card').classList.remove('selected'));
+      button.closest('.package-card').classList.add('selected');
+      packageId.value=item.id;packageName.value=item.name;
+      selectedSummary.innerHTML=`<strong>Selected package:</strong><span>${item.name}</span><span>${priceLabel(item.price)}</span>`;
+      document.querySelector('[name="service"]').value=item.service;
+      placeOrderButton.disabled=false;
+      form.scrollIntoView({behavior:'smooth',block:'start'});
+    }
+
+    async function loadPackages(){
+      try{
+        const response=await fetch('/api/packages');const result=await response.json();
+        if(!response.ok)throw new Error(result.error||'Packages are temporarily unavailable.');
+        const groups=new Map();
+        for(const item of result.packages||[]){if(!groups.has(item.category))groups.set(item.category,[]);groups.get(item.category).push(item);}
+        packageGroups.innerHTML=[...groups].map(([category,items])=>`<section class="package-group"><h3>${category}</h3><div class="package-grid">${items.map(item=>`<article class="package-card" data-package-card="${item.id}"><div><div class="package-card-top"><span>${category}</span><strong>${priceLabel(item.price)}</strong></div><h4>${item.name}</h4><p>${item.summary}</p></div><button type="button" class="package-select-button" data-package-select="${item.id}">Choose this package</button></article>`).join('')}</div></section>`).join('');
+        packageGroups.querySelectorAll('[data-package-select]').forEach(button=>button.addEventListener('click',()=>selectPackage(result.packages.find(item=>item.id===button.dataset.packageSelect),button)));
+      }catch(error){packageGroups.innerHTML=`<p class="notice" role="alert">${error.message} Please contact the studio to place an order.</p>`;}
+    }
+
+    loadPackages();
     form.addEventListener('submit',async event=>{
       event.preventDefault();
-      const button=form.querySelector('button[type="submit"]');
       const message=document.querySelector('#booking-message');
+      if(!packageId.value){message.textContent='Choose one of the listed packages first.';return;}
       const data=Object.fromEntries(new FormData(form));
-      data.brief=[data.package_name?`Package/session: ${data.package_name}`:'',data.preferred_date?`Preferred date: ${data.preferred_date}`:'',data.brief].filter(Boolean).join('\n\n');
-      delete data.package_name;delete data.preferred_date;
-      button.disabled=true;message.textContent='Sending your booking request…';
+      data.brief=[data.preferred_date?`Preferred production date: ${data.preferred_date}`:'',data.brief].filter(Boolean).join('\n\n');
+      delete data.preferred_date;
+      placeOrderButton.disabled=true;message.textContent='Sending your order request…';
       try{
         const response=await fetch('/api/inquiries',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
-        const result=await response.json();if(!response.ok)throw new Error(result.error||'Could not send your request.');
+        const result=await response.json();if(!response.ok)throw new Error(result.error||'Could not submit your order request.');
         message.textContent='✓ '+result.message;form.reset();
-      }catch(error){message.textContent=error.message||'Could not send your request. Contact the studio directly.';}
-      finally{button.disabled=false;}
+        packageId.value='';packageName.value='';
+        packageGroups.querySelectorAll('[data-package-card]').forEach(card=>card.classList.remove('selected'));
+        selectedSummary.textContent='Choose a package above to start your order.';
+      }catch(error){message.textContent=error.message||'Could not submit your order request. Please try again.';}
+      finally{placeOrderButton.disabled=!packageId.value;}
     });
   </script>
 </body>

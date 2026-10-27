@@ -5,35 +5,60 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex,nofollow">
   <meta name="referrer" content="no-referrer">
-  <meta name="theme-color" content="#100f0e">
-  <title>Client Portal &amp; Session | Chiranjit Kar Photography</title>
+  <meta name="theme-color" content="#070709">
+  <title>Client Suite &amp; Live Session | Chiranjit Kar Photography</title>
   <link rel="stylesheet" href="studio.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
   <main class="session-shell">
-    <a class="brand" href="https://chiranjitkar.com/">CK<span>CHIRANJIT KAR PHOTOGRAPHY</span></a>
+    <a class="brand" href="https://chiranjitkar.com/">
+      CK<span>CLIENT CONCIERGE &amp; SUITE</span>
+    </a>
 
     <!-- Signed-in client user bar -->
     <div id="client-user-bar" class="client-user-bar" hidden>
       <div class="client-user-info">
-        <img id="client-avatar" class="client-avatar" src="" alt="Avatar" />
+        <img id="client-avatar" class="client-avatar" src="" alt="Client Avatar" />
         <div>
-          <strong id="client-display-name">Client</strong>
-          <small id="client-display-email" class="muted" style="display:block;"></small>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <strong id="client-display-name">Client</strong>
+            <span style="font-size:9px; letter-spacing:0.12em; text-transform:uppercase; color:var(--gold); border:1px solid var(--line-gold); padding:2px 7px; border-radius:999px; font-weight:700;">VERIFIED</span>
+          </div>
+          <small id="client-display-email" class="muted" style="display:block; margin-top:2px;"></small>
         </div>
       </div>
       <div class="client-user-actions">
         <select id="client-project-picker" class="small-select" hidden></select>
-        <button id="client-logout-btn" class="button quiet" style="padding: 6px 12px; font-size: 11px;">Sign out</button>
+        <button id="client-logout-btn" class="button quiet" style="padding: 7px 14px; font-size: 11px;">Sign out</button>
       </div>
     </div>
 
+    <!-- Referral & Membership Wallet -->
     <section id="client-referral-wallet" class="session-card referral-wallet" hidden>
-      <div class="session-top"><div><span class="eyebrow">CLIENT REFERRALS</span><h2>Share a referral · earn wallet credit</h2><p class="muted">Your friend books their first package and completes payment; you receive 5% of the package price in wallet credit.</p></div></div>
-      <div class="referral-share"><div><small>Your personal referral code</small><strong id="client-referral-code">—</strong></div><button id="client-referral-copy" class="button quiet" type="button">Copy invite link</button></div>
-      <div class="referral-wallet-balance"><span>Available wallet balance</span><strong id="client-wallet-balance">₹0</strong></div>
-      <p class="field-help">Apply available wallet credit toward a package booking from this portal.</p>
+      <div class="session-top">
+        <div>
+          <span class="eyebrow">CLIENT MEMBERSHIP &amp; PRIVILEGES</span>
+          <h2 style="font-family: var(--font-serif); font-size: 20px; margin: 6px 0 4px; color: #ffffff;">Executive Referral Credit</h2>
+          <p class="muted">Share your personalized commission link with creative colleagues or brands. When their first package booking confirms, 5% of the total production value is credited directly into your client wallet.</p>
+        </div>
+      </div>
+      <div class="referral-share">
+        <div>
+          <small>Personal Referral Key</small>
+          <strong id="client-referral-code">—</strong>
+        </div>
+        <button id="client-referral-copy" class="button gold" type="button" style="padding: 8px 16px; font-size: 11px;">Copy Invite Link</button>
+      </div>
+      <div class="referral-wallet-balance">
+        <div>
+          <span style="font-size:10px; text-transform:uppercase; letter-spacing:0.12em; color:var(--muted); font-weight:600;">Available Wallet Balance</span>
+          <strong id="client-wallet-balance" style="display:block; margin-top:4px;">₹0</strong>
+        </div>
+        <small class="field-help" style="max-width:280px; text-align:right;">Instantly redeemable against new package invoices and overtime fees.</small>
+      </div>
       <div id="client-wallet-history" class="wallet-history"></div>
       <p id="client-referral-message" class="notice" role="status"></p>
     </section>
@@ -42,94 +67,122 @@
     <section id="client-auth-card" class="session-card" hidden>
       <div class="session-top">
         <div>
-          <span class="eyebrow">CLIENT PORTAL</span>
-          <h1 style="font: 700 24px Manrope, sans-serif; margin: 8px 0;">Sign In &amp; Sign Up</h1>
-          <p class="muted">Sign in with your Google account to view your photoshoot bookings, live session timers, instant approval codes, invoices, and photo deliverables.</p>
+          <span class="eyebrow">PRIVATE CLIENT ACCESS</span>
+          <h1 style="font-family: var(--font-serif); font-size: 26px; margin: 10px 0 8px; color: #ffffff;">Client Executive Portal</h1>
+          <p class="muted">Authenticate with your Google account to access your live photoshoot dashboard, real-time session chronometer, instant approval tokens, high-res deliverables, and production invoices.</p>
         </div>
       </div>
       <div class="google-auth-box">
         <div id="google-signin-btn"></div>
         <p id="auth-status" class="notice" role="status"></p>
       </div>
+      <div style="margin-top:20px; padding-top:16px; border-top:1px solid var(--line); font-size:11px; color:var(--muted); display:flex; align-items:center; gap:8px;">
+        <span>🔒 256-bit encrypted direct connection · Verified Google Identity Services</span>
+      </div>
     </section>
 
     <!-- Welcome empty state if signed in with 0 projects -->
     <section id="client-no-projects" class="session-card" hidden>
-      <span class="eyebrow">WELCOME</span>
-      <h1 style="font: 700 24px Manrope, sans-serif; margin: 8px 0;">No Active Shoots Yet</h1>
-      <p class="muted">You are signed in as <strong id="no-projects-email"></strong>. We don't have an active shoot registered with this email yet. Submit an inquiry or book your session below to get started!</p>
-      <a href="https://book.chiranjitkar.com/" class="button gold" style="display:inline-block; margin-top:14px; text-decoration:none;">Book / Inquire Shoot ↗</a>
+      <span class="eyebrow">WELCOME TO THE STUDIO</span>
+      <h1 style="font-family: var(--font-serif); font-size: 24px; margin: 10px 0 8px; color: #ffffff;">No Active Productions Registered</h1>
+      <p class="muted">You are authenticated as <strong id="no-projects-email" style="color:var(--gold-bright);"></strong>. No active photoshoot or commercial project has been linked to this email address yet. Commission your session below to initiate your production file.</p>
+      <a href="https://book.chiranjitkar.com/" class="button gold" style="display:inline-flex; margin-top:18px;">Commission A Production ↗</a>
     </section>
 
     <section id="session-loading" class="session-card">
-      <span class="eyebrow">SECURE CLIENT SESSION</span>
-      <p class="muted">Loading your session details…</p>
+      <span class="eyebrow">STUDIO RECONCILIATION</span>
+      <p class="muted" style="margin-top:8px;">Synchronizing your secure client session and active project files…</p>
     </section>
 
     <section id="session-error" class="session-card" hidden>
-      <span class="eyebrow">CLIENT SESSION</span>
-      <h1>Link unavailable</h1>
-      <p class="muted" id="session-error-text">This link is invalid or has expired. Contact the studio team for a new link.</p>
+      <span class="eyebrow">ACCESS TOKEN NOTICE</span>
+      <h1 style="font-family: var(--font-serif); font-size: 24px; color: #ffffff;">Session Token Unavailable</h1>
+      <p class="muted" id="session-error-text">This access credential is not recognized or has lapsed. Sign in with Google above or request a refreshed link from the studio team.</p>
     </section>
 
     <section id="session-content" class="session-card" hidden>
       <div class="session-top">
         <div>
           <span class="eyebrow" id="session-project-code"></span>
-          <h1 id="session-title">Your photography session</h1>
+          <h1 id="session-title">Your Photography Production</h1>
           <div class="muted" id="session-description"></div>
         </div>
         <span class="status scheduled" id="session-status">Scheduled</span>
       </div>
+
       <div class="session-stat-grid">
-        <div class="session-stat"><small>Booked time</small><strong id="booked-time">—</strong></div>
-        <div class="session-stat"><small>Grace period</small><strong>30 minutes</strong></div>
-        <div class="session-stat"><small>Overtime rate</small><strong id="overtime-rate">₹0 / 30 min</strong></div>
-      </div>
-      <div id="client-timer-area" hidden>
-        <div class="eyebrow">SESSION TIMER</div>
-        <div id="client-timer" class="session-timer">00:00:00</div>
-        <p class="muted" id="timer-caption"></p>
-      </div>
-      <div class="client-warning" id="policy-copy">Your confirmed package duration is followed by a 30-minute grace period. After grace, every started 30-minute overtime block is charged at the agreed rate above. The system records the client-approved start and finish times.</div>
-      <div id="client-action-area" class="session-actions" hidden>
-        <button id="client-approve-button" class="button gold session-button"></button>
-        <p id="client-message" class="notice" role="status"></p>
-        <div id="client-code-area" hidden>
-          <span class="eyebrow">ONE-TIME APPROVAL CODE · EXPIRES IN 10 MINUTES</span>
-          <div id="client-code" class="client-code"></div>
-          <p class="muted" id="client-code-instruction">Share this code with your photographer to confirm this action. Keep it private until you are ready.</p>
+        <div class="session-stat">
+          <small>Booked Scope</small>
+          <strong id="booked-time">—</strong>
+        </div>
+        <div class="session-stat">
+          <small>Courtesy Grace</small>
+          <strong>30 Minutes</strong>
+        </div>
+        <div class="session-stat">
+          <small>Agreed Overtime</small>
+          <strong id="overtime-rate">₹0 / 30 min</strong>
         </div>
       </div>
+
+      <div id="client-timer-area" hidden style="background: rgba(10, 10, 14, 0.6); border: 1px solid var(--line-gold); border-radius: 14px; padding: 22px; text-align: center; margin: 20px 0;">
+        <span class="eyebrow" style="margin: 0 auto 6px;">LIVE PRODUCTION CHRONOMETER</span>
+        <div id="client-timer" class="session-timer">00:00:00</div>
+        <p class="muted" id="timer-caption" style="margin:0; font-size:11.5px;"></p>
+      </div>
+
+      <div class="client-warning" id="policy-copy">
+        Your confirmed production duration includes an initial 30-minute studio grace window. Following grace expiration, subsequent 30-minute increments are billed at the agreed project rate. The platform logs client-authorized timestamps via encrypted one-time security codes.
+      </div>
+
+      <div id="client-action-area" class="session-actions" hidden>
+        <button id="client-approve-button" class="button gold session-button" style="padding:14px; font-size:13px;"></button>
+        <p id="client-message" class="notice" role="status"></p>
+        <div id="client-code-area" hidden style="background: rgba(10, 10, 14, 0.7); border: 1px solid var(--line-gold); border-radius: 14px; padding: 24px; text-align: center; margin-top: 16px;">
+          <span class="eyebrow" style="margin: 0 auto 8px;">ONE-TIME SECURITY CONFIRMATION TOKEN</span>
+          <div id="client-code" class="client-code"></div>
+          <p class="muted" id="client-code-instruction" style="font-size:11px; margin-top:8px;">Relay this token to your lead photographer to execute the session state change. Valid for 10 minutes.</p>
+        </div>
+      </div>
+
       <div id="session-summary" hidden></div>
+
       <div id="client-deliveries" class="client-section" hidden>
-        <span class="eyebrow">DELIVERABLES</span>
+        <span class="eyebrow">PRODUCTION DELIVERABLES</span>
         <div id="delivery-items"></div>
       </div>
+
       <div id="client-billing" class="client-section" hidden>
-        <span class="eyebrow">BOOKING &amp; CHARGES</span>
+        <span class="eyebrow">FINANCIAL LEDGER &amp; INVOICES</span>
         <div id="invoice-items"></div>
       </div>
+
       <form id="client-feedback-form" class="client-section" hidden>
-        <span class="eyebrow">MESSAGE THE STUDIO</span>
-        <p class="muted">Send selection notes, revision feedback, or approval instructions. The studio team will see this in the project activity.</p>
-        <label>Feedback type
+        <span class="eyebrow">EXECUTIVE STUDIO DISPATCH</span>
+        <p class="muted">Submit photo curation selects, post-production revision notes, or formal approvals. Transmissions are appended to the studio's live activity log.</p>
+        <label>
+          Communication Category
           <select name="kind">
-            <option value="selection">Image / edit selection</option>
-            <option value="revision">Revision request</option>
-            <option value="approval">Approval</option>
-            <option value="testimonial">Testimonial</option>
+            <option value="selection">Curation / Image Selects</option>
+            <option value="revision">Post-Production Revision Request</option>
+            <option value="approval">Final Delivery Approval</option>
+            <option value="testimonial">Client Testimonial &amp; Quote</option>
           </select>
         </label>
-        <label>Your message
-          <textarea name="body" rows="4" maxlength="5000" required></textarea>
+        <label>
+          Detailed Instructions
+          <textarea name="body" rows="4" maxlength="5000" required placeholder="Specify frame numbers, color grade preferences, delivery deadlines, or questions…"></textarea>
         </label>
-        <button class="button gold" type="submit">Send to studio</button>
+        <button class="button gold" type="submit" style="margin-top:8px;">Dispatch to Production Team</button>
         <p id="feedback-message" class="notice" role="status"></p>
       </form>
-      <p class="session-footer">This private portal is for the named client. The approval code is generated on this page and is not visible to studio staff until you share it. If anything about the time or rate above looks wrong, contact the studio before approving.</p>
+
+      <p class="session-footer" style="margin-top:32px; font-size:10.5px; color:var(--muted); line-height:1.6; border-top:1px solid var(--line); padding-top:18px;">
+        Confidential studio portal provisioned for the designated client entity. Authorization tokens are cryptographically generated within this browser session and inaccessible to studio crew prior to verification. For commercial revisions or contract modifications, contact the lead producer directly.
+      </p>
     </section>
   </main>
+
   <script src="session.js" defer></script>
 </body>
 </html>

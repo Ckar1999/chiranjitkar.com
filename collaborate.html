@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="theme-color" content="#100f0e">
+  <title>Fashion Collaboration Proposal | Chiranjit Kar Photography</title>
+  <link rel="stylesheet" href="/studio.css">
+</head>
+<body>
+  <main class="booking-shell">
+    <nav class="booking-nav"><a class="brand" href="https://chiranjitkar.com/">CK<span>CHIRANJIT KAR STUDIO</span></a><div class="booking-nav-links"><a class="text-button" href="https://book.chiranjitkar.com/">Book a Session <span>→</span></a><a class="text-button" href="https://client.chiranjitkar.com/">Client Portal <span>→</span></a></div></nav>
+    <section class="booking-intro"><span class="eyebrow">FASHION COLLABORATIONS</span><h1>Bring us an extraordinary idea.</h1><p>As a fashion photographer, I welcome considered proposals from models and talent, agencies and managers, fashion brands and designers, and other fashion creatives. Share the idea, your work, and how you’d like to collaborate.</p><div id="model-policy" class="booking-notice"><strong>For models and talent: unpaid portfolio collaborations</strong><br>Selected model-led shoots are unpaid: we do not charge the model, and no modeling fee is paid. We accept only concepts with an exceptional, coherent high-fashion moodboard and a distinctive editorial story that can add real value to our portfolio.</div><div id="partner-policy" class="booking-notice" hidden><strong>For agencies, brands, and creative partners</strong><br>We review fashion-focused proposals for creative fit, portfolio value, and feasibility. Scope, compensation, expenses, image use, and deliverables are discussed separately and agreed in writing before any project is confirmed.</div></section>
+    <form id="collaboration-form" class="booking-form">
+      <input type="hidden" name="inquiry_type" value="model_collab">
+      <label class="booking-honeypot" aria-hidden="true">Leave blank<input name="website" tabindex="-1" autocomplete="off"></label>
+      <div class="booking-fields">
+        <label>I’m applying as<select id="applicant-kind" required><option value="model_talent">Model / talent</option><option value="agency">Agency / management</option><option value="brand">Fashion brand / designer</option><option value="creative_partner">Fashion creative / other partner</option></select></label>
+        <label>Your name<input name="name" autocomplete="name" required maxlength="120"></label>
+        <label>Email address<input name="email" type="email" autocomplete="email" required maxlength="200"></label>
+        <label>Phone / WhatsApp<input name="phone" type="tel" autocomplete="tel" required maxlength="40"></label>
+        <label id="organization-field">Agency, brand, or representation<input id="collab-organization" maxlength="160" placeholder="Name of brand, agency, or creative team"></label>
+        <label>City / location<input name="city" autocomplete="address-level2" required maxlength="100" placeholder="Your base or proposed shoot location"></label>
+        <label class="booking-wide">Portfolio, agency, brand, or social profile<input id="model-portfolio" type="url" required maxlength="500" placeholder="https://…"></label>
+        <label class="booking-wide"><span id="moodboard-label">Preferred high-fashion moodboard link</span><input id="model-moodboard" type="url" maxlength="500" placeholder="Pinterest, Milanote, Google Drive, or another viewable link"><small id="moodboard-help" class="field-help">Models and talent must share an exceptional, publicly viewable moodboard.</small></label>
+        <label class="booking-wide"><span id="concept-label">Your editorial concept</span><textarea id="collab-brief" rows="5" maxlength="3500" required placeholder="Describe the visual story, references, styling, location, lighting, and what makes this concept original and portfolio-worthy."></textarea></label>
+        <label>Ideal timing<input id="collab-timing" maxlength="120" placeholder="A date, month, or flexible"></label>
+        <label>Anything else we should know?<input id="collab-notes" maxlength="500" placeholder="Availability, team, or production details"></label>
+      </div>
+      <p class="booking-notice">Submitting a proposal does not guarantee acceptance or confirm a shoot. We review fashion relevance, creative merit, portfolio value, and feasibility. If selected, we’ll agree the shoot plan and applicable terms in writing before scheduling.</p>
+      <button class="button gold" type="submit">Submit collaboration proposal</button>
+      <p id="collab-message" class="notice" role="status"></p>
+    </form>
+  </main>
+  <script>
+    const form=document.querySelector('#collaboration-form');
+    const applicant=document.querySelector('#applicant-kind');
+    const modelFields=()=>{
+      const isModel=applicant.value==='model_talent';
+      document.querySelector('#collab-organization').required=['agency','brand'].includes(applicant.value);
+      document.querySelector('#model-moodboard').required=isModel;
+      document.querySelector('#moodboard-label').textContent=isModel?'Preferred high-fashion moodboard link':'Moodboard / visual references link (optional)';
+      document.querySelector('#moodboard-help').textContent=isModel?'Models and talent must share an exceptional, publicly viewable moodboard.':'If you have a visual reference board, share a link viewable without requesting access.';
+      document.querySelector('#collab-brief').placeholder=isModel?'Describe the visual story, styling, location, lighting, and what makes this idea original and portfolio-worthy.':'Describe the fashion concept, intended audience, creative direction, and what each collaborator would bring.';
+      document.querySelector('#concept-label').textContent=isModel?'Your editorial concept':'Your fashion collaboration proposal';
+      document.querySelector('#model-policy').hidden=!isModel;
+      document.querySelector('#partner-policy').hidden=isModel;
+      document.querySelector('#organization-field').hidden=isModel;
+    };
+    applicant.addEventListener('change',modelFields);
+    modelFields();
+    form.addEventListener('submit',async event=>{
+      event.preventDefault();
+      const button=form.querySelector('button[type="submit"]');
+      const message=document.querySelector('#collab-message');
+      const data=Object.fromEntries(new FormData(form));
+      const isModel=applicant.value==='model_talent';
+      data.inquiry_type=isModel?'model_collab':'brand_collab';
+      data.service=isModel?'Model portfolio':'Commercial campaign';
+      data.applicant_kind=applicant.value;
+      data.organization=document.querySelector('#collab-organization').value.trim();
+      data.portfolio_url=document.querySelector('#model-portfolio').value.trim();
+      data.moodboard_url=document.querySelector('#model-moodboard').value.trim();
+      data.brief=[
+        `Applicant type: ${applicant.options[applicant.selectedIndex].text}`,
+        data.organization?`Agency / brand / creative team: ${data.organization}`:'',
+        `Fashion concept: ${document.querySelector('#collab-brief').value.trim()}`,
+        document.querySelector('#collab-timing').value.trim()?`Ideal timing: ${document.querySelector('#collab-timing').value.trim()}`:'',
+        document.querySelector('#collab-notes').value.trim()?`Additional details: ${document.querySelector('#collab-notes').value.trim()}`:''
+      ].filter(Boolean).join('\n\n');
+      button.disabled=true;message.textContent='Submitting your photoshoot proposal…';
+      try{
+        const response=await fetch('/api/inquiries',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+        const result=await response.json();if(!response.ok)throw new Error(result.error||'Could not submit your proposal.');
+        message.textContent='✓ '+result.message;form.reset();modelFields();
+      }catch(error){message.textContent=error.message||'Could not submit your proposal. Please try again.';}
+      finally{button.disabled=false;}
+    });
+  </script>
+</body>
+</html>
