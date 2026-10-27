@@ -25,6 +25,7 @@
 
   async function init() {
     initGoogleAuth();
+    $('#client-package-upgrade')?.addEventListener('submit', requestPackageUpgrade);
 
     // Check if client is already signed in via Google session
     try {
@@ -217,6 +218,7 @@
     $('#session-status').className = `status ${project.status}`;
 
     renderClientResources(invoices, deliveries);
+    renderPackageUpgrades(project,session);
 
     const form = $('#client-feedback-form');
     if (form) {
@@ -239,6 +241,33 @@
     refreshHandle = setInterval(refreshSessionState, 5000);
   }
 
+  async function renderPackageUpgrades(project,session){
+    const form=$('#client-package-upgrade'),select=$('#upgrade-package-select');
+    if(!form||session||!Number(project.package_price)||['in_session','editing','client_review','delivered','archived'].includes(project.status)){if(form)form.hidden=true;return;}
+    try{
+      const result=await api('packages');
+      const upgrades=(result.packages||[]).filter(item=>Number(item.price)>Number(project.package_price));
+      if(!upgrades.length){form.hidden=true;return;}
+      form.dataset.projectId=project.id;form.dataset.projectCode=project.project_code;
+      select.innerHTML='<option value="">Choose a higher package</option>'+upgrades.map(item=>`<option value="${safeText(item.id)}">${safeText(item.name)} · ${money(item.price)} (+${money(item.price-project.package_price)})</option>`).join('');
+      form.hidden=false;
+    }catch{form.hidden=true;}
+  }
+
+  async function requestPackageUpgrade(event){
+    event.preventDefault();
+    const form=event.currentTarget,select=$('#upgrade-package-select'),message=$('#upgrade-package-message'),button=form.querySelector('button[type="submit"]');
+    if(!select.value){message.textContent='Choose a higher package first.';return;}
+    const packageName=select.options[select.selectedIndex].text.split(' · ')[0];
+    if(!confirm(`Upgrade your booking to ${packageName}? The 30% upgrade deposit will be added now; the remainder will be due after your session.`))return;
+    button.disabled=true;message.textContent='Updating your package…';
+    try{
+      const result=await api('client/project/upgrade',{method:'POST',body:JSON.stringify({project_id:form.dataset.projectId,project_code:form.dataset.projectCode,package_id:select.value})});
+      message.textContent=result.message;
+      setTimeout(()=>location.reload(),800);
+    }catch(error){message.textContent=error.message;button.disabled=false;}
+  }
+
   function showError(message) {
     $('#session-loading').hidden = true;
     $('#session-content').hidden = true;
@@ -253,16 +282,50 @@
 
     invoices.forEach(invoice => {
       const item = document.createElement('div');
-      item.className = 'client-resource';
+      item.className = 'client-resource invoice-gateway-card';
+      const balance = Math.max(0, invoice.amount - invoice.amount_paid);
+      const isPaid = invoice.status === 'paid' || balance <= 0;
+
       const left = document.createElement('div');
-      left.innerHTML = `<strong>${safeText(invoice.description)}</strong><small>${safeText(invoice.invoice_code)} · ${safeText(invoice.status.replaceAll('_', ' '))}</small>`;
+      left.innerHTML = `
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+          <span style="font-family:var(--font-mono); font-size:11px; color:var(--gold-bright); font-weight:700;">${safeText(invoice.invoice_code)}</span>
+          <span class="status ${isPaid ? 'delivered' : balance < invoice.amount ? 'editing' : 'scheduled'}" style="font-size:9px; padding:2px 8px;">${isPaid ? 'PAID' : balance < invoice.amount ? 'PARTIAL' : 'DUE'}</span>
+        </div>
+        <strong>${safeText(invoice.description)}</strong>
+        <small style="margin-top:4px;">${invoice.due_at ? 'Due ' + new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium' }).format(new Date(invoice.due_at)) : 'On demand'}</small>
+      `;
+
       const right = document.createElement('div');
-      right.innerHTML = `<strong>${money(invoice.amount)}</strong><small>Paid ${money(invoice.amount_paid)} · Balance ${money(Math.max(0, invoice.amount - invoice.amount_paid))}</small>`;
-      item.append(left, right);
-      if (invoice.kind === 'package' && invoice.status !== 'paid' && walletState?.balance > 0) {
+      right.style.textAlign = 'right';
+      right.innerHTML = `
+        <strong style="font-size:15px; font-variant-numeric:tabular-nums; color:#ffffff;">${money(invoice.amount)}</strong>
+        <small style="margin-top:3px; color:var(--muted);">${isPaid ? 'Fully Settled' : 'Paid ' + money(invoice.amount_paid) + ' · Due ' + money(balance)}</small>
+      `;
+
+      const actionArea = document.createElement('div');
+      actionArea.style.display = 'flex';
+      actionArea.style.alignItems = 'center';
+      actionArea.style.gap = '8px';
+
+      if (!isPaid) {
+        const payLink = document.createElement('a');
+        payLink.className = 'button gold';
+        payLink.style.padding = '8px 14px';
+        payLink.style.fontSize = '11.5px';
+        payLink.style.whiteSpace = 'nowrap';
+        payLink.href = `/pay.html?invoice=${encodeURIComponent(invoice.invoice_code)}`;
+        payLink.target = '_blank';
+        payLink.rel = 'noopener noreferrer';
+        payLink.innerHTML = `<span>⚡ Pay ${money(balance)}</span>`;
+        actionArea.append(payLink);
+      }
+
+      if (invoice.kind === 'package' && !isPaid && walletState?.balance > 0) {
         const apply = document.createElement('button');
-        apply.type = 'button'; apply.className = 'small-button wallet-apply';
-        apply.textContent = `Apply wallet credit · up to ${money(Math.min(walletState.balance, invoice.amount - invoice.amount_paid))}`;
+        apply.type = 'button';
+        apply.className = 'small-button wallet-apply';
+        apply.textContent = `Apply Wallet (₹${Math.min(walletState.balance, balance)})`;
         apply.onclick = async () => {
           apply.disabled = true;
           try {
@@ -274,8 +337,9 @@
             if (updated) loadProjectDetails(updated);
           } catch (error) { $('#client-referral-message').textContent = error.message; apply.disabled = false; }
         };
-        item.append(apply);
+        actionArea.append(apply);
       }
+
       if (invoice.payment_url) {
         try {
           const url = new URL(invoice.payment_url);
@@ -285,17 +349,21 @@
             link.href = url.href;
             link.target = '_blank';
             link.rel = 'noopener noreferrer';
-            link.textContent = 'Payment link ↗';
-            item.append(link);
+            link.textContent = 'Custom Link ↗';
+            actionArea.append(link);
           }
         } catch {}
       }
+
+      item.append(left, right, actionArea);
       invoiceItems.append(item);
     });
 
     const deliveryArea = $('#client-deliveries'), deliveryList = $('#delivery-items');
     deliveryList.replaceChildren();
-    deliveryArea.hidden = !deliveries.length;
+    const openBalance=invoices.reduce((sum,invoice)=>sum+Math.max(0,Number(invoice.amount)-Number(invoice.amount_paid)),0);
+    deliveryArea.hidden = !deliveries.length && openBalance<=0;
+    if(!deliveries.length&&openBalance>0){const notice=document.createElement('p');notice.className='muted';notice.textContent=`Final image delivery unlocks after all dues are cleared. Current outstanding balance: ${money(openBalance)}.`;deliveryList.append(notice);}
 
     deliveries.forEach(delivery => {
       const row = document.createElement('div');
@@ -362,6 +430,7 @@
       if (result.session?.status !== activeSession?.status) {
         activeSession = result.session;
         activeProject = result.project;
+        renderPackageUpgrades(activeProject,activeSession);
         if (activeSession?.status === 'active') renderActive();
         else if (activeSession?.status === 'complete') {
           if (countdownHandle) clearInterval(countdownHandle);

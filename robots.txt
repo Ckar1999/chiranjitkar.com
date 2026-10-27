@@ -31,4 +31,6 @@ Sitemap: https://chiranjitkar.com/sitemap.xml
 Disallow: /studio
 Disallow: /studio.html
 Disallow: /session.html
+Disallow: /pay.html
+Disallow: /pay
 Disallow: /api/

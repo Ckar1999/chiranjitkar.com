@@ -2,6 +2,18 @@ const COOKIE = '__Host-studio_session';
 const CLIENT_COOKIE = 'client_session';
 const ROLES = new Set(['admin', 'sales', 'photographer', 'filmmaker', 'editor']);
 const PROJECT_STATES = new Set(['lead', 'confirmed', 'preproduction', 'scheduled', 'in_session', 'editing', 'client_review', 'delivered', 'archived']);
+const BOOKING_PACKAGES = [
+  { id:'model-portfolio', category:'Full production', name:'Model Portfolio & Headshots', price:20000, service:'Model portfolio', summary:'3 looks · MUA and hairstylist · 15 retouched photos · indoor studio · 1 month archive' },
+  { id:'editorial-fashion-session', category:'Full production', name:'Editorial & Fashion Session', price:34000, service:'Photography', summary:'4 looks · MUA, hairstylist, wardrobe stylist and accessories · 20 retouched photos · 1 month archive' },
+  { id:'complete-campaign-bridal', category:'Full production', name:'Complete Campaign & Bridal Production', price:53000, service:'Commercial campaign', summary:'8 looks · full creative crew · custom moodboard · 40 retouched photos · BTS video · studio and outdoor · 2 month archive' },
+  { id:'solo-single-look', category:'Solo look sessions', name:'Single Look — 1 Look', price:4599, service:'Photography', summary:'Up to 7 edited images · up to 3 hours · dedicated photographer direction' },
+  { id:'solo-editorial-2-looks', category:'Solo look sessions', name:'Editorial — 2 Looks', price:7599, service:'Photography', summary:'Up to 14 edited images · up to 6 hours · high-fashion or commercial styling by client' },
+  { id:'solo-atelier-4-looks', category:'Solo look sessions', name:'Atelier Archive — 4 Looks', price:12999, service:'Photography', summary:'Up to 28 edited images · up to 12 hours · portfolio build' },
+  { id:'portfolio-sologlimpse', category:'Paid portfolio packages', name:'SoloGlimpse', price:2499, service:'Model portfolio', summary:'1 look · 10 high-resolution images · digital portfolio rights' },
+  { id:'portfolio-chic-harmony', category:'Paid portfolio packages', name:'Chic Harmony', price:3999, service:'Model portfolio', summary:'2 looks · 20 high-resolution images · digital portfolio rights' },
+  { id:'portfolio-4-looks', category:'Paid portfolio packages', name:'4 Looks Series', price:6999, service:'Model portfolio', summary:'4 looks · 40 high-resolution images · diverse wardrobe' },
+  { id:'portfolio-6-looks', category:'Paid portfolio packages', name:'6 Looks Series', price:10599, service:'Model portfolio', summary:'6 looks · 60 high-resolution images · agency lookbook' }
+];
 
 const json = (data, status = 200, headers = {}) => Response.json(data, { status, headers: { 'Cache-Control': 'no-store', ...headers } });
 const fail = (message, status = 400) => json({ error: message }, status);
@@ -72,16 +84,23 @@ async function logEvent(env, projectId, actorId, event, detail = {}) {
     .bind(id(), projectId, actorId || null, event, JSON.stringify(detail), now()).run();
 }
 
+async function confirmProjectAfterDeposit(env,projectId){
+  const deposit=await env.DB.prepare("SELECT COUNT(*) AS total,SUM(CASE WHEN status='paid' AND amount_paid>=amount THEN 1 ELSE 0 END) AS paid FROM invoices WHERE project_id=? AND kind='package' AND status!='void'").bind(projectId).first();
+  if(Number(deposit?.total)>0&&Number(deposit?.paid)===Number(deposit?.total))await env.DB.prepare("UPDATE projects SET status='confirmed',updated_at=? WHERE id=? AND status='lead'").bind(now(),projectId).run();
+}
+
 async function awardReferralReward(env, projectId) {
   const rewardId=id(), created=now();
   await env.DB.batch([
     env.DB.prepare(`INSERT OR IGNORE INTO referral_rewards(id,referrer_client_id,referred_email,referred_project_id,package_invoice_id,package_amount,reward_amount,reward_percent,created_at)
-      SELECT ?,p.referrer_client_id,p.client_email,p.id,i.id,i.amount,CAST(i.amount*5/100 AS INTEGER),5,?
+      SELECT ?,p.referrer_client_id,p.client_email,p.id,i.id,p.package_price,CAST(p.package_price*5/100 AS INTEGER),5,?
       FROM projects p JOIN invoices i ON i.project_id=p.id AND i.kind='package' AND i.status='paid' AND i.amount_paid>=i.amount
       WHERE p.id=? AND p.referrer_client_id IS NOT NULL AND i.amount>0
+        AND NOT EXISTS(SELECT 1 FROM invoices openi WHERE openi.project_id=p.id AND openi.status NOT IN ('paid','void') AND openi.amount>openi.amount_paid)
+        AND p.package_price>0
         AND LOWER(p.client_email)!=(SELECT LOWER(email) FROM clients WHERE id=p.referrer_client_id)
         AND NOT EXISTS(SELECT 1 FROM referral_rewards r WHERE LOWER(r.referred_email)=LOWER(p.client_email))
-        AND NOT EXISTS(SELECT 1 FROM projects oldp JOIN invoices oldi ON oldi.project_id=oldp.id AND oldi.kind='package' AND oldi.status='paid' WHERE LOWER(oldp.client_email)=LOWER(p.client_email) AND oldp.id!=p.id AND oldp.created_at<p.created_at)`)
+        AND NOT EXISTS(SELECT 1 FROM projects oldp JOIN invoices oldi ON oldi.project_id=oldp.id AND oldi.kind='package' AND oldi.status='paid' WHERE LOWER(oldp.client_email)=LOWER(p.client_email) AND oldp.id!=p.id AND oldp.created_at<p.created_at AND NOT EXISTS(SELECT 1 FROM invoices oldopen WHERE oldopen.project_id=oldp.id AND oldopen.status NOT IN ('paid','void') AND oldopen.amount>oldopen.amount_paid))`)
       .bind(rewardId,created,projectId),
     env.DB.prepare(`INSERT OR IGNORE INTO wallet_transactions(id,client_id,reward_id,kind,amount,description,created_at)
       SELECT ?,referrer_client_id,id,'referral_reward',reward_amount,'5% referral reward after referred client’s first paid package',created_at FROM referral_rewards WHERE referred_project_id=? AND reward_amount>0`)
@@ -109,7 +128,7 @@ async function reconcileBankTransaction(env, input, staffId, source='manual_bank
   if(invoice){
     const paid=invoice.amount_paid+amount;
     await env.DB.prepare(`UPDATE invoices SET amount_paid=?,status=CASE WHEN ? >= amount THEN 'paid' ELSE 'partially_paid' END,updated_at=? WHERE id=?`).bind(paid,paid,importedAt,invoice.id).run();
-    if(paid>=invoice.amount&&invoice.kind==='package')await awardReferralReward(env,invoice.project_id);
+    if(paid>=invoice.amount){await confirmProjectAfterDeposit(env,invoice.project_id);await awardReferralReward(env,invoice.project_id);}
     await logEvent(env,invoice.project_id,staffId,'bank_payment_matched',{invoice_id:invoice.id,utr,amount,transaction_at:transactionISO,source});
   }
   return {result:{ok:true,status,invoice_id:invoice?.id||null,message:status==='matched'?'Payment matched and ledger updated.':status==='review'?'Multiple possible invoices found; transaction saved for review.':'No unique invoice matched; transaction saved without changing balances.'}};
@@ -121,11 +140,42 @@ async function clientProject(env, key) {
 }
 function clientToken(request){return String(request.headers.get('Authorization')||'').replace(/^Bearer\s+/i,'');}
 
+function studioDate(value=new Date()){
+  const parts=Object.fromEntries(new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Kolkata',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(value).map(part=>[part.type,part.value]));
+  return `${parts.year}-${parts.month}-${parts.day}`;
+}
+function addDateDays(value,days){const date=new Date(`${value}T00:00:00Z`);date.setUTCDate(date.getUTCDate()+days);return date.toISOString().slice(0,10);}
+async function bookedStudioDates(env,start,end,excludeProjectId=''){
+  const rows=excludeProjectId
+    ? await env.DB.prepare("SELECT DISTINCT date(p.shoot_at,'+05:30') AS booking_date FROM projects p WHERE p.shoot_at IS NOT NULL AND p.status NOT IN ('delivered','archived') AND (p.status!='lead' OR EXISTS(SELECT 1 FROM invoices i WHERE i.project_id=p.id AND i.kind='package' AND i.status='paid' AND i.amount_paid>=i.amount)) AND date(p.shoot_at,'+05:30')>=? AND date(p.shoot_at,'+05:30')<=? AND p.id<>?").bind(start,end,excludeProjectId).all()
+    : await env.DB.prepare("SELECT DISTINCT date(p.shoot_at,'+05:30') AS booking_date FROM projects p WHERE p.shoot_at IS NOT NULL AND p.status NOT IN ('delivered','archived') AND (p.status!='lead' OR EXISTS(SELECT 1 FROM invoices i WHERE i.project_id=p.id AND i.kind='package' AND i.status='paid' AND i.amount_paid>=i.amount)) AND date(p.shoot_at,'+05:30')>=? AND date(p.shoot_at,'+05:30')<=?").bind(start,end).all();
+  return new Set((rows.results||[]).map(row=>row.booking_date));
+}
+async function nextAvailableStudioDate(env,start){
+  const end=addDateDays(start,180),busy=await bookedStudioDates(env,start,end);
+  for(let offset=0;offset<=180;offset++){const candidate=addDateDays(start,offset);if(!busy.has(candidate))return candidate;}
+  return '';
+}
+
 async function handle(request, env, route) {
   if (!env.DB) return fail('Studio database is not connected yet.', 503);
   const method = request.method.toUpperCase();
   const parts = route.split('/').filter(Boolean).map(decodeURIComponent);
   const body = ['POST', 'PATCH', 'PUT'].includes(method) ? await request.json().catch(() => ({})) : {};
+
+  if(parts[0]==='packages'&&parts.length===1&&method==='GET')return json({packages:BOOKING_PACKAGES});
+  if(parts[0]==='availability'&&parts.length===1&&method==='GET'){
+    const url=new URL(request.url),month=String(url.searchParams.get('month')||studioDate().slice(0,7));
+    if(!/^\d{4}-\d{2}$/.test(month))return fail('Request a valid calendar month as YYYY-MM.');
+    const [year,monthNumber]=month.split('-').map(Number);
+    if(monthNumber<1||monthNumber>12)return fail('Request a valid calendar month as YYYY-MM.');
+    const start=`${month}-01`,end=new Date(Date.UTC(year,monthNumber,0)).toISOString().slice(0,10);
+    const busy=await bookedStudioDates(env,start,end);
+    const today=studioDate(),after=String(url.searchParams.get('after')||'').trim();
+    if(after&&(!/^\d{4}-\d{2}-\d{2}$/.test(after)||after<today))return fail('Request a future date using YYYY-MM-DD.');
+    const nextAvailableDate=await nextAvailableStudioDate(env,after||today);
+    return json({timezone:'Asia/Kolkata',month,today,busy_dates:[...busy].sort(),next_available_date:nextAvailableDate});
+  }
 
   if(parts[0]==='webhooks'&&parts[1]==='bank-alerts'&&parts.length===2&&method==='POST'){
     const supplied=String(request.headers.get('Authorization')||'').replace(/^Bearer\s+/i,'');
@@ -142,14 +192,34 @@ async function handle(request, env, route) {
   if(parts[0]==='inquiries'&&parts.length===1&&method==='POST'){
     if(String(body.website||'').trim())return json({ok:true,message:'Thanks, your inquiry has been received.'},201);
     const name=String(body.name||'').trim(),email=String(body.email||'').trim().toLowerCase(),service=String(body.service||'').trim(),referralCode=String(body.referral_code||'').trim().toUpperCase();
-    if(!name||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||!service)return fail('Please provide your name, a valid email, and the shoot category.');
+    const inquiryType=['booking','brand_collab','model_collab'].includes(body.inquiry_type)?body.inquiry_type:'booking';
+    const packageId=inquiryType==='booking'?String(body.package_id||''):'';
+    const selectedPackage=inquiryType==='booking'?BOOKING_PACKAGES.find(item=>item.id===packageId):null;
+    if(inquiryType==='booking'&&!selectedPackage)return fail('Choose a package from the booking menu.');
+    if(!name||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||(!service&&!selectedPackage))return fail('Please provide your name, a valid email, and the shoot category.');
+    const resolvedService=selectedPackage?.service||service;
+    const orderPackageName=selectedPackage?.name||'';
+    const orderPackagePrice=selectedPackage?.price||0;
+    const preferredDate=String(body.preferred_date||'').trim();
+    if(inquiryType==='booking'&&!preferredDate)return fail('Select an available shoot date first.');
+    if(preferredDate){
+      const parsedDate=new Date(`${preferredDate}T00:00:00Z`);
+      if(!/^\d{4}-\d{2}-\d{2}$/.test(preferredDate)||Number.isNaN(parsedDate.getTime())||parsedDate.toISOString().slice(0,10)!==preferredDate||preferredDate<studioDate())return fail('Choose a valid future shoot date.');
+      const busy=await bookedStudioDates(env,preferredDate,preferredDate);
+      if(busy.has(preferredDate)){const next=await nextAvailableStudioDate(env,addDateDays(preferredDate,1));return fail(`That date is no longer available. The next available date is ${next||'not currently listed'}.`,409);}
+    }
+    const portfolioUrl=String(body.portfolio_url||'').trim(),moodboardUrl=String(body.moodboard_url||'').trim();
+    if(inquiryType==='model_collab'&&(!portfolioUrl||!moodboardUrl))return fail('A portfolio link and moodboard link are required for a model collaboration proposal.');
+    if(inquiryType==='brand_collab'&&!portfolioUrl)return fail('Please provide a portfolio, agency, brand, or social profile link.');
+    for(const value of [portfolioUrl,moodboardUrl].filter(Boolean)){try{const parsed=new URL(value);if(!['http:','https:'].includes(parsed.protocol))throw new Error();}catch{return fail('Portfolio and moodboard links must be valid HTTPS or HTTP links.');}}
     if(referralCode&&!await env.DB.prepare('SELECT id FROM clients WHERE referral_code=?').bind(referralCode).first())return fail('This referral link is invalid or expired.');
     const ip=request.headers.get('CF-Connecting-IP')||'unknown';const ipHash=await digest(`${env.APP_SECRET||'studio-rate-limit'}:${ip}`);
     const since=new Date(Date.now()-60*60_000).toISOString();const recent=await env.DB.prepare('SELECT COUNT(*) AS n FROM inquiries WHERE ip_hash=? AND created_at>?').bind(ipHash,since).first();
     if((recent?.n||0)>=5)return fail('Too many inquiries from this connection. Please contact the studio directly.',429);
-    const created=now();await env.DB.prepare('INSERT INTO inquiries(id,name,email,phone,city,service,brief,status,source,ip_hash,referral_code,created_at,updated_at) VALUES(?,?,?,?,?,?,?,\'new\',\'website\',?,?,?,?)')
-      .bind(id(),name,email,String(body.phone||'').trim().slice(0,40),String(body.city||'').trim().slice(0,100),service.slice(0,150),String(body.brief||'').trim().slice(0,5000),ipHash,referralCode,created,created).run();
-    return json({ok:true,message:'Thanks, your inquiry has been received. Our studio coordinator will review it and follow up.'},201);
+    const created=now();await env.DB.prepare('INSERT INTO inquiries(id,name,email,phone,city,service,brief,status,source,ip_hash,referral_code,inquiry_type,portfolio_url,moodboard_url,package_id,package_name,package_price,preferred_date,created_at,updated_at) VALUES(?,?,?,?,?,?,?,\'new\',\'website\',?,?,?,?,?,?,?,?,?,?,?)')
+      .bind(id(),name,email,String(body.phone||'').trim().slice(0,40),String(body.city||'').trim().slice(0,100),resolvedService.slice(0,150),String(body.brief||'').trim().slice(0,5000),ipHash,referralCode,inquiryType,portfolioUrl.slice(0,500),moodboardUrl.slice(0,500),packageId,orderPackageName,orderPackagePrice,preferredDate,created,created).run();
+    const message=inquiryType==='model_collab'?'Thanks for sharing your photoshoot idea and moodboard. Our team will review the proposal and contact you if we would like to take it forward.':inquiryType==='brand_collab'?'Thanks for your fashion collaboration proposal. Our team will review it and contact you if we would like to take it forward.':inquiryType==='booking'?'Thank you. The studio team will review your request. If approved, your invoice will appear in your client dashboard.':'Thanks, your inquiry has been received. Our studio coordinator will review it and follow up.';
+    return json({ok:true,message},201);
   }
 
   if(parts[0]==='inquiries'&&parts.length===1&&method==='GET'){
@@ -160,6 +230,17 @@ async function handle(request, env, route) {
 
   if(parts[0]==='inquiries'&&parts[1]&&method==='PATCH'){
     const auth=await requireStaff(request,env,['admin','sales']);if(auth.response)return auth.response;
+    if(body.collaboration_decision){
+      if(!['accepted','declined'].includes(body.collaboration_decision))return fail('Choose accepted or declined.');
+      const inquiry=await env.DB.prepare('SELECT inquiry_type,collaboration_decision FROM inquiries WHERE id=?').bind(parts[1]).first();
+      if(!inquiry)return fail('Inquiry not found.',404);
+      if(!['model_collab','brand_collab'].includes(inquiry.inquiry_type))return fail('This request is not a fashion collaboration proposal.');
+      if(inquiry.collaboration_decision!=='pending')return fail('This proposal has already been reviewed.');
+      const reviewed=now();
+      const updated=await env.DB.prepare('UPDATE inquiries SET collaboration_decision=?,reviewed_at=?,reviewed_by=?,updated_at=? WHERE id=? AND collaboration_decision=\'pending\'').bind(body.collaboration_decision,reviewed,auth.staff.id,reviewed,parts[1]).run();
+      if(!updated.meta?.changes)return fail('Another team member has already reviewed this proposal.',409);
+      return json({ok:true,collaboration_decision:body.collaboration_decision});
+    }
     const status=body.status;if(status&&!['new','contacted','qualified','closed'].includes(status))return fail('Invalid inquiry status.');
     if(body.assigned_to){const assignee=await env.DB.prepare('SELECT id FROM staff WHERE id=? AND active=1').bind(body.assigned_to).first();if(!assignee)return fail('Select an active team member.');}
     await env.DB.prepare('UPDATE inquiries SET status=COALESCE(?,status),assigned_to=COALESCE(?,assigned_to),updated_at=? WHERE id=?').bind(status||null,body.assigned_to||null,now(),parts[1]).run();
@@ -289,7 +370,7 @@ async function handle(request, env, route) {
     if (!client) return fail('Not signed in.', 401);
 
     const projects = await env.DB.prepare(`
-      SELECT id, project_code, client_name, client_email, service, package_name, status, shoot_at, location, brief, booked_minutes, grace_minutes, overtime_step_minutes, overtime_rate, package_price, deposit_amount, created_at
+      SELECT id, project_code, client_name, client_email, service, package_name, status, shoot_at, location, brief, booked_minutes, grace_minutes, overtime_step_minutes, overtime_rate, package_price, deposit_amount, booking_deposit_due, cancelled_at, cancellation_refund_amount, cancellation_policy_applied, created_at
       FROM projects WHERE LOWER(client_email)=LOWER(?)
       ORDER BY CASE status WHEN 'in_session' THEN 0 WHEN 'scheduled' THEN 1 WHEN 'confirmed' THEN 2 WHEN 'editing' THEN 3 WHEN 'client_review' THEN 4 WHEN 'delivered' THEN 5 ELSE 6 END, shoot_at DESC, created_at DESC
     `).bind(client.email).all();
@@ -298,11 +379,15 @@ async function handle(request, env, route) {
     for (const p of (projects.results || [])) {
       const session = await env.DB.prepare("SELECT id,started_at,ended_at,elapsed_minutes,overtime_minutes,overtime_units,overtime_fee,status FROM sessions WHERE project_id=? ORDER BY started_at DESC LIMIT 1").bind(p.id).first();
       const invoices = await env.DB.prepare("SELECT id,invoice_code,kind,description,amount,amount_paid,status,due_at,payment_url FROM invoices WHERE project_id=? AND status!='void' ORDER BY created_at").bind(p.id).all();
-      const deliveries = await env.DB.prepare('SELECT title,url,note,created_at FROM deliveries WHERE project_id=? ORDER BY created_at DESC').bind(p.id).all();
+      const openBalance=(invoices.results||[]).reduce((sum,invoice)=>sum+Math.max(0,Number(invoice.amount)-Number(invoice.amount_paid)),0);
+      const deliveries = openBalance<=0
+        ? await env.DB.prepare('SELECT title,url,note,created_at FROM deliveries WHERE project_id=? ORDER BY created_at DESC').bind(p.id).all()
+        : {results:[]};
       projectList.push({
         ...p,
         session,
         invoices: invoices.results || [],
+        open_balance: openBalance,
         deliveries: deliveries.results || []
       });
     }
@@ -346,6 +431,7 @@ async function handle(request, env, route) {
       ]);
       if(!(results[0]?.meta?.changes>0))return fail('Wallet or package balance changed. Refresh and try again.',409);
     }catch(error){if(String(error?.message||'').includes('UNIQUE'))return fail('Wallet credit has already been applied to this package.',409);throw error;}
+    await confirmProjectAfterDeposit(env,invoice.project_id);
     await awardReferralReward(env,invoice.project_id);
     return json({ok:true,applied:useAmount,message:`${new Intl.NumberFormat('en-IN').format(useAmount)} rupees of wallet credit applied.`});
   }
@@ -361,6 +447,36 @@ async function handle(request, env, route) {
     headers.append('Set-Cookie', `${CLIENT_COOKIE}=${domainPart}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`);
     headers.append('Set-Cookie', `__Host-client_session=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`);
     return new Response(JSON.stringify({ ok: true }), { status: 200, headers });
+  }
+
+  if(parts[0]==='client'&&parts[1]==='project'&&parts[2]==='upgrade'&&method==='POST'){
+    let project=await clientProject(env,clientToken(request));
+    if(project&&body.project_id&&project.id!==String(body.project_id))return fail('This private client link belongs to a different project.',403);
+    if(!project){
+      const client=await clientAuth(request,env);if(!client)return fail('Sign in to request a package upgrade.',401);
+      const code=String(body.project_code||'').trim();
+      if(!code)return fail('Select a project before requesting an upgrade.');
+      project=await env.DB.prepare('SELECT * FROM projects WHERE (id=? OR project_code=?) AND LOWER(client_email)=LOWER(?)').bind(code,code,client.email).first();
+    }
+    if(!project)return fail('This client project was not found.',404);
+    if(['in_session','editing','client_review','delivered','archived'].includes(project.status))return fail('Package upgrades close when the session starts.');
+    const started=await env.DB.prepare('SELECT 1 AS started FROM sessions WHERE project_id=? LIMIT 1').bind(project.id).first();
+    if(started)return fail('Package upgrades close when the session starts.');
+    const selected=BOOKING_PACKAGES.find(item=>item.id===String(body.package_id||''));
+    if(!selected)return fail('Choose an available package.');
+    const currentPrice=Number(project.package_price)||0,delta=selected.price-currentPrice;
+    if(delta<=0)return fail('Choose a package that costs more than your current package.');
+    const depositDelta=Math.round(delta*.30),balanceDelta=delta-depositDelta,updated=now();
+    const update=await env.DB.prepare("UPDATE projects SET package_name=?,package_price=?,booking_deposit_due=booking_deposit_due+?,updated_at=? WHERE id=? AND package_price=? AND status NOT IN ('in_session','editing','client_review','delivered','archived') AND NOT EXISTS(SELECT 1 FROM sessions WHERE project_id=?)")
+      .bind(selected.name,selected.price,depositDelta,updated,project.id,currentPrice,project.id).run();
+    if(!(update.meta?.changes>0))return fail('This project changed or the session has started. Refresh and try again.',409);
+    const invoiceSuffix=Date.now().toString().slice(-8);
+    if(depositDelta>0)await env.DB.prepare('INSERT INTO invoices(id,project_id,invoice_code,kind,description,amount,amount_paid,status,due_at,payment_url,created_by,created_at,updated_at) VALUES(?,?,?,?,?,?,0,\'sent\',NULL,\'\',?,?,?)')
+      .bind(id(),project.id,`INV-${project.project_code}-UP-${invoiceSuffix}`,'package',`Package upgrade deposit — ${selected.name} (30% of upgrade)`,depositDelta,project.created_by,updated,updated).run();
+    if(balanceDelta>0)await env.DB.prepare('INSERT INTO invoices(id,project_id,invoice_code,kind,description,amount,amount_paid,status,due_at,payment_url,created_by,created_at,updated_at) VALUES(?,?,?,?,?,?,0,\'draft\',NULL,\'\',?,?,?)')
+      .bind(id(),project.id,`INV-${project.project_code}-UB-${invoiceSuffix}`,'adjustment',`Package balance (70%) upgrade to ${selected.name} — due after session completion`,balanceDelta,project.created_by,updated,updated).run();
+    await logEvent(env,project.id,null,'client_package_upgraded',{from:project.package_name,to:selected.name,previous_price:currentPrice,new_price:selected.price,deposit_due:depositDelta,balance_due:balanceDelta});
+    return json({ok:true,package_name:selected.name,price:selected.price,upgrade_amount:delta,deposit_due:depositDelta,balance_due:balanceDelta,message:`Package upgraded. The 30% upgrade deposit is ₹${depositDelta}; ₹${balanceDelta} is due after your session.`});
   }
 
   if (parts[0] === 'client' && parts[1] === 'project' && method === 'GET') {
@@ -379,8 +495,11 @@ async function handle(request, env, route) {
     if (!project) return fail('This client project was not found.', 404);
     const session = await env.DB.prepare("SELECT id,started_at,ended_at,elapsed_minutes,overtime_minutes,overtime_units,overtime_fee,status FROM sessions WHERE project_id=? ORDER BY started_at DESC LIMIT 1").bind(project.id).first();
     const invoices = await env.DB.prepare("SELECT id,invoice_code,kind,description,amount,amount_paid,status,due_at,payment_url FROM invoices WHERE project_id=? AND status!='void' ORDER BY created_at").bind(project.id).all();
-    const deliveries = await env.DB.prepare('SELECT title,url,note,created_at FROM deliveries WHERE project_id=? ORDER BY created_at DESC').bind(project.id).all();
-    return json({ project: { id: project.id, project_code: project.project_code, client_name: project.client_name, service: project.service, package_name: project.package_name, shoot_at: project.shoot_at, booked_minutes: project.booked_minutes, grace_minutes: project.grace_minutes, overtime_step_minutes: project.overtime_step_minutes, overtime_rate: project.overtime_rate, status: project.status }, session, invoices: invoices.results || [], deliveries: deliveries.results || [] });
+    const openBalance=(invoices.results||[]).reduce((sum,invoice)=>sum+Math.max(0,Number(invoice.amount)-Number(invoice.amount_paid)),0);
+    const deliveries = openBalance<=0
+      ? await env.DB.prepare('SELECT title,url,note,created_at FROM deliveries WHERE project_id=? ORDER BY created_at DESC').bind(project.id).all()
+      : {results:[]};
+    return json({ project: { id: project.id, project_code: project.project_code, client_name: project.client_name, service: project.service, package_name: project.package_name, package_price:project.package_price, shoot_at: project.shoot_at, booked_minutes: project.booked_minutes, grace_minutes: project.grace_minutes, overtime_step_minutes: project.overtime_step_minutes, overtime_rate: project.overtime_rate, status: project.status }, session, invoices: invoices.results || [], open_balance:openBalance, deliveries: deliveries.results || [] });
   }
 
   if (parts[0] === 'client' && parts[1] === 'challenge' && method === 'POST') {
@@ -430,6 +549,62 @@ async function handle(request, env, route) {
     return json({ok:true},201);
   }
 
+  if (parts[0] === 'pay' && parts[1] === 'notify' && method === 'POST') {
+    const code = String(body.invoice_code || '').trim();
+    const utr = String(body.utr || '').trim().toUpperCase().replace(/\s+/g, '');
+    const amount = Math.round(Number(body.amount));
+    if (!utr || !/^[A-Z0-9]{8,40}$/.test(utr)) return fail('Enter a valid 8 to 40 character UTR / UPI Reference Number.');
+    if (!amount || amount <= 0) return fail('Valid amount required.');
+
+    const invoice = await env.DB.prepare(`
+      SELECT i.*, p.client_name, p.client_email 
+      FROM invoices i 
+      JOIN projects p ON p.id=i.project_id 
+      WHERE (i.invoice_code=? OR i.id=?) AND i.status!='void'
+    `).bind(code, code).first();
+    if (!invoice) return fail('Invoice not found.', 404);
+
+    const outcome = await reconcileBankTransaction(env, {
+      utr,
+      amount,
+      transaction_at: now()
+    }, null, 'client_portal_submission');
+
+    if (outcome.result && outcome.result.status === 'matched') {
+      return json({ ok: true, status: 'paid', message: 'Payment successfully matched and confirmed!' });
+    }
+
+    return json({
+      ok: true,
+      status: 'pending',
+      message: 'UTR registered. Our 24/7 bank scanner is scanning HDFC alerts and will reconcile your payment automatically within 60 seconds.'
+    });
+  }
+
+  if (parts[0] === 'pay' && parts[1] && method === 'GET') {
+    const code = decodeURIComponent(parts[1]).trim();
+    const invoice = await env.DB.prepare(`
+      SELECT i.id, i.invoice_code, i.kind, i.description, i.amount, i.amount_paid, i.status, i.due_at, i.payment_url,
+             p.project_code, p.client_name, p.service, p.package_name
+      FROM invoices i
+      JOIN projects p ON p.id=i.project_id
+      WHERE (i.invoice_code=? OR i.id=?) AND i.status!='void'
+    `).bind(code, code).first();
+    if (!invoice) return fail('Invoice not found.', 404);
+
+    const balance = Math.max(0, invoice.amount - invoice.amount_paid);
+    return json({
+      ok: true,
+      invoice: {
+        ...invoice,
+        balance,
+        upi_id: '9402369889@hdfc',
+        payee_name: 'Chiranjit Kar',
+        bank_name: 'HDFC Bank'
+      }
+    });
+  }
+
   if (parts[0] === 'projects' && parts.length === 1 && method === 'GET') {
     const auth = await requireStaff(request, env);
     if (auth.response) return auth.response;
@@ -438,9 +613,10 @@ async function handle(request, env, route) {
       (SELECT id FROM sessions se WHERE se.project_id=p.id AND se.status='active' LIMIT 1) AS active_session_id,
       (SELECT started_at FROM sessions se WHERE se.project_id=p.id AND se.status='active' LIMIT 1) AS active_started_at,
       (SELECT COUNT(*) FROM tasks t WHERE t.project_id=p.id AND t.status!='done') AS open_tasks,
-      (SELECT COALESCE(SUM(i.amount-i.amount_paid),0) FROM invoices i WHERE i.project_id=p.id AND i.status NOT IN ('void','paid')) AS balance_due
+      (SELECT COALESCE(SUM(i.amount-i.amount_paid),0) FROM invoices i WHERE i.project_id=p.id AND i.status NOT IN ('void','paid')) AS balance_due,
+      (SELECT COALESCE(SUM(i.amount_paid),0) FROM invoices i WHERE i.project_id=p.id AND i.kind='package' AND i.status!='void') AS deposit_received
       FROM projects p JOIN staff s ON s.id=p.created_by WHERE (? IN ('admin','sales') OR p.created_by=? OR EXISTS(SELECT 1 FROM assignments a WHERE a.project_id=p.id AND a.staff_id=?) OR EXISTS(SELECT 1 FROM tasks t WHERE t.project_id=p.id AND t.assigned_to=?)) ORDER BY CASE p.status WHEN 'lead' THEN 0 WHEN 'confirmed' THEN 1 WHEN 'preproduction' THEN 2 WHEN 'scheduled' THEN 3 WHEN 'in_session' THEN 4 WHEN 'editing' THEN 5 WHEN 'client_review' THEN 6 WHEN 'delivered' THEN 7 ELSE 8 END, p.shoot_at IS NULL, p.shoot_at ASC, p.created_at DESC`).bind(auth.staff.role,auth.staff.id,auth.staff.id,auth.staff.id).all();
-    const projects=(rows.results||[]).map(project=>{if(!['admin','sales'].includes(auth.staff.role)){delete project.package_price;delete project.deposit_amount;delete project.balance_due;}return project;});
+    const projects=(rows.results||[]).map(project=>{if(!['admin','sales'].includes(auth.staff.role)){delete project.package_price;delete project.deposit_amount;delete project.balance_due;delete project.deposit_received;}return project;});
     return json({ projects });
   }
 
@@ -557,7 +733,7 @@ async function handle(request, env, route) {
       const referrer=await env.DB.prepare('SELECT id,email FROM clients WHERE referral_code=?').bind(referralCode).first();
       if(!referrer)return fail('Referral code is invalid.');
       if(referrer.email.toLowerCase()===client_email)return fail('A client cannot refer themselves.');
-      const priorPurchase=await env.DB.prepare(`SELECT 1 AS purchased FROM projects p JOIN invoices i ON i.project_id=p.id WHERE LOWER(p.client_email)=? AND i.kind='package' AND i.status='paid' LIMIT 1`).bind(client_email).first();
+      const priorPurchase=await env.DB.prepare(`SELECT 1 AS purchased FROM projects p JOIN invoices i ON i.project_id=p.id WHERE LOWER(p.client_email)=? AND i.kind='package' AND i.status='paid' AND NOT EXISTS(SELECT 1 FROM invoices openi WHERE openi.project_id=p.id AND openi.status NOT IN ('paid','void') AND openi.amount>openi.amount_paid) LIMIT 1`).bind(client_email).first();
       if(priorPurchase)return fail('Referral credit applies only to a friend’s first paid package.');
       referrerClientId=referrer.id;
     }
@@ -569,27 +745,39 @@ async function handle(request, env, route) {
     const step = 30;
     const rateInput=Number(body.overtime_rate);
     const rate = Math.max(0, Math.round(Number.isFinite(rateInput)&&body.overtime_rate!==''?rateInput:(defaults.default_overtime_rate||0)));
+    const packagePrice=Math.max(0,Math.round(Number(body.package_price)||0));
+    const bookingDepositDue=Math.round(packagePrice*.30);
+    const depositReceived=Math.min(Math.max(0,Math.round(Number(body.deposit_amount)||0)),bookingDepositDue);
+    const requestedStatus=body.status&&PROJECT_STATES.has(body.status)?body.status:'lead';
+    if(packagePrice>0&&['confirmed','preproduction','scheduled'].includes(requestedStatus)&&depositReceived<bookingDepositDue)return fail('The booking can be confirmed only after its 30% deposit is paid.');
+    const projectStatus=packagePrice>0&&requestedStatus==='lead'&&depositReceived>=bookingDepositDue?'confirmed':requestedStatus;
+    let shootAt=body.shoot_at||null;
+    if(shootAt){const parsed=new Date(shootAt);if(Number.isNaN(parsed.getTime()))return fail('Choose a valid shoot date and time.');shootAt=parsed.toISOString();const day=studioDate(parsed);if(day>=studioDate()&&(await bookedStudioDates(env,day,day)).has(day)){const next=await nextAvailableStudioDate(env,addDateDays(day,1));return fail(`That shoot date is already booked. The next available date is ${next||'not currently listed'}.`,409);}}
     const projectId = id();
     const key = b64(bytes(32));
     const projectCode = `CK-${new Date().getFullYear()}-${crypto.getRandomValues(new Uint32Array(1))[0].toString().slice(0, 6).padStart(6,'0')}`;
     const created = now();
-    await env.DB.prepare(`INSERT INTO projects(id,project_code,client_name,client_email,client_phone,service,package_name,status,shoot_at,location,brief,booked_minutes,grace_minutes,overtime_step_minutes,overtime_rate,package_price,deposit_amount,client_key_hash,selection_due_at,delivery_due_at,created_by,created_at,updated_at,referrer_client_id)
+    try{await env.DB.prepare(`INSERT INTO projects(id,project_code,client_name,client_email,client_phone,service,package_name,status,shoot_at,location,brief,booked_minutes,grace_minutes,overtime_step_minutes,overtime_rate,package_price,deposit_amount,client_key_hash,selection_due_at,delivery_due_at,created_by,created_at,updated_at,referrer_client_id)
       VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).bind(
       projectId, projectCode, client_name, client_email, String(body.client_phone || '').trim(), service,
-      String(body.package_name || '').trim(), body.status && PROJECT_STATES.has(body.status) ? body.status : 'lead',
-      body.shoot_at || null, String(body.location || '').trim(), String(body.brief || '').trim(), booked, grace, step, rate,
-      Math.max(0, Math.round(Number(body.package_price) || 0)), Math.max(0, Math.round(Number(body.deposit_amount) || 0)),
+      String(body.package_name || '').trim(), projectStatus,
+      shootAt, String(body.location || '').trim(), String(body.brief || '').trim(), booked, grace, step, rate,
+      packagePrice, depositReceived,
       await digest(key), body.selection_due_at || null, body.delivery_due_at || null, auth.staff.id, created, created, referrerClientId
-    ).run();
+    ).run();}catch(error){if(String(error?.message||'').includes('projects_one_active_session_per_day'))return fail('That shoot date is already booked. Choose another available date.',409);throw error;}
+    if(packagePrice>0)await env.DB.prepare('UPDATE projects SET booking_deposit_due=? WHERE id=?').bind(bookingDepositDue,projectId).run();
     const assignments = Array.isArray(body.assignments) ? body.assignments : [];
     for (const item of assignments) {
       if (item?.staff_id && ROLES.has(item.role)) await env.DB.prepare('INSERT OR IGNORE INTO assignments(project_id,staff_id,assignment,assigned_at) VALUES(?,?,?,?)').bind(projectId, item.staff_id, item.role, created).run();
     }
-    await logEvent(env, projectId, auth.staff.id, 'project_created', { project_code: projectCode, status: body.status || 'lead' });
+    await logEvent(env, projectId, auth.staff.id, 'project_created', { project_code: projectCode, status: projectStatus });
     if (Number(body.package_price) > 0) {
       await env.DB.prepare('INSERT INTO invoices(id,project_id,invoice_code,kind,description,amount,amount_paid,status,due_at,payment_url,created_by,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)')
-        .bind(id(),projectId,`INV-${projectCode}-01`,'package',String(body.package_name||service),Math.round(Number(body.package_price)||0),Math.min(Math.round(Number(body.deposit_amount)||0),Math.round(Number(body.package_price)||0)),Number(body.deposit_amount)>=Number(body.package_price)?'paid':Number(body.deposit_amount)>0?'partially_paid':'draft',null,'',auth.staff.id,created,created).run();
-      if(Number(body.deposit_amount)>=Number(body.package_price)&&Number(body.package_price)>0)await awardReferralReward(env,projectId);
+        .bind(id(),projectId,`INV-${projectCode}-01`,'package',`${String(body.package_name||service)} — 30% booking deposit due at confirmation`,bookingDepositDue,depositReceived,depositReceived>=bookingDepositDue&&bookingDepositDue>0?'paid':depositReceived>0?'partially_paid':'sent',null,'',auth.staff.id,created,created).run();
+      const balance=packagePrice-bookingDepositDue;
+      if(balance>0)await env.DB.prepare('INSERT INTO invoices(id,project_id,invoice_code,kind,description,amount,amount_paid,status,due_at,payment_url,created_by,created_at,updated_at) VALUES(?,?,?,?,?,?,0,\'draft\',NULL,\'\',?,?,?)')
+        .bind(id(),projectId,`INV-${projectCode}-02`,'adjustment','Package balance (70%) — due after session completion',balance,auth.staff.id,created,created).run();
+      if(depositReceived>=bookingDepositDue&&bookingDepositDue>0)await awardReferralReward(env,projectId);
     }
     return json({ project: { id: projectId, project_code: projectCode }, client_link: clientPortalUrl(request, `key=${encodeURIComponent(key)}`) }, 201);
   }
@@ -624,6 +812,23 @@ async function handle(request, env, route) {
     return json({ client_link: clientPortalUrl(request, `key=${encodeURIComponent(key)}`) });
   }
 
+  if(parts[0]==='projects'&&parts[1]&&parts[2]==='cancel'&&method==='POST'){
+    const auth=await requireStaff(request,env,['admin','sales']);if(auth.response)return auth.response;
+    const project=await env.DB.prepare("SELECT p.id,p.project_code,p.shoot_at,p.deposit_amount,p.status,p.cancelled_at,COALESCE((SELECT SUM(i.amount_paid) FROM invoices i WHERE i.project_id=p.id AND i.kind='package' AND i.status!='void'),p.deposit_amount) AS paid_deposit FROM projects p WHERE p.id=?").bind(parts[1]).first();
+    if(!project)return fail('Project not found.',404);
+    if(project.cancelled_at)return fail('This booking is already cancelled.');
+    if(['in_session','delivered'].includes(project.status))return fail('An active or delivered project cannot be cancelled here.');
+    if(!project.shoot_at)return fail('Set the scheduled session date before applying the cancellation policy.');
+    const cancelledAt=now();
+    const within48=new Date(project.shoot_at).getTime()-Date.now()<=48*60*60*1000;
+    const refundAmount=within48?0:Math.max(0,Number(project.paid_deposit)||0);
+    const policy=within48?'Cancellation within 48 hours of session; deposit non-refundable.':'Cancellation more than 48 hours before session; paid deposit marked refundable.';
+    await env.DB.prepare("UPDATE projects SET status='archived',cancelled_at=?,cancellation_refund_amount=?,cancellation_policy_applied=?,updated_at=? WHERE id=?")
+      .bind(cancelledAt,refundAmount,policy,cancelledAt,project.id).run();
+    await logEvent(env,project.id,auth.staff.id,'booking_cancelled',{refund_amount:refundAmount,policy,shoot_at:project.shoot_at});
+    return json({ok:true,refund_amount:refundAmount,policy,message:refundAmount>0?`Cancelled. ₹${refundAmount} is marked refundable; process the refund through your payment provider.`:'Cancelled. Deposit is non-refundable under the 48-hour policy.'});
+  }
+
   if (parts[0] === 'projects' && parts[1] && parts.length === 2 && method === 'PATCH') {
     const auth = await requireStaff(request, env, ['admin','sales','photographer','filmmaker','editor']);
     if (auth.response) return auth.response;
@@ -634,7 +839,7 @@ async function handle(request, env, route) {
     for (const field of allowed) {
       if (!(field in body)) continue;
       if (field === 'status' && !PROJECT_STATES.has(body[field])) return fail('Invalid project status.');
-      if (['booked_minutes','overtime_rate','package_price','deposit_amount'].includes(field)) {
+      if (['booked_minutes','overtime_rate','package_price','deposit_amount','cancellation_refund_amount'].includes(field)) {
         const v = Number(body[field]);
         if (!Number.isFinite(v) || v < (field === 'booked_minutes' ? 1 : 0)) return fail(`Invalid ${field.replaceAll('_',' ')}.`);
         values.push(Math.round(v));
@@ -642,8 +847,25 @@ async function handle(request, env, route) {
       sets.push(`${field}=?`);
     }
     if (!sets.length) return fail('No supported project fields supplied.');
+    if(body.status){
+      const currentStatus=await env.DB.prepare('SELECT status,package_price FROM projects WHERE id=?').bind(parts[1]).first();
+      if(currentStatus?.status==='lead'&&['confirmed','preproduction','scheduled'].includes(body.status)&&Number(currentStatus.package_price)>0){
+        const deposit=await env.DB.prepare("SELECT COUNT(*) AS total,SUM(CASE WHEN status='paid' AND amount_paid>=amount THEN 1 ELSE 0 END) AS paid FROM invoices WHERE project_id=? AND kind='package' AND status!='void'").bind(parts[1]).first();
+        if(!Number(deposit?.total)||Number(deposit.paid)!==Number(deposit.total))return fail('A booking can be confirmed only after the 30% deposit is paid.',409);
+      }
+      if(body.status==='lead'&&currentStatus?.status!=='lead'){
+        const paidDeposit=await env.DB.prepare("SELECT 1 AS paid FROM invoices WHERE project_id=? AND kind='package' AND status='paid' AND amount_paid>=amount LIMIT 1").bind(parts[1]).first();
+        if(paidDeposit)return fail('A deposit-paid booking cannot return to inquiry status.',409);
+      }
+    }
+    if('shoot_at' in body||'status' in body){
+      const current=await env.DB.prepare('SELECT shoot_at,status FROM projects WHERE id=?').bind(parts[1]).first();
+      const nextStatus=body.status||current?.status;
+      let nextShootAt='shoot_at' in body?(body.shoot_at||null):current?.shoot_at;
+      if(nextShootAt){const parsed=new Date(nextShootAt);if(Number.isNaN(parsed.getTime()))return fail('Choose a valid shoot date and time.');nextShootAt=parsed.toISOString();const day=studioDate(parsed);if(nextStatus&&!['delivered','archived'].includes(nextStatus)&&(await bookedStudioDates(env,day,day,parts[1])).has(day)){const next=await nextAvailableStudioDate(env,addDateDays(day,1));return fail(`That shoot date is already booked. The next available date is ${next||'not currently listed'}.`,409);}if('shoot_at' in body){const fieldIndex=allowed.indexOf('shoot_at');const valueIndex=allowed.slice(0,fieldIndex).filter(field=>field in body).length;values[valueIndex]=nextShootAt;}}
+    }
     sets.push('updated_at=?'); values.push(now(), parts[1]);
-    const result = await env.DB.prepare(`UPDATE projects SET ${sets.join(',')} WHERE id=?`).bind(...values).run();
+    let result;try{result=await env.DB.prepare(`UPDATE projects SET ${sets.join(',')} WHERE id=?`).bind(...values).run();}catch(error){if(String(error?.message||'').includes('projects_one_active_session_per_day'))return fail('That shoot date is already booked. Choose another available date.',409);throw error;}
     if (!result.meta.changes) return fail('Project not found.', 404);
     await logEvent(env, parts[1], auth.staff.id, 'project_updated', Object.fromEntries(allowed.filter(k => k in body).map(k => [k, body[k]])));
     return json({ ok: true });
@@ -726,7 +948,7 @@ async function handle(request, env, route) {
     const paid=body.amount_paid===undefined?invoice.amount_paid:Math.min(invoice.amount,Math.max(0,Math.round(Number(body.amount_paid)||0)));
     const status=body.status&&['draft','sent','partially_paid','paid','void'].includes(body.status)?body.status:paid>=invoice.amount&&invoice.amount>0?'paid':paid>0?'partially_paid':invoice.status==='sent'?'sent':'draft';
     await env.DB.prepare('UPDATE invoices SET amount_paid=?,status=?,payment_url=COALESCE(?,payment_url),updated_at=? WHERE id=?').bind(paid,status,body.payment_url||null,now(),parts[1]).run();
-    if(invoice.kind==='package'&&paid>=invoice.amount)await awardReferralReward(env,invoice.project_id);
+    if(paid>=invoice.amount){await confirmProjectAfterDeposit(env,invoice.project_id);await awardReferralReward(env,invoice.project_id);}
     await logEvent(env,invoice.project_id,auth.staff.id,'invoice_updated',{invoice_code:invoice.invoice_code,amount_paid:paid,status});return json({ok:true});
   }
 
@@ -748,6 +970,8 @@ async function handle(request, env, route) {
     if (!env.APP_SECRET) return fail('Session approval is not configured yet.', 503);
     const project = await env.DB.prepare('SELECT * FROM projects WHERE id=?').bind(parts[1]).first();
     if (!project) return fail('Project not found.', 404);
+    const unpaidDeposit=await env.DB.prepare("SELECT 1 AS unpaid FROM invoices WHERE project_id=? AND kind='package' AND status NOT IN ('paid','void') AND amount>amount_paid LIMIT 1").bind(project.id).first();
+    if(unpaidDeposit)return fail('The booking deposit must be paid before the session can start.',409);
     const code = String(body.code || '').trim();
     const challenge = await env.DB.prepare("SELECT * FROM otp_challenges WHERE project_id=? AND kind='start' AND consumed_at IS NULL AND expires_at>? ORDER BY created_at DESC LIMIT 1").bind(project.id, now()).first();
     if (!challenge) return fail('Ask the client to generate a fresh start code from their session link.', 409);
@@ -794,6 +1018,8 @@ async function handle(request, env, route) {
     await env.DB.prepare('UPDATE otp_challenges SET consumed_at=? WHERE id=?').bind(ended, challenge.id).run();
     await env.DB.prepare("UPDATE sessions SET ended_at=?,elapsed_minutes=?,overtime_minutes=?,overtime_units=?,overtime_fee=?,end_approved_by_client=1,status='complete' WHERE id=?")
       .bind(ended, elapsed, overtime, units, fee, session.id).run();
+    await env.DB.prepare("UPDATE invoices SET due_at=?,status=CASE WHEN status='draft' THEN 'sent' ELSE status END,updated_at=? WHERE project_id=? AND status NOT IN ('void','paid') AND (kind='package' OR (kind='adjustment' AND description LIKE 'Package balance (70%)%'))")
+      .bind(ended,ended,project.id).run();
     await env.DB.prepare("UPDATE projects SET status='editing',updated_at=? WHERE id=?").bind(ended, project.id).run();
     if(fee>0){
       const prior=await env.DB.prepare('SELECT id FROM invoices WHERE session_id=?').bind(session.id).first();

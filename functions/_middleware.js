@@ -52,6 +52,11 @@ export async function onRequest(context) {
 
   // 2. MAIN WEBSITE ROUTING (chiranjitkar.com)
   if (host === MAIN_HOST || host === WWW_MAIN_HOST) {
+    if (path === '/collaborate' || path === '/collaborate.html') {
+      const target = new URL('https://' + BOOK_HOST + '/collaborate');
+      target.search = url.search;
+      return Response.redirect(target.toString(), 302);
+    }
     if (path === '/session' || path === '/session.html' || path === '/portal') {
       const target = new URL('https://' + CLIENT_HOST + '/');
       target.search = url.search;
@@ -64,10 +69,19 @@ export async function onRequest(context) {
       target.hash = url.hash;
       return Response.redirect(target.toString(), 302);
     }
+    if (path === '/pay' || path === '/pay.html') {
+      const target = new URL('https://' + CLIENT_HOST + '/pay.html');
+      target.search = url.search;
+      target.hash = url.hash;
+      return Response.redirect(target.toString(), 302);
+    }
   }
 
   // 3. CLIENT PORTAL SUBDOMAIN ROUTING (client.chiranjitkar.com)
   if (host === CLIENT_HOST) {
+    if (path === '/pay' || path === '/pay.html') {
+      return serveAsset(context, '/pay.html');
+    }
     // Cross-link redirects to booking
     if (path === '/book' || path === '/book.html' || path === '/booking' || path === '/contact' || path === '/contact.html') {
       const target = new URL('https://' + BOOK_HOST + '/');
@@ -95,6 +109,10 @@ export async function onRequest(context) {
       const target = new URL('https://' + CLIENT_HOST + '/');
       target.search = url.search;
       return Response.redirect(target.toString(), 302);
+    }
+
+    if (path === '/collaborate' || path === '/collaborate.html') {
+      return serveAsset(context, '/collaborate.html');
     }
 
     // Canonical redirect from /book, /book.html, /booking, /contact to /
