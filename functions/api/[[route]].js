@@ -577,7 +577,7 @@ async function handle(request, env, route) {
     return json({
       ok: true,
       status: 'pending',
-      message: 'UTR registered. Our 24/7 bank scanner is scanning HDFC alerts and will reconcile your payment automatically within 60 seconds.'
+      message: 'Payment reference logged. Your transaction is being confirmed automatically.'
     });
   }
 
@@ -585,7 +585,8 @@ async function handle(request, env, route) {
     const code = decodeURIComponent(parts[1]).trim();
     const invoice = await env.DB.prepare(`
       SELECT i.id, i.invoice_code, i.kind, i.description, i.amount, i.amount_paid, i.status, i.due_at, i.payment_url,
-             p.project_code, p.client_name, p.service, p.package_name
+             p.project_code, p.client_name, p.client_email, p.client_phone, p.service, p.package_name,
+             p.shoot_at, p.location, p.package_price, p.deposit_amount, p.brief
       FROM invoices i
       JOIN projects p ON p.id=i.project_id
       WHERE (i.invoice_code=? OR i.id=?) AND i.status!='void'

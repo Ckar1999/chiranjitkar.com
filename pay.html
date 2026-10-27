@@ -4,632 +4,786 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex,nofollow">
-  <meta name="theme-color" content="#070709">
-  <title>Payment Gateway | Chiranjit Kar Photography</title>
-  <link rel="stylesheet" href="/studio.css">
+  <meta name="theme-color" content="#08080a">
+  <title>Checkout | Chiranjit Kar Photography</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    /* Razorpay-grade Gateway Specific Styles */
-    .gateway-shell {
+    :root {
+      --bg: #08080a;
+      --card-left: #0e0e13;
+      --card-right: #14141c;
+      --border: rgba(255, 255, 255, 0.08);
+      --border-focus: rgba(212, 175, 55, 0.6);
+      --text: #f4f4f7;
+      --text-muted: #8e8e99;
+      --text-dim: #5c5c66;
+      --gold: #d4af37;
+      --gold-gradient: linear-gradient(135deg, #f7ebd1 0%, #d4af37 55%, #9b7923 100%);
+      --gold-glow: rgba(212, 175, 55, 0.25);
+      --green: #10b981;
+      --green-bg: rgba(16, 185, 129, 0.12);
+      --green-border: rgba(16, 185, 129, 0.25);
+      --font: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --serif: 'Cinzel', Georgia, serif;
+      --mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      background-image: 
+        radial-gradient(at 15% 15%, rgba(212, 175, 55, 0.04) 0px, transparent 50%),
+        radial-gradient(at 85% 85%, rgba(20, 20, 30, 0.8) 0px, transparent 50%);
+      color: var(--text);
+      font-family: var(--font);
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 30px 16px;
-      background: radial-gradient(circle at 50% 10%, rgba(212, 175, 55, 0.08) 0%, transparent 70%), #070709;
+      padding: 32px 16px;
+      -webkit-font-smoothing: antialiased;
     }
 
-    .gateway-container {
-      width: min(920px, 100%);
-      border: 1px solid var(--line-light);
+    /* Stripe Outer Checkout Frame */
+    .stripe-checkout-container {
+      width: 100%;
+      max-width: 940px;
+      background: var(--card-right);
+      border: 1px solid var(--border);
       border-radius: 20px;
-      background: rgba(18, 18, 24, 0.88);
-      backdrop-filter: blur(28px) saturate(180%);
-      box-shadow: 0 30px 80px -15px rgba(0, 0, 0, 0.85), 0 0 40px rgba(212, 175, 55, 0.15);
       overflow: hidden;
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.75), 0 1px 0 rgba(255, 255, 255, 0.06) inset;
       display: grid;
-      grid-template-columns: 360px 1fr;
+      grid-template-columns: 400px 1fr;
+      position: relative;
     }
 
-    /* Left Sidebar: Merchant & Order Summary */
-    .gateway-summary {
-      background: rgba(12, 12, 16, 0.85);
-      border-right: 1px solid var(--line);
-      padding: 34px 28px;
-      display: flex;
-      flex-direction: column;
+    /* Mobile Accordion Header (Only visible on mobile) */
+    .mobile-summary-bar {
+      display: none;
+      background: var(--card-left);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 20px;
+      align-items: center;
       justify-content: space-between;
+      cursor: pointer;
     }
-
-    .merchant-badge {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .merchant-logo {
-      width: 44px;
-      height: 44px;
-      border-radius: 12px;
-      background: var(--gold-gradient);
-      color: #0b0906;
-      font-family: var(--font-serif);
-      font-weight: 800;
-      font-size: 16px;
-      display: grid;
-      place-items: center;
-      box-shadow: 0 4px 18px rgba(212, 175, 55, 0.35);
-    }
-
-    .merchant-name strong {
-      display: block;
-      font-family: var(--font-serif);
-      font-size: 14px;
-      letter-spacing: 0.04em;
-      color: #ffffff;
-    }
-
-    .merchant-verified {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      font-size: 9.5px;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--green);
-      font-weight: 700;
-      margin-top: 2px;
-    }
-
-    .merchant-verified::before {
-      content: '✓';
-      display: inline-grid;
-      place-items: center;
-      width: 13px;
-      height: 13px;
-      border-radius: 50%;
-      background: rgba(52, 211, 153, 0.2);
-      font-size: 8px;
-    }
-
-    .order-details-box {
-      margin: 28px 0;
-      padding: 20px;
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      background: rgba(8, 8, 12, 0.6);
-    }
-
-    .order-label {
-      font-size: 10px;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-      color: var(--muted);
-      font-weight: 600;
-    }
-
-    .order-amount-display {
-      font-family: var(--font-sans);
-      font-size: 38px;
-      font-weight: 800;
-      letter-spacing: -0.03em;
-      color: #ffffff;
-      margin: 8px 0 16px;
-      font-variant-numeric: tabular-nums;
-    }
-
-    .order-breakdown-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 11.5px;
-      color: var(--text-dim);
-      padding: 6px 0;
-      border-bottom: 1px dashed rgba(255, 255, 255, 0.08);
-    }
-
-    .order-breakdown-row:last-child {
-      border-bottom: none;
-      padding-bottom: 0;
-    }
-
-    .security-guarantee {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding-top: 20px;
-      border-top: 1px solid var(--line);
-      font-size: 10.5px;
-      color: var(--muted);
-      line-height: 1.5;
-    }
-
-    .security-guarantee span {
-      font-size: 18px;
+    .mobile-summary-bar .summary-toggle-btn {
+      background: none;
+      border: none;
       color: var(--gold);
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+    .mobile-summary-bar .mobile-amount {
+      font-size: 18px;
+      font-weight: 700;
+      color: #fff;
     }
 
-    /* Right Main Panel: Payment Method Tabs & Workflows */
-    .gateway-body {
-      padding: 34px 32px;
+    /* Left Sidebar: Stripe Merchant & Order Details */
+    .stripe-sidebar {
+      background: var(--card-left);
+      border-right: 1px solid var(--border);
+      padding: 36px 32px;
       display: flex;
       flex-direction: column;
-    }
-
-    .gateway-nav {
-      display: flex;
-      gap: 8px;
-      border-bottom: 1px solid var(--line);
-      padding-bottom: 16px;
-      margin-bottom: 24px;
-      overflow-x: auto;
-    }
-
-    .gateway-tab {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 9px 15px;
-      border-radius: 10px;
-      font-size: 11.5px;
-      font-weight: 600;
-      color: var(--muted);
-      border: 1px solid transparent;
-      background: transparent;
-      cursor: pointer;
-      transition: all 0.18s ease;
-      white-space: nowrap;
-    }
-
-    .gateway-tab:hover {
-      color: #ffffff;
-      background: rgba(255, 255, 255, 0.04);
-    }
-
-    .gateway-tab.active {
-      color: var(--gold-bright);
-      background: rgba(212, 175, 55, 0.12);
-      border-color: var(--line-gold);
-    }
-
-    .gateway-tab-badge {
-      font-size: 8.5px;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      padding: 2px 6px;
-      border-radius: 999px;
-      background: var(--green);
-      color: #0b0906;
-      font-weight: 700;
-    }
-
-    /* Tab 1: UPI & QR Code Hero View */
-    .upi-hero-container {
-      display: grid;
-      grid-template-columns: 210px 1fr;
-      gap: 24px;
-      align-items: center;
-      margin-bottom: 24px;
-    }
-
-    .qr-wrapper {
-      padding: 12px;
-      background: #ffffff;
-      border-radius: 16px;
-      display: grid;
-      place-items: center;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-    }
-
-    .qr-img {
-      width: 186px;
-      height: 186px;
-      display: block;
-      border-radius: 8px;
-    }
-
-    .upi-info-col h3 {
-      font-family: var(--font-serif);
-      font-size: 18px;
-      margin: 0 0 6px;
-      color: #ffffff;
-    }
-
-    .upi-info-col p {
-      font-size: 11.5px;
-      color: var(--text-dim);
-      margin: 0 0 16px;
-      line-height: 1.5;
-    }
-
-    .copiable-bubble {
-      display: flex;
-      align-items: center;
       justify-content: space-between;
-      gap: 12px;
-      border: 1px solid var(--line-gold);
-      background: rgba(212, 175, 55, 0.08);
-      padding: 12px 16px;
-      border-radius: 12px;
-      margin-bottom: 14px;
     }
 
-    .copiable-bubble span {
-      font-size: 10px;
-      text-transform: uppercase;
-      letter-spacing: 0.14em;
-      color: var(--muted);
-      display: block;
-    }
-
-    .copiable-bubble strong {
-      font-family: var(--font-mono);
-      font-size: 16px;
-      color: var(--gold-bright);
-      letter-spacing: 0.05em;
-    }
-
-    .copy-button {
-      border: 1px solid rgba(212, 175, 55, 0.4);
-      background: var(--gold-gradient);
-      color: #0b0906;
-      font-weight: 700;
-      padding: 7px 14px;
-      border-radius: 8px;
-      font-size: 11px;
-      cursor: pointer;
-      transition: all 0.18s ease;
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-    }
-
-    .copy-button:hover {
-      box-shadow: var(--shadow-gold);
-      filter: brightness(1.08);
-    }
-
-    .upi-apps-row {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .upi-app-btn {
+    .back-nav {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      padding: 7px 12px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: rgba(255, 255, 255, 0.04);
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--text-dim);
-      transition: all 0.18s ease;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 12.5px;
+      font-weight: 500;
+      margin-bottom: 24px;
+      transition: color 0.15s ease;
+    }
+    .back-nav:hover {
+      color: #fff;
     }
 
-    .upi-app-btn:hover {
-      background: rgba(255, 255, 255, 0.09);
-      color: #ffffff;
-      border-color: var(--line-light);
-    }
-
-    /* Verification Form Box */
-    .verification-box {
-      border-top: 1px solid var(--line);
-      padding-top: 20px;
-      margin-top: 10px;
-    }
-
-    .verification-box h4 {
-      font-size: 12px;
-      font-weight: 600;
-      margin: 0 0 4px;
-      color: #ffffff;
+    .merchant-profile {
       display: flex;
       align-items: center;
-      gap: 7px;
-    }
-
-    .verification-box p {
-      font-size: 11px;
-      color: var(--muted);
-      margin: 0 0 12px;
-    }
-
-    .utr-form {
-      display: flex;
-      gap: 10px;
-    }
-
-    .utr-form input {
-      flex: 1;
-      font-family: var(--font-mono);
-      font-size: 13px;
-      letter-spacing: 0.06em;
-      padding: 10px 14px;
-    }
-
-    /* Tab 2: Bank Transfer Details */
-    .bank-card {
-      display: grid;
       gap: 12px;
       margin-bottom: 20px;
     }
-
-    .bank-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 12px 16px;
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      background: rgba(10, 10, 14, 0.6);
-    }
-
-    .bank-row span {
-      font-size: 10.5px;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-    }
-
-    .bank-row strong {
-      font-family: var(--font-mono);
-      font-size: 13px;
-      color: var(--text);
-    }
-
-    /* Tab 3: Card Simulator */
-    .card-simulator-box {
-      display: grid;
-      gap: 14px;
-    }
-
-    .card-promo-badge {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 10px 14px;
-      border: 1px solid rgba(52, 211, 153, 0.3);
-      border-radius: 10px;
-      background: rgba(52, 211, 153, 0.08);
-      color: var(--green);
-      font-size: 11px;
-      font-weight: 600;
-    }
-
-    .gateway-footer-logos {
+    .merchant-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #1f1b13 0%, #2a2417 100%);
+      border: 1px solid rgba(212, 175, 55, 0.3);
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 16px;
-      margin-top: auto;
-      padding-top: 24px;
-      border-top: 1px solid var(--line);
+      font-family: var(--serif);
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--gold);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    }
+    .merchant-info h2 {
+      font-family: var(--serif);
+      font-size: 14px;
+      letter-spacing: 0.1em;
+      color: #ffffff;
+      font-weight: 600;
+    }
+    .verified-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
       font-size: 10px;
-      color: var(--muted-dark);
+      color: var(--green);
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
+    .order-headline {
+      margin-bottom: 24px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .order-headline .order-for {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 600;
+    }
+    .order-headline .total-amount {
+      font-size: 40px;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: -0.03em;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Details Group: Package & Client */
+    .details-group {
+      margin-bottom: 24px;
+    }
+    .details-group-title {
+      font-size: 11px;
       text-transform: uppercase;
       letter-spacing: 0.12em;
-    }
-
-    .gateway-footer-logos span {
+      color: var(--text-dim);
       font-weight: 700;
-      color: var(--muted);
+      margin-bottom: 12px;
     }
 
+    .package-card {
+      background: rgba(255, 255, 255, 0.025);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 18px;
+    }
+    .package-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: #ffffff;
+      margin-bottom: 4px;
+    }
+    .package-scope {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.45;
+    }
+
+    /* Client Entity Card */
+    .client-spec-card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .spec-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      font-size: 12px;
+    }
+    .spec-label {
+      color: var(--text-muted);
+    }
+    .spec-value {
+      color: #f1f1f5;
+      font-weight: 500;
+      text-align: right;
+    }
+    .spec-value.mono {
+      font-family: var(--mono);
+      font-size: 11.5px;
+      color: var(--gold);
+    }
+
+    /* Stripe Line Items Table */
+    .line-items-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 14px;
+    }
+    .line-items-table tr td {
+      padding: 6px 0;
+      font-size: 12px;
+    }
+    .line-items-table .item-label {
+      color: var(--text-muted);
+    }
+    .line-items-table .item-val {
+      text-align: right;
+      color: var(--text);
+      font-variant-numeric: tabular-nums;
+    }
+    .line-items-table .discount-row td {
+      color: var(--green);
+    }
+    .line-items-table .total-row td {
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    /* Trust Shield Footer in Sidebar */
+    .sidebar-footer {
+      margin-top: auto;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+
+    /* Right Content Area: Stripe Payment Panel */
+    .stripe-payment-panel {
+      padding: 36px 36px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .payment-header {
+      margin-bottom: 20px;
+    }
+    .payment-header h3 {
+      font-size: 16px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 4px;
+    }
+    .payment-header p {
+      font-size: 12.5px;
+      color: var(--text-muted);
+    }
+
+    /* Express Checkout (Stripe Style) */
+    .express-checkout-box {
+      margin-bottom: 22px;
+    }
+    .express-label {
+      font-size: 10.5px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+    .express-apps-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    .express-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #ffffff;
+      text-decoration: none;
+      transition: all 0.15s ease;
+    }
+    .express-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.18);
+      transform: translateY(-1px);
+    }
+
+    /* Stripe Divider */
+    .stripe-divider {
+      display: flex;
+      align-items: center;
+      text-align: center;
+      margin: 18px 0 22px;
+      color: var(--text-dim);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .stripe-divider::before,
+    .stripe-divider::after {
+      content: '';
+      flex: 1;
+      border-bottom: 1px solid var(--border);
+    }
+    .stripe-divider span {
+      padding: 0 12px;
+    }
+
+    /* UPI Dynamic QR Code Container */
+    .qr-checkout-card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+    .qr-frame {
+      background: #ffffff;
+      padding: 10px;
+      border-radius: 12px;
+      flex-shrink: 0;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    }
+    .qr-frame img {
+      width: 130px;
+      height: 130px;
+      display: block;
+      border-radius: 4px;
+    }
+    .qr-instructions {
+      flex: 1;
+    }
+    .qr-instructions h4 {
+      font-size: 14px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 4px;
+    }
+    .qr-instructions p {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.45;
+      margin-bottom: 8px;
+    }
+    .qr-instructions .app-pills-text {
+      font-size: 11px;
+      color: var(--gold);
+      font-weight: 500;
+    }
+
+    /* 1-Tap Copiable Bubble (Stripe Style Input Copy Box) */
+    .upi-copy-container {
+      margin-bottom: 22px;
+    }
+    .input-label {
+      display: block;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+    .upi-copy-field {
+      display: flex;
+      align-items: center;
+      background: #0d0d12;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 6px 6px 6px 14px;
+      transition: border-color 0.15s ease;
+    }
+    .upi-copy-field:focus-within {
+      border-color: var(--border-focus);
+    }
+    .upi-copy-text {
+      flex: 1;
+      font-family: var(--mono);
+      font-size: 14px;
+      color: #ffffff;
+      letter-spacing: 0.03em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .copy-action-btn {
+      background: rgba(212, 175, 55, 0.12);
+      border: 1px solid rgba(212, 175, 55, 0.35);
+      color: var(--gold);
+      font-family: var(--font);
+      font-size: 12px;
+      font-weight: 700;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+    .copy-action-btn:hover {
+      background: var(--gold-gradient);
+      color: #08080a;
+      border-color: transparent;
+    }
+
+    /* Payment Confirmation Form (Stripe Style Input & Primary Action) */
+    .confirmation-section {
+      background: rgba(255, 255, 255, 0.015);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px 20px;
+      margin-bottom: 20px;
+    }
+    .confirmation-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .confirmation-header span {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: #ffffff;
+    }
+    .instant-tag {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 700;
+      color: var(--green);
+      background: var(--green-bg);
+      border: 1px solid var(--green-border);
+      padding: 2px 8px;
+      border-radius: 999px;
+    }
+
+    .utr-input-row {
+      display: flex;
+      gap: 10px;
+    }
+    .utr-field {
+      flex: 1;
+      background: #09090d;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-family: var(--mono);
+      font-size: 13px;
+      color: #ffffff;
+      outline: none;
+      letter-spacing: 0.04em;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .utr-field:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.15);
+    }
+    .utr-field::placeholder {
+      color: var(--text-dim);
+    }
+
+    .stripe-pay-btn {
+      background: var(--gold-gradient);
+      color: #0b0906;
+      border: none;
+      border-radius: 10px;
+      padding: 12px 22px;
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: filter 0.15s ease, transform 0.1s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 15px rgba(212, 175, 55, 0.25);
+    }
+    .stripe-pay-btn:hover {
+      filter: brightness(1.1);
+      transform: translateY(-1px);
+    }
+    .stripe-pay-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .status-alert {
+      margin-top: 12px;
+      font-size: 12px;
+      min-height: 18px;
+      line-height: 1.4;
+      transition: all 0.2s ease;
+    }
+
+    /* Stripe Security Trust Footer */
+    .panel-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 18px;
+      border-top: 1px solid var(--border);
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+    .panel-footer a {
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.15s ease;
+    }
+    .panel-footer a:hover {
+      color: var(--gold);
+    }
+
+    /* Responsive Design */
     @media (max-width: 840px) {
-      .gateway-container {
+      .stripe-checkout-container {
         grid-template-columns: 1fr;
+        max-width: 520px;
       }
-      .gateway-summary {
+      .mobile-summary-bar {
+        display: flex;
+      }
+      .stripe-sidebar {
+        display: none; /* Collapsed by default on mobile, toggled via button */
         border-right: none;
-        border-bottom: 1px solid var(--line);
+        border-bottom: 1px solid var(--border);
         padding: 24px 20px;
       }
-      .gateway-body {
-        padding: 24px 20px;
+      .stripe-sidebar.mobile-open {
+        display: flex;
       }
-      .upi-hero-container {
-        grid-template-columns: 1fr;
-        justify-items: center;
+      .stripe-payment-panel {
+        padding: 28px 20px;
+      }
+      .qr-checkout-card {
+        flex-direction: column;
         text-align: center;
       }
-      .copiable-bubble {
+      .utr-input-row {
         flex-direction: column;
-        align-items: center;
       }
-      .utr-form {
-        flex-direction: column;
+      .stripe-pay-btn {
+        width: 100%;
+        justify-content: center;
       }
     }
   </style>
 </head>
 <body>
-  <main class="gateway-shell">
-    <div class="gateway-container">
-      
-      <!-- Left Summary Panel -->
-      <aside class="gateway-summary">
-        <div>
-          <div class="merchant-badge">
-            <div class="merchant-logo">CK</div>
-            <div class="merchant-name">
-              <strong>CHIRANJIT KAR STUDIO</strong>
-              <span class="merchant-verified">Verified Merchant · HDFC Direct</span>
-            </div>
-          </div>
 
-          <div class="order-details-box">
-            <span class="order-label">TOTAL AMOUNT PAYABLE</span>
-            <div class="order-amount-display" id="display-amount">₹0</div>
+  <div class="stripe-checkout-container">
 
-            <div class="order-breakdown-row">
-              <span>Invoice / Order</span>
-              <strong id="display-invoice-code" style="font-family:var(--font-mono); color:var(--gold-bright);">INV-PENDING</strong>
-            </div>
-            <div class="order-breakdown-row">
-              <span>Client Entity</span>
-              <strong id="display-client-name">—</strong>
-            </div>
-            <div class="order-breakdown-row">
-              <span>Service Scope</span>
-              <strong id="display-service">—</strong>
-            </div>
-            <div class="order-breakdown-row">
-              <span>Payment Status</span>
-              <span id="display-status" class="status scheduled">Pending</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="security-guarantee">
-          <span>🔒</span>
-          <div>
-            <strong>Autonomous Bank Alert Verification</strong><br>
-            Credits are reconciled autonomously 24/7 via HDFC bank alert webhooks within 60 seconds.
-          </div>
-        </div>
-      </aside>
-
-      <!-- Right Payment Interaction Panel -->
-      <section class="gateway-body">
-        <nav class="gateway-nav" aria-label="Payment Methods">
-          <button class="gateway-tab active" data-tab="upi">
-            <span>⚡</span> UPI &amp; QR Code
-            <span class="gateway-tab-badge">Instant</span>
-          </button>
-          <button class="gateway-tab" data-tab="bank">
-            <span>🏦</span> Bank Transfer (NEFT/IMPS)
-          </button>
-          <button class="gateway-tab" data-tab="cards">
-            <span>💳</span> Cards &amp; Netbanking
-          </button>
-        </nav>
-
-        <!-- Tab 1: UPI & QR Code (Primary Gateway) -->
-        <div id="tab-upi" class="gateway-content-pane">
-          <div class="upi-hero-container">
-            <div class="qr-wrapper">
-              <img id="upi-qr-image" class="qr-img" src="" alt="Dynamic UPI Payment QR Code" />
-            </div>
-
-            <div class="upi-info-col">
-              <h3>Scan &amp; Pay via Any UPI App</h3>
-              <p>Scan with Google Pay, PhonePe, Paytm, BHIM, or Cred. Exact amount is pre-filled.</p>
-
-              <!-- Standalone Copiable Bubble for hassle-free 1-tap copy -->
-              <div class="copiable-bubble">
-                <div>
-                  <span>HDFC VPA / UPI ID</span>
-                  <strong id="upi-id-text">9402369889@hdfc</strong>
-                </div>
-                <button type="button" id="copy-upi-btn" class="copy-button">
-                  <span id="copy-icon">⎘</span> <span id="copy-text">Copy UPI ID</span>
-                </button>
-              </div>
-
-              <div class="upi-apps-row">
-                <a id="intent-gpay" class="upi-app-btn" href="#">GPay ↗</a>
-                <a id="intent-phonepe" class="upi-app-btn" href="#">PhonePe ↗</a>
-                <a id="intent-paytm" class="upi-app-btn" href="#">Paytm ↗</a>
-                <a id="intent-generic" class="upi-app-btn" href="#">Open UPI App ↗</a>
-              </div>
-            </div>
-          </div>
-
-          <!-- Instant UTR Confirmation -->
-          <div class="verification-box">
-            <h4><span>⚡</span> Instant Autonomous Reconciliation</h4>
-            <p>Completed the transfer? Paste the 12-digit UTR / UPI Reference Number from your bank notification for immediate confirmation.</p>
-            <form id="utr-confirmation-form" class="utr-form">
-              <input name="utr" required minlength="8" maxlength="30" placeholder="Enter 12-digit UPI Ref / UTR number" autocomplete="off" />
-              <button class="button gold" type="submit" style="white-space:nowrap; padding:10px 18px;">Confirm Payment</button>
-            </form>
-            <p id="utr-status-message" class="notice" role="status" style="margin-top:10px;"></p>
-          </div>
-        </div>
-
-        <!-- Tab 2: Bank Transfer (IMPS / NEFT) -->
-        <div id="tab-bank" class="gateway-content-pane" hidden>
-          <div class="bank-card">
-            <div class="bank-row">
-              <div>
-                <span>Account Name</span>
-                <strong style="display:block;">Chiranjit Kar</strong>
-              </div>
-              <button type="button" class="small-button" onclick="copyData('Chiranjit Kar')">Copy</button>
-            </div>
-            <div class="bank-row">
-              <div>
-                <span>Bank Name</span>
-                <strong style="display:block;">HDFC Bank</strong>
-              </div>
-              <span style="font-size:10px; color:var(--green);">Active</span>
-            </div>
-            <div class="bank-row">
-              <div>
-                <span>UPI VPA / Handle</span>
-                <strong style="display:block; color:var(--gold-bright);">9402369889@hdfc</strong>
-              </div>
-              <button type="button" class="small-button" onclick="copyData('9402369889@hdfc')">Copy</button>
-            </div>
-            <div class="bank-row">
-              <div>
-                <span>Account Type</span>
-                <strong style="display:block;">Resident Individual / Creative Professional</strong>
-              </div>
-            </div>
-          </div>
-          <div class="policy-note" style="margin:0;">
-            Direct IMPS/NEFT transfers are monitored in real time. Include the invoice reference number in the transfer remarks for instant matching.
-          </div>
-        </div>
-
-        <!-- Tab 3: Cards & Netbanking -->
-        <div id="tab-cards" class="gateway-content-pane" hidden>
-          <div class="card-simulator-box">
-            <div class="card-promo-badge">
-              <span>🎁</span>
-              <span>Amazon Pay ICICI Card: 5% unlimited cashback applies on direct invoice settlement.</span>
-            </div>
-            <label>Cardholder Name
-              <input type="text" placeholder="Full name as printed on card" maxlength="60">
-            </label>
-            <label>Card Number
-              <input type="text" placeholder="4000 1234 5678 9010" maxlength="19">
-            </label>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-              <label>Expiry Date
-                <input type="text" placeholder="MM / YY" maxlength="5">
-              </label>
-              <label>CVV / CVC
-                <input type="password" placeholder="•••" maxlength="4">
-              </label>
-            </div>
-            <button type="button" class="button gold" style="width:100%; padding:13px;" onclick="simulateCardPayment()">
-              Pay Securely via Card Gateway ↗
-            </button>
-          </div>
-        </div>
-
-        <!-- Security & Payment Network Trust Strip -->
-        <div class="gateway-footer-logos">
-          <span>UPI</span> ·
-          <span>HDFC BANK</span> ·
-          <span>GOOGLE PAY</span> ·
-          <span>PHONEPE</span> ·
-          <span>PAYTM</span> ·
-          <span>BHIM</span>
-        </div>
-      </section>
-
+    <!-- Mobile Summary Bar (Accordion Toggle for Small Viewports) -->
+    <div class="mobile-summary-bar" id="mobile-toggle">
+      <button type="button" class="summary-toggle-btn">
+        <span>Order Details & Client Spec</span>
+        <span id="accordion-arrow">▾</span>
+      </button>
+      <span class="mobile-amount" id="mobile-amt-display">₹0</span>
     </div>
-  </main>
+
+    <!-- Left Column: Stripe Merchant & Order Details -->
+    <aside class="stripe-sidebar" id="stripe-sidebar">
+      <div>
+        <a href="https://client.chiranjitkar.com/" class="back-nav">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          Client Portal
+        </a>
+
+        <!-- Merchant Profile -->
+        <div class="merchant-profile">
+          <div class="merchant-avatar">CK</div>
+          <div class="merchant-info">
+            <h2>CHIRANJIT KAR</h2>
+            <div class="verified-badge">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+              Verified Studio Account
+            </div>
+          </div>
+        </div>
+
+        <!-- Total Due Headline -->
+        <div class="order-headline">
+          <div class="order-for">Total Amount Due</div>
+          <div class="total-amount" id="amt-headline">₹0</div>
+        </div>
+
+        <!-- Package Specifications -->
+        <div class="details-group">
+          <div class="details-group-title">Package & Production Scope</div>
+          <div class="package-card">
+            <div class="package-name" id="pkg-name">Editorial Fashion Campaign</div>
+            <div class="package-scope" id="pkg-scope">Studio Production, Color Graded High-Res Masters, Full Commercial Usage License.</div>
+          </div>
+        </div>
+
+        <!-- Client Entity Details -->
+        <div class="details-group">
+          <div class="details-group-title">Client Specifications</div>
+          <div class="client-spec-card">
+            <div class="spec-row">
+              <span class="spec-label">Billed To</span>
+              <span class="spec-value" id="client-name-display">Ananya Sen</span>
+            </div>
+            <div class="spec-row">
+              <span class="spec-label">Contact</span>
+              <span class="spec-value" id="client-contact-display">ananya@sen.studio</span>
+            </div>
+            <div class="spec-row">
+              <span class="spec-label">Shoot Schedule</span>
+              <span class="spec-value" id="shoot-schedule-display">To Be Scheduled · Studio</span>
+            </div>
+            <div class="spec-row">
+              <span class="spec-label">Invoice Ref</span>
+              <span class="spec-value mono" id="inv-code-display">INV-CK-SAMPLE</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Line Items Breakdown (Stripe Style) -->
+        <table class="line-items-table">
+          <tbody>
+            <tr>
+              <td class="item-label">Package Production Total</td>
+              <td class="item-val" id="row-pkg-total">₹0</td>
+            </tr>
+            <tr class="discount-row" id="row-deposit-tr" style="display:none;">
+              <td class="item-label">Advance Deposit Credited</td>
+              <td class="item-val" id="row-deposit">-₹0</td>
+            </tr>
+            <tr class="total-row">
+              <td class="item-label">Net Payable Balance</td>
+              <td class="item-val" id="row-balance">₹0</td>
+            </tr>
+          </tbody>
+        </table>
+
+      </div>
+
+      <!-- Trust Footer in Sidebar -->
+      <div class="sidebar-footer">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+        <span>End-to-end encrypted direct studio settlement.</span>
+      </div>
+    </aside>
+
+    <!-- Right Column: Stripe Payment Experience -->
+    <main class="stripe-payment-panel">
+      <div>
+
+        <!-- Panel Header -->
+        <header class="payment-header">
+          <h3>Direct Studio Settlement</h3>
+          <p>Instant UPI settlement to HDFC Bank. Zero gateway surcharges.</p>
+        </header>
+
+        <!-- Express Checkout Bar (Stripe Style) -->
+        <section class="express-checkout-box">
+          <div class="express-label">Express UPI Apps</div>
+          <div class="express-apps-grid">
+            <a id="link-gpay" class="express-btn" href="#">Google Pay ↗</a>
+            <a id="link-phonepe" class="express-btn" href="#">PhonePe ↗</a>
+            <a id="link-paytm" class="express-btn" href="#">Paytm ↗</a>
+          </div>
+        </section>
+
+        <!-- Stripe Divider -->
+        <div class="stripe-divider">
+          <span>Or scan QR code</span>
+        </div>
+
+        <!-- Dynamic QR Code Card -->
+        <div class="qr-checkout-card">
+          <div class="qr-frame">
+            <img id="qr-img" src="" alt="UPI QR Code" />
+          </div>
+          <div class="qr-instructions">
+            <h4>Scan to Pay Exact Amount</h4>
+            <p>Open any UPI app on your phone and scan this code to complete the transfer.</p>
+            <div class="app-pills-text">Supports BHIM, Cred, GPay, PhonePe, Paytm & Mobile Banking</div>
+          </div>
+        </div>
+
+        <!-- 1-Tap Copiable UPI ID Bubble -->
+        <div class="upi-copy-container">
+          <label class="input-label">Studio UPI ID (VPA)</label>
+          <div class="upi-copy-field">
+            <span class="upi-copy-text" id="upi-id-val">9402369889@hdfc</span>
+            <button type="button" class="copy-action-btn" id="copy-btn">Copy</button>
+          </div>
+        </div>
+
+        <!-- Completed Transfer / UTR Confirmation Form -->
+        <section class="confirmation-section">
+          <div class="confirmation-header">
+            <span>Completed your payment?</span>
+            <span class="instant-tag">Instant Confirmation</span>
+          </div>
+          <form id="verify-form">
+            <div class="utr-input-row">
+              <input 
+                name="utr" 
+                id="refInput"
+                class="utr-field"
+                required 
+                minlength="8" 
+                maxlength="30" 
+                placeholder="12-digit UPI Ref / UTR" 
+                autocomplete="off" 
+              />
+              <button type="submit" class="stripe-pay-btn" id="confirm-btn">
+                Confirm
+              </button>
+            </div>
+          </form>
+          <div id="status-text" class="status-alert"></div>
+        </section>
+
+      </div>
+
+      <!-- Stripe Footer -->
+      <footer class="panel-footer">
+        <span>🔒 256-Bit SSL Encrypted Direct Payment</span>
+        <a href="https://client.chiranjitkar.com/">Client Suite →</a>
+      </footer>
+    </main>
+
+  </div>
 
   <script>
     const money = val => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(Number(val) || 0);
@@ -637,100 +791,133 @@
     const invoiceCode = params.get('invoice') || params.get('code') || '';
     let currentInvoice = null;
 
-    async function initGateway() {
-      // Setup tabs
-      document.querySelectorAll('.gateway-tab').forEach(tab => {
-        tab.addEventListener('click', () => {
-          document.querySelectorAll('.gateway-tab').forEach(t => t.classList.remove('active'));
-          document.querySelectorAll('.gateway-content-pane').forEach(p => p.hidden = true);
-          tab.classList.add('active');
-          const target = document.getElementById(`tab-${tab.dataset.tab}`);
-          if (target) target.hidden = false;
-        });
-      });
+    // Mobile Accordion Toggle
+    const mobileToggle = document.querySelector('#mobile-toggle');
+    const sidebar = document.querySelector('#stripe-sidebar');
+    const accordionArrow = document.querySelector('#accordion-arrow');
+    mobileToggle.addEventListener('click', () => {
+      sidebar.classList.toggle('mobile-open');
+      accordionArrow.textContent = sidebar.classList.contains('mobile-open') ? '▴' : '▾';
+    });
 
-      // Setup copy button
-      document.querySelector('#copy-upi-btn').addEventListener('click', async () => {
-        const upiId = document.querySelector('#upi-id-text').textContent;
-        await navigator.clipboard.writeText(upiId);
-        document.querySelector('#copy-icon').textContent = '✓';
-        document.querySelector('#copy-text').textContent = 'Copied!';
-        setTimeout(() => {
-          document.querySelector('#copy-icon').textContent = '⎘';
-          document.querySelector('#copy-text').textContent = 'Copy UPI ID';
-        }, 3000);
-      });
+    // 1-Tap Copy Setup
+    const copyBtn = document.querySelector('#copy-btn');
+    copyBtn.addEventListener('click', async () => {
+      const vpa = document.querySelector('#upi-id-val').textContent.trim();
+      await navigator.clipboard.writeText(vpa);
+      copyBtn.textContent = '✓ Copied';
+      copyBtn.style.background = 'var(--gold-gradient)';
+      copyBtn.style.color = '#08080a';
+      setTimeout(() => {
+        copyBtn.textContent = 'Copy';
+        copyBtn.style.background = '';
+        copyBtn.style.color = '';
+      }, 2500);
+    });
 
-      // Load Invoice Data
+    async function init() {
       if (invoiceCode) {
         try {
           const res = await fetch(`/api/pay/${encodeURIComponent(invoiceCode)}`);
           const data = await res.json();
           if (res.ok && data.invoice) {
             currentInvoice = data.invoice;
-            renderInvoice(currentInvoice);
+            render(currentInvoice);
             return;
           }
-        } catch (e) {}
+        } catch (e) {
+          console.warn('API lookup failed, falling back to query parameters', e);
+        }
       }
 
-      // Fallback for custom or direct amount
-      const fallbackAmount = Number(params.get('amount')) || 25000;
+      // Query param fallback
+      const amount = Number(params.get('amount')) || 35000;
+      const total = Number(params.get('total')) || amount;
+      const deposit = Math.max(0, total - amount);
       currentInvoice = {
-        invoice_code: invoiceCode || 'INV-CK-DIRECT',
-        client_name: params.get('name') || 'Direct Client',
-        service: params.get('service') || 'Photoshoot Production',
-        amount: fallbackAmount,
-        amount_paid: 0,
-        balance: fallbackAmount,
-        status: 'sent'
+        invoice_code: invoiceCode || 'INV-CK-TEST99',
+        amount: amount,
+        balance: amount,
+        package_price: total,
+        deposit_amount: deposit,
+        description: params.get('service') || 'Editorial Fashion Campaign',
+        package_name: params.get('package') || params.get('service') || 'Editorial Fashion Campaign',
+        client_name: params.get('name') || params.get('client') || 'Ananya Sen',
+        client_email: params.get('email') || 'ananya@sen.studio',
+        client_phone: params.get('phone') || '+91 98765 43210',
+        shoot_at: params.get('date') || 'Nov 15, 2026',
+        location: params.get('location') || 'The Oberoi Grand, Kolkata'
       };
-      renderInvoice(currentInvoice);
+      render(currentInvoice);
     }
 
-    function renderInvoice(inv) {
-      document.querySelector('#display-invoice-code').textContent = inv.invoice_code;
-      document.querySelector('#display-amount').textContent = money(inv.balance || inv.amount);
-      document.querySelector('#display-client-name').textContent = inv.client_name || 'Client';
-      document.querySelector('#display-service').textContent = inv.service || inv.description || 'Production Service';
+    function render(inv) {
+      const balance = (inv.balance !== undefined && inv.balance !== null) ? inv.balance : inv.amount;
+      const formattedBalance = money(balance);
+
+      // Amount Display
+      document.querySelector('#amt-headline').textContent = formattedBalance;
+      document.querySelector('#mobile-amt-display').textContent = formattedBalance;
+      document.querySelector('#inv-code-display').textContent = inv.invoice_code || 'INV-CK-2026';
+
+      // Package & Scope
+      const pkgName = inv.package_name || inv.service || inv.description || 'Editorial Production Session';
+      document.querySelector('#pkg-name').textContent = pkgName;
+      document.querySelector('#pkg-scope').textContent = inv.brief || inv.description || 'Full studio production, color-graded master exports, digital gallery and commercial usage license.';
+
+      // Client Details
+      document.querySelector('#client-name-display').textContent = inv.client_name || 'Studio Client';
+      const contactInfo = [inv.client_email, inv.client_phone].filter(Boolean).join(' · ') || 'Verified Client';
+      document.querySelector('#client-contact-display').textContent = contactInfo;
+
+      // Shoot Schedule
+      const sched = [inv.shoot_at, inv.location].filter(Boolean).join(' · ');
+      document.querySelector('#shoot-schedule-display').textContent = sched || 'To Be Scheduled · Studio';
+
+      // Line Items
+      const total = inv.package_price || inv.amount || balance;
+      document.querySelector('#row-pkg-total').textContent = money(total);
       
-      const statusEl = document.querySelector('#display-status');
-      statusEl.textContent = inv.status.toUpperCase();
-      statusEl.className = `status ${inv.status === 'paid' ? 'delivered' : 'scheduled'}`;
+      const paid = inv.amount_paid || (total > balance ? total - balance : 0);
+      if (paid > 0) {
+        document.querySelector('#row-deposit-tr').style.display = 'table-row';
+        document.querySelector('#row-deposit').textContent = '-' + money(paid);
+      } else {
+        document.querySelector('#row-deposit-tr').style.display = 'none';
+      }
+      document.querySelector('#row-balance').textContent = formattedBalance;
 
-      // Build Dynamic UPI URL & QR Code
-      const payeeVpa = '9402369889@hdfc';
-      const payeeName = encodeURIComponent('Chiranjit Kar');
-      const note = encodeURIComponent(`${inv.invoice_code} Payment`);
-      const amount = (inv.balance || inv.amount).toFixed(2);
+      // UPI URI
+      const vpa = inv.upi_id || '9402369889@hdfc';
+      document.querySelector('#upi-id-val').textContent = vpa;
+      const name = encodeURIComponent(inv.payee_name || 'Chiranjit Kar');
+      const note = encodeURIComponent(inv.invoice_code || 'Photoshoot Payment');
+      const amt = balance.toFixed(2);
+      const upiUri = `upi://pay?pa=${vpa}&pn=${name}&am=${amt}&cu=INR&tn=${note}`;
 
-      const upiUrl = `upi://pay?pa=${payeeVpa}&pn=${payeeName}&am=${amount}&cu=INR&tn=${note}`;
-      
-      // QR Code via Google Charts / QR Server
-      const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&format=svg&data=${encodeURIComponent(upiUrl)}`;
-      document.querySelector('#upi-qr-image').src = qrApiUrl;
+      // Set Dynamic High-Res QR
+      document.querySelector('#qr-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(upiUri)}`;
 
-      // Deep links
-      document.querySelector('#intent-gpay').href = upiUrl;
-      document.querySelector('#intent-phonepe').href = upiUrl;
-      document.querySelector('#intent-paytm').href = upiUrl;
-      document.querySelector('#intent-generic').href = upiUrl;
+      // Set Express Links
+      document.querySelector('#link-gpay').href = upiUri;
+      document.querySelector('#link-phonepe').href = upiUri;
+      document.querySelector('#link-paytm').href = upiUri;
     }
 
-    // UTR Submission Form
-    document.querySelector('#utr-confirmation-form').addEventListener('submit', async event => {
-      event.preventDefault();
-      const message = document.querySelector('#utr-status-message');
-      const form = event.currentTarget;
+    // UTR Submission Form Handler
+    document.querySelector('#verify-form').addEventListener('submit', async e => {
+      e.preventDefault();
+      const form = e.currentTarget;
       const utr = form.utr.value.trim().toUpperCase();
-      const button = form.querySelector('button[type="submit"]');
+      const btn = document.querySelector('#confirm-btn');
+      const status = document.querySelector('#status-text');
 
-      button.disabled = true;
-      message.style.color = '#d4af37';
-      message.textContent = 'Verifying transaction against live HDFC alert stream…';
+      btn.disabled = true;
+      status.style.color = 'var(--gold)';
+      status.textContent = 'Submitting reference for autonomous verification…';
 
       try {
-        const response = await fetch('/api/pay/notify', {
+        const res = await fetch('/api/pay/notify', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -739,37 +926,21 @@
             amount: currentInvoice ? (currentInvoice.balance || currentInvoice.amount) : 1
           })
         });
-        const result = await response.json();
-        if (!response.ok) throw new Error(result.error || 'Verification attempt failed.');
+        const result = await res.json();
+        if (!res.ok) throw new Error(result.error || 'Verification request failed.');
 
-        if (result.status === 'paid') {
-          message.style.color = '#34d399';
-          message.textContent = '✓ ' + result.message;
-          document.querySelector('#display-status').textContent = 'PAID';
-          document.querySelector('#display-status').className = 'status delivered';
-        } else {
-          message.style.color = '#60a5fa';
-          message.textContent = '✓ ' + result.message;
-        }
+        status.style.color = 'var(--green)';
+        status.textContent = '✓ ' + (result.message || 'Payment reference logged. Confirmation in progress.');
         form.reset();
       } catch (err) {
-        message.style.color = '#f87171';
-        message.textContent = err.message || 'Error recording UTR. Please retry.';
+        status.style.color = '#f87171';
+        status.textContent = err.message || 'Please check the reference number and retry.';
       } finally {
-        button.disabled = false;
+        btn.disabled = false;
       }
     });
 
-    window.copyData = async text => {
-      await navigator.clipboard.writeText(text);
-      alert(`Copied: ${text}`);
-    };
-
-    window.simulateCardPayment = () => {
-      alert('Card gateway connection active. In production, this completes directly via Razorpay/HDFC merchant checkout.');
-    };
-
-    initGateway();
+    init();
   </script>
 </body>
 </html>
