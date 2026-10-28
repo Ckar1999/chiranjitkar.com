@@ -65,7 +65,7 @@ function initMobileMenu() {
         }
     });
 
-    window.matchMedia('(min-width: 768px)').addEventListener('change', event => {
+    window.matchMedia('(min-width: 1280px)').addEventListener('change', event => {
         if (event.matches) setOpen(false);
     });
 }
