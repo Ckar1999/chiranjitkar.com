@@ -722,7 +722,7 @@
                         <div class="mb-6 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex flex-wrap items-center justify-between gap-4 text-xs font-mono no-print">
                             <div class="flex items-center gap-3 text-amber-300">
                                 <span class="text-base">⚡</span>
-                                <span><strong>Payment Required Before Signing:</strong> UIDAI Aadhaar verification &amp; Delhi e-Stamp fee (<strong>₹${docFee}.00</strong>) must be settled before digital OTP signature.</span>
+                                <span><strong>Separate Agreement Fee Required (${isCollab ? 'Unpaid TFP' : 'Paid Commission'}):</strong> Before becoming eligible to execute digital Aadhaar OTP eSign via Leegality, the official Delhi NCT ₹100 e-Stamp documentation fee (<strong>₹${docFee}.00</strong>) must be settled separately first.</span>
                             </div>
                             <a href="${payFeeUrl}" class="px-5 py-2 rounded-full bg-gradient-to-r from-amber-500 to-amber-400 text-noir-950 font-bold uppercase tracking-wider hover:brightness-110 shadow-md transition-all">
                                 Pay ₹${docFee} Fee via UPI &rarr;
@@ -834,7 +834,7 @@
                                 ${isCollab ? `
                                 <tr>
                                     <td class="font-bold text-white">B.1 Consideration &amp; Professional Fees</td>
-                                    <td class="font-mono text-gold-300 font-bold">₹0.00 (Zero Monetary Fees &bull; Mutual TFP Portfolio Exchange)</td>
+                                    <td class="font-mono text-gold-300 font-bold">₹0.00 (Zero Monetary Fees &bull; Mutual TFP Portfolio Exchange &bull; Doc Fee Payable Separately)</td>
                                 </tr>
                                 <tr>
                                     <td class="font-bold text-white">B.2 Production Deliverables</td>
@@ -847,6 +847,12 @@
                                 <tr>
                                     <td class="font-bold text-white">B.4 Mandatory Credit &amp; Attribution</td>
                                     <td class="font-mono text-white font-bold">Mandatory tag and credit to <span class="text-gold-300">@iamchiranjitkar</span> on all public social media and publication posts.</td>
+                                </tr>
+                                <tr>
+                                    <td class="font-bold text-white">B.5 UIDAI Aadhaar Documentation Fee</td>
+                                    <td class="font-mono ${isFeePaid ? 'text-emerald-400 font-bold' : 'text-amber-400 font-bold'}">
+                                        ₹${docFee}.00 (${isFeePaid ? '✓ Fully Settled &amp; Verified' : '⚠️ Separate Documentation Fee — Required before Aadhaar OTP execution'})
+                                    </td>
                                 </tr>
                                 ` : `
                                 <tr>

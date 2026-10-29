@@ -700,6 +700,13 @@ async function handle(request, env, route) {
       agreementRow.fee_invoice_code = feeInvCode;
     }
 
+    // Strict signing eligibility: redact leegality_sign_url until fee is paid
+    const isFeePaid = agreementRow.fee_status === 'paid' || Number(agreementRow.documentation_fee) === 0;
+    agreementRow.is_eligible_for_esign = isFeePaid;
+    if (!isFeePaid && Number(agreementRow.documentation_fee) > 0) {
+      agreementRow.leegality_sign_url = null;
+    }
+
     const invoices = await env.DB.prepare("SELECT id,invoice_code,kind,description,amount,amount_paid,status,due_at,payment_url FROM invoices WHERE project_id=? AND status!='void' ORDER BY created_at").bind(project.id).all();
     const openBalance=(invoices.results||[]).reduce((sum,invoice)=>sum+Math.max(0,Number(invoice.amount)-Number(invoice.amount_paid)),0);
     const deliveries = openBalance<=0

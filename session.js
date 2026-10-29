@@ -254,19 +254,19 @@
     $('#agreement-title').textContent = 'Master Photography & Creative Production Agreement';
     $('#agreement-subtitle').textContent = 'Universal studio deed with Delhi NCT ₹100 e-Stamp and UIDAI Aadhaar OTP digital execution, governing both Paid Commissions & TFP Collaborations.';
 
+    const docFee = Number(agreement?.documentation_fee ?? 99);
+    const isFeePaid = agreement?.fee_status === 'paid' || docFee === 0;
+    const isSigned = agreement && agreement.status === 'signed';
+
     $('#agr-contract-id').textContent = contractCode;
     $('#agr-estamp-no').textContent = estamp;
-    $('#agr-payment-terms').textContent = isCollab ? 'TFP Portfolio Exchange · Non-Monetary' : '20% Advance · 80% Post-Shoot (No-RAW)';
+    $('#agr-payment-terms').textContent = isCollab ? `TFP Portfolio Exchange · Non-Monetary (Doc Fee: ₹${docFee} Separate)` : `20% Advance · 80% Post-Shoot (Doc Fee: ₹${docFee} Separate)`;
 
     const badge = $('#agreement-status-badge');
     const signBtn = $('#agreement-sign-btn');
     const termsBtn = $('#agreement-terms-btn');
     const downloadBtn = $('#agreement-download-btn');
     const msg = $('#agreement-message');
-
-    const docFee = Number(agreement?.documentation_fee ?? 99);
-    const isFeePaid = agreement?.fee_status === 'paid' || docFee === 0;
-    const isSigned = agreement && agreement.status === 'signed';
 
     const feeEl = $('#agr-doc-fee');
     if (feeEl) {
@@ -304,17 +304,17 @@
       const returnUrl = `/agreements?key=${encodeURIComponent(currentKey)}`;
       signBtn.href = `/pay.html?invoice=${encodeURIComponent(feeInvCode)}${currentKey ? '&key=' + encodeURIComponent(currentKey) + '&return=' + encodeURIComponent(returnUrl) : ''}`;
       signBtn.innerHTML = `<span>⚡ Pay ₹${docFee} Fee to Unlock eSign ↗</span>`;
-      msg.textContent = `Aadhaar OTP eSign on official Delhi ₹100 e-Stamp unlocks immediately once the ₹${docFee} documentation fee is completed.`;
+      msg.textContent = `For both paid packages and unpaid collaborations, the official Delhi NCT ₹100 e-Stamp documentation fee (₹${docFee}) must be settled separately first. Once verified, you will be automatically eligible and redirected to execute Aadhaar OTP eSign via Leegality.`;
       msg.className = 'notice';
     } else {
-      badge.textContent = 'Pending eSign';
+      badge.textContent = 'Eligible for eSign';
       badge.className = 'status scheduled';
       signBtn.hidden = false;
       downloadBtn.hidden = true;
       const signUrl = agreement?.leegality_sign_url || `https://sign.leegality.com/sign/DOC-${project.project_code}`;
       signBtn.href = signUrl;
       signBtn.innerHTML = `<span>Aadhaar OTP eSign via Leegality ↗</span>`;
-      msg.textContent = 'Documentation fee settled. Review contract specifics and execute your legally binding Aadhaar OTP eSign on the official Delhi ₹100 e-Stamp.';
+      msg.textContent = '✓ Documentation fee verified. You are now eligible to execute your legally binding Aadhaar OTP eSign on the official Delhi ₹100 e-Stamp via Leegality.';
       msg.className = 'notice success';
     }
   }
