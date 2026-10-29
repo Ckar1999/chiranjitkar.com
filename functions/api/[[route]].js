@@ -179,6 +179,7 @@ async function dispatchLeegalityAgreement(env, project, agreementType = 'master_
   const yyyy = nowDt.getFullYear();
   const todayUS = `${mm}/${dd}/${yyyy}`;
   const phone10 = String(project.client_phone || '').replace(/[^0-9]/g, '').slice(-10) || '9876543210';
+  const clientCity = String(project.client_city || (project.location ? project.location.split(',').pop().trim() : '') || 'New Delhi').trim() || 'New Delhi';
 
   let docId = `DOC-${project.project_code}-${Date.now().toString().slice(-4)}`;
   let signUrl = '';
@@ -201,7 +202,10 @@ async function dispatchLeegalityAgreement(env, project, agreementType = 'master_
             { id: '1769351978909', name: 'Collaborator Name', value: project.client_name, type: 'text' },
             { id: '1769351126190', name: 'Date', value: todayUS, type: 'date', format: 'mm/dd/yyyy' },
             { id: '1769351129812', name: 'Date', value: todayUS, type: 'date', format: 'mm/dd/yyyy' },
-            { id: '1769352371986', name: 'City Name', value: 'New Delhi', type: 'text' },
+            { id: '1769352371986', name: 'City Name', value: clientCity, type: 'text' },
+            { name: 'City Name', value: clientCity, type: 'text' },
+            { name: 'Place', value: clientCity, type: 'text' },
+            { name: 'City', value: clientCity, type: 'text' },
             { id: '1769356992373', name: 'Collaborator Name', value: project.client_name, type: 'text' }
           ]
         },

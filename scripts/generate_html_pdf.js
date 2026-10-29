@@ -18,7 +18,7 @@ function buildHtmlPdf(outputPath) {
 
     @page {
       size: A4 portrait;
-      margin: 14mm 14mm 14mm 14mm;
+      margin: 12mm 14mm 12mm 14mm;
     }
 
     * {
@@ -31,8 +31,8 @@ function buildHtmlPdf(outputPath) {
       font-family: 'Lora', 'Georgia', serif;
       color: #1a1b1f;
       background: #ffffff;
-      font-size: 9.8pt;
-      line-height: 1.55;
+      font-size: 9.6pt;
+      line-height: 1.58;
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
     }
@@ -40,7 +40,8 @@ function buildHtmlPdf(outputPath) {
     .page {
       page-break-after: always;
       break-after: page;
-      position: relative;
+      height: 272mm;
+      max-height: 272mm;
     }
 
     .page:last-child {
@@ -48,32 +49,31 @@ function buildHtmlPdf(outputPath) {
       break-after: avoid !important;
     }
 
-    /* Double Luxury Gold Border */
+    /* Iconic Double Luxury Gold Border from Live P1 */
     .border-frame {
       border: 1.2pt solid #1a1b1f;
       outline: 0.6pt solid #c9a44e;
       outline-offset: -3.5pt;
-      padding: 16pt 20pt;
-      height: 265mm;
-      max-height: 265mm;
+      padding: 14pt 18pt;
+      height: 100%;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
     }
 
-    /* Running Header */
+    /* Running Header (Top of Pages 2 & 3) */
     .running-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding-bottom: 7pt;
-      margin-bottom: 14pt;
-      border-bottom: 0.75pt solid #c9a44e;
+      padding-bottom: 6pt;
+      margin-bottom: 12pt;
+      border-bottom: 0.8pt solid #c9a44e;
       font-family: 'Montserrat', sans-serif;
       font-size: 7.2pt;
       letter-spacing: 0.08em;
       text-transform: uppercase;
-      color: #444;
+      white-space: nowrap;
     }
 
     .running-header-left {
@@ -82,6 +82,7 @@ function buildHtmlPdf(outputPath) {
       gap: 7pt;
       font-weight: 700;
       color: #111;
+      white-space: nowrap;
     }
 
     .running-header-left img {
@@ -91,7 +92,8 @@ function buildHtmlPdf(outputPath) {
 
     .running-header-right {
       color: #9e6b12;
-      font-weight: 600;
+      font-weight: 700;
+      white-space: nowrap;
     }
 
     /* Running Footer */
@@ -99,8 +101,8 @@ function buildHtmlPdf(outputPath) {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding-top: 7pt;
-      margin-top: 14pt;
+      padding-top: 6pt;
+      margin-top: 10pt;
       border-top: 0.6pt solid #dcd7ce;
       font-family: 'Montserrat', sans-serif;
       font-size: 6.8pt;
@@ -108,24 +110,24 @@ function buildHtmlPdf(outputPath) {
     }
 
     .running-footer strong {
-      color: #222;
+      color: #111;
     }
 
-    /* Header Block */
+    /* Studio Brand Header */
     .studio-header {
       text-align: center;
-      margin-bottom: 12pt;
+      margin-bottom: 10pt;
     }
 
     .studio-logo {
-      height: 34pt;
+      height: 36pt;
       width: auto;
-      margin-bottom: 5pt;
+      margin-bottom: 4pt;
     }
 
     .studio-title {
       font-family: 'Cinzel', serif;
-      font-size: 15pt;
+      font-size: 15.5pt;
       font-weight: 700;
       letter-spacing: 0.12em;
       color: #0c0d12;
@@ -134,8 +136,8 @@ function buildHtmlPdf(outputPath) {
 
     .studio-sub {
       font-family: 'Montserrat', sans-serif;
-      font-size: 7pt;
-      letter-spacing: 0.15em;
+      font-size: 7.2pt;
+      letter-spacing: 0.16em;
       text-transform: uppercase;
       color: #666;
       margin-top: 2pt;
@@ -143,23 +145,32 @@ function buildHtmlPdf(outputPath) {
 
     .gold-divider {
       height: 1pt;
-      background: linear-gradient(90deg, transparent, #c9a44e, transparent);
+      background: linear-gradient(90deg, transparent, #c9a44e, #c9a44e, transparent);
       margin: 8pt auto 10pt;
-      width: 80%;
+      width: 75%;
     }
 
-    /* Official e-Stamp Box */
+    /* Official e-Stamp Certificate Box */
     .estamp-card {
       background: #faf8f4;
-      border: 1pt solid #c9a44e;
+      border: 1.1pt solid #c9a44e;
       border-radius: 4pt;
       padding: 9pt 12pt;
-      margin-bottom: 12pt;
+      margin-bottom: 11pt;
+    }
+
+    .estamp-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 0.6pt solid #e6dfd1;
+      padding-bottom: 4pt;
+      margin-bottom: 6pt;
     }
 
     .estamp-headline {
       font-family: 'Montserrat', sans-serif;
-      font-size: 8pt;
+      font-size: 8.2pt;
       font-weight: 700;
       letter-spacing: 0.08em;
       text-transform: uppercase;
@@ -170,22 +181,18 @@ function buildHtmlPdf(outputPath) {
       font-family: 'Montserrat', sans-serif;
       font-size: 7.2pt;
       font-weight: 600;
-      letter-spacing: 0.06em;
+      letter-spacing: 0.05em;
       text-transform: uppercase;
       color: #9e6b12;
-      margin-top: 1.5pt;
     }
 
     .estamp-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 3pt 14pt;
-      margin-top: 6pt;
+      gap: 3pt 16pt;
       font-family: 'Montserrat', sans-serif;
-      font-size: 6.9pt;
+      font-size: 7pt;
       color: #333;
-      border-top: 0.5pt solid #e6dfd1;
-      padding-top: 5pt;
     }
 
     .estamp-grid div strong {
@@ -196,14 +203,14 @@ function buildHtmlPdf(outputPath) {
     /* Deed Heading */
     .deed-title-block {
       text-align: center;
-      margin-bottom: 10pt;
+      margin-bottom: 9pt;
     }
 
     .deed-title {
       font-family: 'Cinzel', serif;
-      font-size: 12pt;
+      font-size: 12.5pt;
       font-weight: 700;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.06em;
       color: #0c0d12;
       text-transform: uppercase;
     }
@@ -213,28 +220,28 @@ function buildHtmlPdf(outputPath) {
       font-family: 'Montserrat', sans-serif;
       font-size: 6.8pt;
       font-weight: 700;
-      letter-spacing: 0.1em;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
       color: #9e6b12;
-      background: #fdf6e7;
-      border: 0.6pt solid #e5c368;
-      padding: 2pt 8pt;
-      border-radius: 10pt;
+      background: #fcf6ea;
+      border: 0.7pt solid #e5c368;
+      padding: 2.2pt 9pt;
+      border-radius: 12pt;
       margin-top: 3pt;
     }
 
     .preamble {
-      font-size: 8.8pt;
-      line-height: 1.5;
+      font-size: 9pt;
+      line-height: 1.55;
       text-align: justify;
-      color: #2a2b30;
-      margin-bottom: 11pt;
+      color: #24252a;
+      margin-bottom: 10pt;
     }
 
-    /* Schedule Tables */
+    /* Schedules */
     .schedule-title {
       font-family: 'Cinzel', serif;
-      font-size: 9pt;
+      font-size: 9.2pt;
       font-weight: 700;
       letter-spacing: 0.06em;
       text-transform: uppercase;
@@ -246,7 +253,7 @@ function buildHtmlPdf(outputPath) {
       border: 0.8pt solid #d6cfc2;
       border-radius: 3.5pt;
       background: #ffffff;
-      padding: 7pt 10pt;
+      padding: 8pt 10pt;
       margin-bottom: 10pt;
     }
 
@@ -254,18 +261,13 @@ function buildHtmlPdf(outputPath) {
       width: 100%;
       border-collapse: collapse;
       font-family: 'Montserrat', sans-serif;
-      font-size: 7.2pt;
-      line-height: 1.45;
+      font-size: 7.4pt;
+      line-height: 1.5;
     }
 
     .schedule-table td {
       padding: 2.5pt 5pt;
       vertical-align: top;
-    }
-
-    .schedule-table td strong {
-      color: #111;
-      font-weight: 600;
     }
 
     .schedule-table .field-label {
@@ -280,70 +282,85 @@ function buildHtmlPdf(outputPath) {
 
     .sched-b-sec {
       font-family: 'Montserrat', sans-serif;
-      font-size: 7.4pt;
+      font-size: 7.6pt;
       font-weight: 700;
       color: #0c0d12;
-      margin-top: 3pt;
+      margin-top: 2pt;
       margin-bottom: 2pt;
       letter-spacing: 0.04em;
     }
 
     .sched-b-text {
       font-family: 'Lora', serif;
-      font-size: 7.6pt;
-      line-height: 1.45;
+      font-size: 8pt;
+      line-height: 1.5;
       color: #2b2b2b;
       margin-left: 8pt;
       margin-bottom: 4pt;
     }
 
-    /* Operative Articles */
+    /* Section Banner */
     .section-banner {
       font-family: 'Cinzel', serif;
-      font-size: 10pt;
+      font-size: 10.5pt;
       font-weight: 700;
       letter-spacing: 0.08em;
       text-transform: uppercase;
       color: #0c0d12;
-      border-bottom: 1pt solid #c9a44e;
+      border-bottom: 1.2pt solid #c9a44e;
       padding-bottom: 4pt;
-      margin-bottom: 12pt;
+      margin-bottom: 13pt;
     }
 
+    /* Operative Articles */
     .article {
-      margin-bottom: 10.5pt;
+      margin-bottom: 11pt;
       text-align: justify;
+      text-justify: inter-word;
     }
 
     .article-num {
       font-family: 'Cinzel', serif;
-      font-size: 8.8pt;
+      font-size: 9.2pt;
       font-weight: 700;
-      color: #0c0d12;
       letter-spacing: 0.03em;
-      margin-bottom: 2pt;
+      color: #0c0d12;
+      margin-bottom: 3pt;
     }
 
     .article-body {
-      font-size: 8.5pt;
-      line-height: 1.5;
-      color: #26272b;
+      font-size: 8.8pt;
+      line-height: 1.55;
+      color: #222328;
     }
 
-    /* Execution Block */
+    .bullet-list {
+      margin-left: 18pt;
+      margin-top: 4pt;
+      margin-bottom: 4pt;
+      font-size: 8.8pt;
+      line-height: 1.55;
+      color: #222328;
+    }
+
+    .bullet-list li {
+      margin-bottom: 2pt;
+    }
+
+    /* Execution & Signature Section */
     .exec-box {
-      border: 1pt solid #c9a44e;
+      border: 1.2pt solid #c9a44e;
       border-radius: 4pt;
       background: #faf8f5;
-      padding: 12pt;
+      padding: 12pt 14pt;
       margin-top: 10pt;
     }
 
     .exec-title {
       font-family: 'Cinzel', serif;
-      font-size: 9.5pt;
+      font-size: 10pt;
       font-weight: 700;
-      letter-spacing: 0.06em;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
       color: #0c0d12;
       margin-bottom: 8pt;
@@ -353,14 +370,14 @@ function buildHtmlPdf(outputPath) {
     .exec-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 16pt;
-      border-top: 0.6pt solid #e2dbcd;
+      gap: 18pt;
+      border-top: 0.8pt solid #dfd8cb;
       padding-top: 10pt;
     }
 
     .exec-col-title {
       font-family: 'Montserrat', sans-serif;
-      font-size: 7.5pt;
+      font-size: 7.6pt;
       font-weight: 700;
       letter-spacing: 0.06em;
       text-transform: uppercase;
@@ -370,15 +387,15 @@ function buildHtmlPdf(outputPath) {
 
     .exec-name {
       font-family: 'Lora', serif;
-      font-size: 10.5pt;
+      font-size: 11pt;
       font-weight: 700;
-      color: #111;
+      color: #0c0d12;
       margin-bottom: 2pt;
     }
 
     .exec-sub {
       font-family: 'Montserrat', sans-serif;
-      font-size: 6.8pt;
+      font-size: 7pt;
       color: #555;
       margin-bottom: 6pt;
     }
@@ -386,44 +403,45 @@ function buildHtmlPdf(outputPath) {
     .sig-seal-wrap {
       display: flex;
       align-items: center;
-      gap: 10pt;
-      margin-top: 4pt;
-      margin-bottom: 6pt;
+      gap: 12pt;
+      margin-top: 6pt;
+      margin-bottom: 8pt;
     }
 
     .sig-img {
-      height: 38pt;
+      height: 44pt;
       width: auto;
     }
 
     .seal-img {
-      height: 42pt;
+      height: 48pt;
       width: auto;
     }
 
     .sig-status {
       font-family: 'Montserrat', sans-serif;
-      font-size: 6.8pt;
-      color: #1d7237;
+      font-size: 7pt;
+      color: #1e7039;
       font-weight: 700;
     }
 
     .sig-status-sub {
       font-family: 'Montserrat', sans-serif;
-      font-size: 6.2pt;
+      font-size: 6.5pt;
       color: #666;
+      margin-top: 1pt;
     }
 
     .sign-line {
-      border-bottom: 0.8pt dashed #888;
-      height: 28pt;
+      border-bottom: 1pt dashed #777;
+      height: 34pt;
       margin-top: 12pt;
       margin-bottom: 4pt;
     }
 
     .sign-prompt {
       font-family: 'Montserrat', sans-serif;
-      font-size: 6.5pt;
+      font-size: 6.8pt;
       font-style: italic;
       color: #777;
     }
@@ -445,8 +463,10 @@ function buildHtmlPdf(outputPath) {
 
         <!-- Official e-Stamp Certificate Box -->
         <div class="estamp-card">
-          <div class="estamp-headline">Government of National Capital Territory of Delhi</div>
-          <div class="estamp-subhead">Certificate of Stamp Duty · Non-Judicial e-Stamp (Article 5 Agreement)</div>
+          <div class="estamp-header-row">
+            <div class="estamp-headline">Government of National Capital Territory of Delhi</div>
+            <div class="estamp-subhead">Certificate of Stamp Duty · Non-Judicial e-Stamp (Article 5 Agreement)</div>
+          </div>
           <div class="estamp-grid">
             <div>Certificate No: <strong>IN-DL22366535014840X</strong></div>
             <div>Duty Amount: <strong>Rs. 100.00 (One Hundred only)</strong></div>
@@ -466,7 +486,7 @@ function buildHtmlPdf(outputPath) {
         </div>
 
         <p class="preamble">
-          This Master Agreement ("Agreement") is executed between Chiranjit Kar ("Photographer"), Operating as Chiranjit Kar Photography, New Delhi, and the Second Party designated below ("Client" or "Collaborator"). This universal master deed operates dynamically across both Paid Commercial Commissions and Unpaid TFP Collaborations under the Indian Contract Act 1872 and Information Technology Act 2000.
+          This Master Agreement ("Agreement") is executed between <strong>Chiranjit Kar</strong> ("Photographer"), Operating as Chiranjit Kar Photography, New Delhi, and the Second Party designated below ("Client" or "Collaborator"). This universal master deed operates dynamically across both Paid Commercial Commissions and Unpaid TFP Collaborations under the statutory framework of the Indian Contract Act 1872 and the Information Technology Act 2000.
         </p>
 
         <!-- Schedule A -->
@@ -514,7 +534,7 @@ function buildHtmlPdf(outputPath) {
           </div>
           <div class="sched-b-sec">B.2 UNPAID / TFP CREATIVE COLLABORATION TERMS</div>
           <div class="sched-b-text">
-            • Monetary Fee: <strong>Rs. 0.00 (Zero Monetary Consideration)</strong> | Mutual TFP portfolio exchange.<br>
+            • Monetary Fee: <strong>Rs. 0.00 (Zero Consideration)</strong> | Mutual creative portfolio exchange.<br>
             • Model Likeness Grant: Collaborator irrevocably grants Photographer perpetual worldwide likeness rights. RAW files strictly excluded.
           </div>
         </div>
@@ -534,7 +554,7 @@ function buildHtmlPdf(outputPath) {
         <div class="running-header">
           <div class="running-header-left">
             <img src="data:image/png;base64,${logoB64}" alt="Logo">
-            <span>Chiranjit Kar Photography · Master Creative Production Deed</span>
+            <span>Chiranjit Kar Photography · Master Production Deed</span>
           </div>
           <div class="running-header-right">Govt e-Stamp: IN-DL22366535014840X</div>
         </div>
@@ -565,7 +585,7 @@ function buildHtmlPdf(outputPath) {
         <div class="article">
           <div class="article-num">4. Image Delivery &amp; Strict No-RAW Policy</div>
           <div class="article-body">
-            4.1 Unedited RAW camera files and digital negatives are proprietary confidential trade assets and will NEVER be released, sold, or provided under any circumstances. 4.2 Photographer delivers a curated set of finished master retouched JPEGs. Proofs are delivered within 48-72 hours; retouched deliverables require 1-2 months based on studio post-production queue.
+            4.1 Unedited RAW camera files and digital negatives are proprietary confidential trade assets and will <strong>NEVER</strong> be released, sold, or provided under any circumstances. 4.2 Photographer delivers a curated set of finished master retouched JPEGs. Proofs are delivered within 48-72 hours; retouched deliverables require 1-2 months based on studio post-production queue.
           </div>
         </div>
 
@@ -605,15 +625,15 @@ function buildHtmlPdf(outputPath) {
         <div class="running-header">
           <div class="running-header-left">
             <img src="data:image/png;base64,${logoB64}" alt="Logo">
-            <span>Chiranjit Kar Photography · Master Creative Production Deed</span>
+            <span>Chiranjit Kar Photography · Master Production Deed</span>
           </div>
           <div class="running-header-right">Govt e-Stamp: IN-DL22366535014840X</div>
         </div>
 
-        <div class="section-banner">Governance, Written Policy &amp; Execution</div>
+        <div class="section-banner">Communication Governance, Policies &amp; Execution</div>
 
         <div class="article">
-          <div class="article-num">8. Strict Written Communication Policy (Critical)</div>
+          <div class="article-num">8. Strict Written Communication Policy (Mandatory)</div>
           <div class="article-body">
             8.1 Only written communication via email to <strong>iamchiranjitkar@hotmail.com</strong> shall be considered legally valid and binding. 8.2 Any discussion via WhatsApp, phone calls, social media DMs, or verbal conversation shall have zero legal validity unless expressly confirmed in writing via email.
           </div>
@@ -636,7 +656,7 @@ function buildHtmlPdf(outputPath) {
         <div class="article">
           <div class="article-num">11. Limitation of Liability &amp; Indemnity</div>
           <div class="article-body">
-            11.1 Photographer shall not be liable for any indirect loss, injury, or force majeure events; liability is strictly capped at net fees received. 11.2 Collaborator agrees to indemnify and hold harmless the Photographer against all claims arising from misuse of images or breach of this deed.
+            11.1 Photographer shall not be liable for any indirect loss, injury, or force majeure events; liability is capped at net fees received. 11.2 Collaborator agrees to indemnify and hold harmless the Photographer against all claims arising from misuse of images or breach of this deed.
           </div>
         </div>
 
@@ -661,26 +681,26 @@ function buildHtmlPdf(outputPath) {
           </div>
         </div>
 
-        <!-- Execution Block -->
+        <!-- Execution Block with Authentic Signature & Seal -->
         <div class="exec-box">
           <div class="exec-title">Execution, Digital Seals &amp; UIDAI Aadhaar Authentication</div>
           <div class="exec-grid">
-            <!-- First Party -->
+            <!-- First Party Column -->
             <div>
-              <div class="exec-col-title">First Party (Photographer / Studio Director)</div>
+              <div class="exec-col-title">First Party (Studio Director)</div>
               <div class="exec-name">CHIRANJIT KAR</div>
               <div class="exec-sub">Lead Photographer · Studio Director · Chiranjit Kar Photography</div>
-              
+
               <div class="sig-seal-wrap">
                 <img src="data:image/png;base64,${sigB64}" class="sig-img" alt="Chiranjit Kar Signature">
                 <img src="data:image/png;base64,${sealB64}" class="seal-img" alt="Verified Agreement Seal">
               </div>
 
-              <div class="sig-status">✓ Digital Studio Seal &amp; Signature Applied</div>
+              <div class="sig-status">✓ Digital Studio Seal &amp; Authentic Signature Applied</div>
               <div class="sig-status-sub">Delhi NCT e-Stamp: IN-DL22366535014840X · SHCIL Base Verified</div>
             </div>
 
-            <!-- Second Party -->
+            <!-- Second Party Column -->
             <div>
               <div class="exec-col-title">Second Party (Client / Collaborator)</div>
               <div class="exec-name">{{Collaborator Name}}</div>
@@ -689,7 +709,7 @@ function buildHtmlPdf(outputPath) {
 
               <div class="sign-line"></div>
               <div class="sign-prompt">Second Party Signature / Aadhaar OTP Stamp Placement</div>
-              <div class="exec-sub" style="margin-top:4pt;">Date: <strong>{{Date}}</strong> | Place: <strong>New Delhi, India</strong></div>
+              <div class="exec-sub" style="margin-top:4pt;">Date: <strong>{{Date}}</strong> | Place: <strong>{{Place}}</strong></div>
             </div>
           </div>
         </div>
