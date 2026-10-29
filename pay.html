@@ -1208,8 +1208,9 @@
 
       // Populate Success Details
       const paidAmount = info.amount || (currentInvoice ? (currentInvoice.balance || currentInvoice.amount) : 35000);
+      const invCode = info.invoice_code || (currentInvoice ? currentInvoice.invoice_code : 'INV-CK-SAMPLE');
       document.querySelector('#success-amount-display').textContent = money(paidAmount);
-      document.querySelector('#success-inv-code').textContent = info.invoice_code || (currentInvoice ? currentInvoice.invoice_code : 'INV-CK-SAMPLE');
+      document.querySelector('#success-inv-code').textContent = invCode;
       document.querySelector('#success-client-name').textContent = info.client_name || (currentInvoice ? currentInvoice.client_name : 'Valued Client');
       document.querySelector('#success-service-name').textContent = info.package_name || info.service || (currentInvoice ? (currentInvoice.package_name || currentInvoice.service) : 'Studio Production Session');
       document.querySelector('#success-utr-code').textContent = info.utr || 'HDFC-REF-' + Math.floor(100000000000 + Math.random() * 900000000000);
@@ -1218,6 +1219,40 @@
       const dateStr = now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
       const timeStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
       document.querySelector('#success-timestamp').textContent = `${dateStr}, ${timeStr} IST`;
+
+      const isAgrInvoice = invCode.startsWith('INV-AGR-') || Boolean(params.get('return'));
+      const returnTarget = params.get('return') || (params.get('key') ? `/agreements?key=${encodeURIComponent(params.get('key'))}` : '/agreements');
+
+      if (isAgrInvoice) {
+        let redirectArea = document.querySelector('#success-agreement-redirect');
+        if (!redirectArea) {
+          redirectArea = document.createElement('div');
+          redirectArea.id = 'success-agreement-redirect';
+          redirectArea.style.cssText = 'margin:18px 0; padding:16px; border-radius:14px; background:rgba(212,175,55,0.08); border:1px solid #d4af37; text-align:center;';
+          const actionsDiv = document.querySelector('.success-actions');
+          if (actionsDiv) actionsDiv.parentNode.insertBefore(redirectArea, actionsDiv);
+        }
+        
+        let secondsLeft = 3;
+        redirectArea.innerHTML = `
+          <div style="font-size:10.5px; text-transform:uppercase; letter-spacing:0.15em; color:#d4af37; font-weight:700; margin-bottom:4px;">Legal Compliance &bull; eSign Unlocked</div>
+          <h3 style="font-size:16px; color:#ffffff; margin:0 0 6px 0; font-family:'Cinzel', Georgia, serif;">Agreement Fee Confirmed</h3>
+          <p style="font-size:12.5px; color:#d4d4d4; margin:0 0 12px 0;">Documentation fee settled. Redirecting to agreement deed for Aadhaar OTP eSign in <strong id="redirect-counter" style="color:#d4af37; font-size:14px;">${secondsLeft}</strong>s…</p>
+          <a href="${returnTarget}" class="btn-portal" style="display:inline-flex; align-items:center; gap:8px; padding:10px 24px; text-decoration:none; font-weight:bold; border-radius:999px; font-size:12px; background:linear-gradient(135deg, #d4af37, #aa820a); color:#0a0a0e;">
+            <span>Proceed to Agreement Page for eSign &rarr;</span>
+          </a>
+        `;
+
+        const countdownInterval = setInterval(() => {
+          secondsLeft -= 1;
+          const counterEl = document.querySelector('#redirect-counter');
+          if (counterEl) counterEl.textContent = secondsLeft;
+          if (secondsLeft <= 0) {
+            clearInterval(countdownInterval);
+            window.location.href = returnTarget;
+          }
+        }, 1000);
+      }
 
       // Animate out checkout and animate in success screen
       stripeContainer.style.opacity = '0';

@@ -264,6 +264,17 @@
     const downloadBtn = $('#agreement-download-btn');
     const msg = $('#agreement-message');
 
+    const docFee = Number(agreement?.documentation_fee ?? 99);
+    const isFeePaid = agreement?.fee_status === 'paid' || docFee === 0;
+    const isSigned = agreement && agreement.status === 'signed';
+
+    const feeEl = $('#agr-doc-fee');
+    if (feeEl) {
+      feeEl.innerHTML = docFee > 0 
+        ? `₹${docFee}.00 <span style="font-size:10px; font-weight:normal; color:${isFeePaid ? 'var(--emerald)' : 'var(--gold-bright)'};">[ ${isFeePaid ? '✓ Paid' : 'Payment Due'} ]</span>`
+        : `Free (Waived)`;
+    }
+
     if (termsBtn) {
       const currentKey = key || '';
       termsBtn.href = currentKey 
@@ -271,7 +282,7 @@
         : `/agreements?code=${encodeURIComponent(project.project_code || '')}`;
     }
 
-    if (agreement && agreement.status === 'signed') {
+    if (isSigned) {
       badge.textContent = '✓ Aadhaar eSigned';
       badge.className = 'status confirmed';
       signBtn.hidden = true;
@@ -283,6 +294,18 @@
       } else {
         downloadBtn.hidden = true;
       }
+    } else if (!isFeePaid && docFee > 0) {
+      badge.textContent = `₹${docFee} Fee Required`;
+      badge.className = 'status scheduled';
+      signBtn.hidden = false;
+      downloadBtn.hidden = true;
+      const feeInvCode = agreement?.fee_invoice_code || `INV-AGR-${project.project_code}`;
+      const currentKey = key || '';
+      const returnUrl = `/agreements?key=${encodeURIComponent(currentKey)}`;
+      signBtn.href = `/pay.html?invoice=${encodeURIComponent(feeInvCode)}${currentKey ? '&key=' + encodeURIComponent(currentKey) + '&return=' + encodeURIComponent(returnUrl) : ''}`;
+      signBtn.innerHTML = `<span>⚡ Pay ₹${docFee} Fee to Unlock eSign ↗</span>`;
+      msg.textContent = `Aadhaar OTP eSign on official Delhi ₹100 e-Stamp unlocks immediately once the ₹${docFee} documentation fee is completed.`;
+      msg.className = 'notice';
     } else {
       badge.textContent = 'Pending eSign';
       badge.className = 'status scheduled';
@@ -290,8 +313,9 @@
       downloadBtn.hidden = true;
       const signUrl = agreement?.leegality_sign_url || `https://sign.leegality.com/sign/DOC-${project.project_code}`;
       signBtn.href = signUrl;
-      msg.textContent = 'Review contract specifics and execute your legally binding Aadhaar OTP eSign on the official Delhi ₹100 e-Stamp.';
-      msg.className = 'notice';
+      signBtn.innerHTML = `<span>Aadhaar OTP eSign via Leegality ↗</span>`;
+      msg.textContent = 'Documentation fee settled. Review contract specifics and execute your legally binding Aadhaar OTP eSign on the official Delhi ₹100 e-Stamp.';
+      msg.className = 'notice success';
     }
   }
 

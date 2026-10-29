@@ -660,6 +660,11 @@
             const signUrl = agr.leegality_sign_url || `https://sign.leegality.com/sign/DOC-${p.project_code}`;
             const isSigned = agr.status === 'signed';
 
+            const docFee = Number(agr.documentation_fee ?? 99);
+            const isFeePaid = agr.fee_status === 'paid' || docFee === 0;
+            const feeInvCode = agr.fee_invoice_code || `INV-AGR-${p.project_code}`;
+            const payFeeUrl = `/pay.html?invoice=${encodeURIComponent(feeInvCode)}${key ? '&key=' + encodeURIComponent(key) + '&return=' + encodeURIComponent('/agreements?key=' + key) : ''}`;
+
             // Update Hero
             const eyebrow = document.getElementById('hero-eyebrow');
             const title = document.getElementById('hero-title');
@@ -683,11 +688,17 @@
                         <span class="px-5 py-2.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-mono font-bold">
                             &check; Aadhaar eSigned
                         </span>
-                    ` : `
-                        <a href="${signUrl}" target="_blank" rel="noopener noreferrer" class="px-6 py-2.5 rounded-full bg-gradient-to-r from-gold-500 to-gold-400 text-noir-950 text-xs font-cinzel font-bold tracking-widest uppercase hover:brightness-110 shadow-lg transition-all">
-                            Aadhaar OTP eSign on Leegality &nearr;
-                        </a>
-                    `}
+                    ` : (
+                        !isFeePaid && docFee > 0 ? `
+                            <a href="${payFeeUrl}" class="px-6 py-2.5 rounded-full bg-gradient-to-r from-amber-500 to-amber-400 text-noir-950 text-xs font-cinzel font-bold tracking-widest uppercase hover:brightness-110 shadow-lg transition-all flex items-center gap-1.5">
+                                <span>⚡ Pay ₹${docFee} Fee to eSign &rarr;</span>
+                            </a>
+                        ` : `
+                            <a href="${signUrl}" target="_blank" rel="noopener noreferrer" class="px-6 py-2.5 rounded-full bg-gradient-to-r from-gold-500 to-gold-400 text-noir-950 text-xs font-cinzel font-bold tracking-widest uppercase hover:brightness-110 shadow-lg transition-all">
+                                Aadhaar OTP eSign on Leegality &nearr;
+                            </a>
+                        `
+                    )}
                 `;
             }
 
@@ -707,6 +718,18 @@
                 const clientLocation = p.location || 'Studio Set / Hauz Khas, New Delhi';
 
                 personalView.innerHTML = `
+                    ${!isFeePaid && !isSigned && docFee > 0 ? `
+                        <div class="mb-6 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex flex-wrap items-center justify-between gap-4 text-xs font-mono no-print">
+                            <div class="flex items-center gap-3 text-amber-300">
+                                <span class="text-base">⚡</span>
+                                <span><strong>Payment Required Before Signing:</strong> UIDAI Aadhaar verification &amp; Delhi e-Stamp fee (<strong>₹${docFee}.00</strong>) must be settled before digital OTP signature.</span>
+                            </div>
+                            <a href="${payFeeUrl}" class="px-5 py-2 rounded-full bg-gradient-to-r from-amber-500 to-amber-400 text-noir-950 font-bold uppercase tracking-wider hover:brightness-110 shadow-md transition-all">
+                                Pay ₹${docFee} Fee via UPI &rarr;
+                            </a>
+                        </div>
+                    ` : ''}
+
                     <!-- 1. OFFICIAL DELHI E-STAMP CERTIFICATE HEADER -->
                     <div class="estamp-print-card p-6 sm:p-8 rounded-3xl liquid-card border-2 border-gold-400/40 relative overflow-hidden bg-gradient-to-b from-gold-500/10 via-noir-900 to-noir-950">
                         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-6 border-b border-white/10">
@@ -840,7 +863,9 @@
                                 </tr>
                                 <tr>
                                     <td class="font-bold text-white">B.4 UIDAI Aadhaar Documentation Fee</td>
-                                    <td class="font-mono text-neutral-300">₹99.00 (UIDAI OTP identity validation fee)</td>
+                                    <td class="font-mono ${isFeePaid ? 'text-emerald-400 font-bold' : 'text-amber-400 font-bold'}">
+                                        ₹${docFee}.00 (${isFeePaid ? '✓ Fully Settled &amp; Verified' : '⚠️ Pending Payment — Due prior to Aadhaar OTP execution'})
+                                    </td>
                                 </tr>
                                 <tr>
                                     <td class="font-bold text-white">B.5 Proprietary RAW Files Policy</td>
@@ -986,13 +1011,13 @@
                             </div>
 
                             <!-- Party 2: Client -->
-                            <div class="signature-col p-6 rounded-2xl liquid-glass border ${isSigned ? 'border-emerald-500/30' : 'border-gold-400/30'} space-y-3">
+                            <div class="signature-col p-6 rounded-2xl liquid-glass border ${isSigned ? 'border-emerald-500/30' : isFeePaid ? 'border-gold-400/30' : 'border-amber-500/30'} space-y-3">
                                 <span class="text-gold-400 font-mono text-[10px] uppercase font-bold block">Second Party (${isCollab ? 'Model / Collaborator' : 'Client Entity'})</span>
                                 <div class="font-editorial text-2xl text-white italic pt-1">${p.client_name}</div>
                                 <div class="text-[11px] font-mono text-neutral-400 space-y-0.5">
-                                    <div>Status: <strong class="${isSigned ? 'text-emerald-400' : 'text-gold-300'}">${isSigned ? '&check; Executed via Aadhaar OTP' : 'Pending Aadhaar OTP eSign'}</strong></div>
+                                    <div>Status: <strong class="${isSigned ? 'text-emerald-400' : isFeePaid ? 'text-gold-300' : 'text-amber-400'}">${isSigned ? '&check; Executed via Aadhaar OTP' : isFeePaid ? 'Verified &bull; Pending Aadhaar OTP eSign' : 'Payment Required Before Signing'}</strong></div>
                                     <div>Leegality Ref: <span class="text-neutral-300 font-bold font-mono">${agr.leegality_document_id || 'DOC-' + p.project_code}</span></div>
-                                    <div class="text-neutral-500 text-[10px]">Documentation Fee: ₹99.00 (UIDAI OTP Service)</div>
+                                    <div class="text-[10.5px] ${isFeePaid ? 'text-emerald-400 font-bold' : 'text-amber-400 font-medium'}">Documentation Fee: ₹${docFee}.00 (${isFeePaid ? '&check; Settled &amp; Reconciled' : '⚠️ Payment Due'})</div>
                                 </div>
                             </div>
                         </div>
@@ -1006,11 +1031,17 @@
                                 <button onclick="window.print()" class="px-5 py-2.5 rounded-full bg-white/5 border border-white/20 text-neutral-300 text-xs font-mono tracking-wider hover:bg-white/10 hover:text-white transition-all">
                                     🖨 Download / Print PDF
                                 </button>
-                                ${!isSigned ? `
-                                    <a href="${signUrl}" target="_blank" rel="noopener noreferrer" class="px-6 py-2.5 rounded-full bg-gradient-to-r from-gold-500 to-gold-400 text-noir-950 text-xs font-cinzel font-bold tracking-widest uppercase hover:brightness-110 shadow-lg transition-all">
-                                        Proceed to Aadhaar OTP eSign &nearr;
-                                    </a>
-                                ` : ''}
+                                ${!isSigned ? (
+                                    !isFeePaid && docFee > 0 ? `
+                                        <a href="${payFeeUrl}" class="px-6 py-2.5 rounded-full bg-gradient-to-r from-amber-500 to-amber-400 text-noir-950 text-xs font-cinzel font-bold tracking-widest uppercase hover:brightness-110 shadow-lg transition-all flex items-center gap-2">
+                                            <span>⚡ Complete ₹${docFee} Fee to Sign &rarr;</span>
+                                        </a>
+                                    ` : `
+                                        <a href="${signUrl}" target="_blank" rel="noopener noreferrer" class="px-6 py-2.5 rounded-full bg-gradient-to-r from-gold-500 to-gold-400 text-noir-950 text-xs font-cinzel font-bold tracking-widest uppercase hover:brightness-110 shadow-lg transition-all">
+                                            Proceed to Aadhaar OTP eSign &nearr;
+                                        </a>
+                                    `
+                                ) : ''}
                             </div>
                         </div>
                     </div>

@@ -230,6 +230,10 @@
                 <input name="default_overtime_rate" type="number" min="0" max="10000000" step="100" required>
                 <small class="field-help">Charged per started 30-minute block following grace expiration.</small>
               </label>
+              <label>Aadhaar eSign &amp; Documentation Fee (₹)
+                <input name="agreement_fee" type="number" min="0" max="50000" step="1" value="99" required>
+                <small class="field-help">Fee charged to client before unlocking Aadhaar OTP eSign on Delhi e-Stamp (Set to 0 for free).</small>
+              </label>
               <div class="locked-policy" style="border:1px solid var(--line); border-radius:10px; padding:14px; margin-top:14px; background:rgba(10,10,14,0.5);">
                 <div><span>Fixed Grace Period</span><strong style="color:var(--gold-bright);">30 Minutes</strong></div>
                 <div><span>Billing Increment</span><strong style="color:var(--gold-bright);">Every Started 30 Min</strong></div>
@@ -295,11 +299,8 @@
                   <input type="text" id="leegality-estamp-no" value="IN-DL22366535014840X">
                 </label>
                 <label>
-                  Environment Mode
-                  <select id="leegality-sandbox-select">
-                    <option value="0">Live Production (api.leegality.com)</option>
-                    <option value="1">Sandbox / Test (sandbox.leegality.com)</option>
-                  </select>
+                  Documentation Fee (₹)
+                  <input type="number" id="leegality-doc-fee" min="0" max="50000" step="1" value="99">
                 </label>
               </div>
               <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
@@ -553,9 +554,12 @@
           <span class="muted">e-Stamp Duty:</span>
           <span style="color:var(--gold);">Delhi NCT ₹100 (IN-DL22366535014840X)</span>
         </div>
-        <div style="display:flex; justify-content:space-between;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
           <span class="muted">Aadhaar eSign Fee:</span>
-          <strong>₹99.00</strong>
+          <div>
+            <strong id="agr-dlg-fee">₹99.00</strong>
+            <span id="agr-dlg-fee-status" class="status scheduled" style="font-size:9.5px; padding:2px 7px; margin-left:6px;">Pending</span>
+          </div>
         </div>
       </div>
 
@@ -574,6 +578,7 @@
       </div>
 
       <div class="dialog-actions">
+        <button type="button" id="agr-dlg-toggle-fee" class="button quiet" style="font-size:11px;">Toggle Fee Status</button>
         <button type="button" class="button quiet" data-close-dialog>Close</button>
         <button type="submit" id="agr-dlg-submit" class="button gold">Dispatch via Leegality</button>
       </div>
@@ -582,6 +587,6 @@
   </dialog>
 
   <div id="toast" class="toast" role="status"></div>
-  <script src="studio.js" defer></script>
+  <script src="studio.js?v=agreement-fee-v1" defer></script>
 </body>
 </html>

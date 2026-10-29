@@ -184,7 +184,7 @@
         if (state.settings.leegality_profile_id_paid) $('#leegality-profile-paid').value = state.settings.leegality_profile_id_paid;
         if (state.settings.leegality_profile_id_collab) $('#leegality-profile-collab').value = state.settings.leegality_profile_id_collab;
         if (state.settings.leegality_estamp_number) $('#leegality-estamp-no').value = state.settings.leegality_estamp_number;
-        if (state.settings.leegality_sandbox) $('#leegality-sandbox-select').value = state.settings.leegality_sandbox;
+        if ($('#leegality-doc-fee')) $('#leegality-doc-fee').value = state.settings.agreement_fee ?? 99;
       }
       $('#integration-cards').innerHTML=Object.entries(result.integrations).map(([key,value])=>{
         const labels={leegality:'Leegality Aadhaar eSign',bank_alerts:'Gmail bank alerts',client_codes:'Session approvals',sms_email:'SMS & email delivery',payments:'Payment processing',media_storage:'Photo & video storage'};
@@ -207,7 +207,7 @@
           leegality_profile_id_paid: $('#leegality-profile-paid').value,
           leegality_profile_id_collab: $('#leegality-profile-collab').value,
           leegality_estamp_number: $('#leegality-estamp-no').value,
-          leegality_sandbox: $('#leegality-sandbox-select').value
+          agreement_fee: $('#leegality-doc-fee')?.value || 99
         })
       });
       status.textContent = 'Configuration saved.';
@@ -228,6 +228,7 @@
   async function saveSettings(event){
     event.preventDefault();const data=Object.fromEntries(new FormData(event.currentTarget));
     data.default_duration_minutes=Number(data.default_duration_minutes);data.default_overtime_rate=Number(data.default_overtime_rate);
+    data.agreement_fee=Number(data.agreement_fee)||0;
     try{await api('settings',{method:'PUT',body:JSON.stringify(data)});toast('Admin settings saved.');await loadSettings();}
     catch(error){toast(error.message);}
   }
@@ -342,6 +343,31 @@
     try {
       const result = await api(`projects/${project.id}/agreement`);
       const agr = result.agreement;
+      const docFee = Number(agr?.documentation_fee ?? state.settings?.agreement_fee ?? 99);
+      const feeStatus = agr?.fee_status || (docFee === 0 ? 'paid' : 'pending');
+      $('#agr-dlg-fee').textContent = `₹${docFee}.00`;
+      const statusBadge = $('#agr-dlg-fee-status');
+      statusBadge.textContent = feeStatus === 'paid' ? '✓ Paid' : 'Pending Payment';
+      statusBadge.className = `status ${feeStatus === 'paid' ? 'confirmed' : 'scheduled'}`;
+
+      const toggleBtn = $('#agr-dlg-toggle-fee');
+      if (toggleBtn) {
+        toggleBtn.textContent = feeStatus === 'paid' ? 'Mark Fee as Pending' : 'Mark Fee as Paid / Waived';
+        toggleBtn.onclick = async () => {
+          const newStatus = feeStatus === 'paid' ? 'pending' : 'paid';
+          try {
+            await api(`projects/${project.id}/agreement/fee-status`, {
+              method: 'POST',
+              body: JSON.stringify({ fee_status: newStatus })
+            });
+            toast(`Agreement fee marked as ${newStatus}.`);
+            openAgreementDialog(project);
+          } catch (err) {
+            toast(err.message);
+          }
+        };
+      }
+
       if (agr) {
         $('#agr-dlg-type').value = agr.agreement_type || 'master_paid';
         $('#agr-dlg-status').textContent = agr.status === 'signed' ? '✓ Aadhaar eSigned & Verified' : 'Dispatched via Leegality (Awaiting Sign)';

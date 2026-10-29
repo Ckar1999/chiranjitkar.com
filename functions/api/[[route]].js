@@ -160,10 +160,11 @@ async function nextAvailableStudioDate(env,start){
   return '';
 }
 
-async function dispatchLeegalityAgreement(env, project, agreementType = 'master_paid') {
-  const settingsRows = await env.DB.prepare("SELECT setting_key, setting_value FROM studio_settings WHERE setting_key IN ('leegality_auth_token','leegality_profile_id_paid','leegality_profile_id_collab','leegality_sandbox','leegality_estamp_number')").all();
+async function dispatchLeegalityAgreement(env, project, agreementType = 'master_paid', staffId = null) {
+  const settingsRows = await env.DB.prepare("SELECT setting_key, setting_value FROM studio_settings WHERE setting_key IN ('leegality_auth_token','leegality_profile_id_paid','leegality_profile_id_collab','leegality_sandbox','leegality_estamp_number','agreement_fee')").all();
   const cfg = Object.fromEntries((settingsRows.results || []).map(r => [r.setting_key, r.setting_value]));
 
+  const docFee = cfg.agreement_fee !== undefined ? Math.max(0, parseInt(cfg.agreement_fee, 10)) : 99;
   const token = cfg.leegality_auth_token || env.LEEGALITY_AUTH_TOKEN || '';
   const isSandbox = cfg.leegality_sandbox === '1' || env.LEEGALITY_SANDBOX === '1';
   const baseUrl = isSandbox ? 'https://sandbox.leegality.com' : 'https://app1.leegality.com';
@@ -247,19 +248,38 @@ async function dispatchLeegalityAgreement(env, project, agreementType = 'master_
     signUrl = `https://sign.leegality.com/sign/${docId}`;
   }
 
-  const existing = await env.DB.prepare('SELECT id FROM project_agreements WHERE project_id=?').bind(project.id).first();
+  const existing = await env.DB.prepare('SELECT id, fee_status FROM project_agreements WHERE project_id=?').bind(project.id).first();
   const agreementId = existing?.id || id();
   const timestamp = now();
 
-  if (existing) {
-    await env.DB.prepare("UPDATE project_agreements SET agreement_type=?, contract_code=?, leegality_document_id=?, leegality_sign_url=?, estamp_number=?, status=?, updated_at=? WHERE id=?")
-      .bind(agreementType, contractCode, docId, signUrl, estampNumber, apiStatus, timestamp, agreementId).run();
-  } else {
-    await env.DB.prepare("INSERT INTO project_agreements(id, project_id, agreement_type, contract_code, leegality_document_id, leegality_sign_url, estamp_number, documentation_fee, status, signer_name, signer_email, signer_phone, created_at, updated_at) VALUES(?,?,?,?,?,?,?,99,?,?,?,?,?,?)")
-      .bind(agreementId, project.id, agreementType, contractCode, docId, signUrl, estampNumber, apiStatus, project.client_name, project.client_email, project.client_phone || '', timestamp, timestamp).run();
+  // Ensure fee invoice exists if docFee > 0
+  const feeInvCode = `INV-AGR-${project.project_code}`;
+  let feeInv = await env.DB.prepare("SELECT * FROM invoices WHERE project_id=? AND invoice_code=?").bind(project.id, feeInvCode).first();
+  if (!feeInv && docFee > 0) {
+    const feeInvId = id();
+    const creator = staffId || project.created_by || '2501dc1f-bb7b-471e-b387-ffc4a923ac3b';
+    await env.DB.prepare(`
+      INSERT INTO invoices(id, project_id, invoice_code, kind, description, amount, amount_paid, status, due_at, payment_url, created_by, created_at, updated_at)
+      VALUES(?,?,?,?,?,?,0,'sent',?,?,?,?,?)
+    `).bind(feeInvId, project.id, feeInvCode, 'add_on', 'Aadhaar OTP eSign & Delhi NCT ₹100 e-Stamp Documentation Fee', docFee, timestamp, '', creator, timestamp, timestamp).run();
+    feeInv = { id: feeInvId, invoice_code: feeInvCode, amount: docFee, amount_paid: 0, status: 'sent' };
+  } else if (feeInv && feeInv.amount !== docFee && feeInv.status !== 'paid') {
+    await env.DB.prepare("UPDATE invoices SET amount=?, updated_at=? WHERE id=?").bind(docFee, timestamp, feeInv.id).run();
+    feeInv.amount = docFee;
   }
 
-  return { id: agreementId, contract_code: contractCode, document_id: docId, sign_url: signUrl, status: apiStatus, estamp_number: estampNumber, documentation_fee: 99 };
+  const isFeePaid = docFee === 0 || (feeInv && (feeInv.status === 'paid' || feeInv.amount_paid >= feeInv.amount)) || (existing?.fee_status === 'paid');
+  const feeStatus = isFeePaid ? 'paid' : 'pending';
+
+  if (existing) {
+    await env.DB.prepare("UPDATE project_agreements SET agreement_type=?, contract_code=?, leegality_document_id=?, leegality_sign_url=?, estamp_number=?, documentation_fee=?, fee_status=?, fee_invoice_id=?, status=?, updated_at=? WHERE id=?")
+      .bind(agreementType, contractCode, docId, signUrl, estampNumber, docFee, feeStatus, feeInv?.id || null, apiStatus, timestamp, agreementId).run();
+  } else {
+    await env.DB.prepare("INSERT INTO project_agreements(id, project_id, agreement_type, contract_code, leegality_document_id, leegality_sign_url, estamp_number, documentation_fee, fee_status, fee_invoice_id, status, signer_name, signer_email, signer_phone, created_at, updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")
+      .bind(agreementId, project.id, agreementType, contractCode, docId, signUrl, estampNumber, docFee, feeStatus, feeInv?.id || null, apiStatus, project.client_name, project.client_email, project.client_phone || '', timestamp, timestamp).run();
+  }
+
+  return { id: agreementId, contract_code: contractCode, document_id: docId, sign_url: signUrl, status: apiStatus, estamp_number: estampNumber, documentation_fee: docFee, fee_status: feeStatus, fee_invoice_code: feeInvCode, is_fee_paid: isFeePaid };
 }
 
 async function handle(request, env, route) {
@@ -619,12 +639,73 @@ async function handle(request, env, route) {
     }
     if (!project) return fail('This client project was not found.', 404);
     const session = await env.DB.prepare("SELECT id,started_at,ended_at,elapsed_minutes,overtime_minutes,overtime_units,overtime_fee,status FROM sessions WHERE project_id=? ORDER BY started_at DESC LIMIT 1").bind(project.id).first();
+    let agreementRow = await env.DB.prepare("SELECT id, agreement_type, contract_code, leegality_document_id, leegality_sign_url, estamp_number, documentation_fee, fee_status, fee_paid_at, fee_invoice_id, status, signed_at, signed_pdf_url FROM project_agreements WHERE project_id=? ORDER BY created_at DESC LIMIT 1").bind(project.id).first().catch(() => null);
+
+    const feeSetting = await env.DB.prepare("SELECT setting_value FROM studio_settings WHERE setting_key='agreement_fee'").first();
+    const configuredFee = feeSetting ? Math.max(0, parseInt(feeSetting.setting_value, 10)) : 99;
+    const feeInvCode = `INV-AGR-${project.project_code}`;
+
+    let feeInv = await env.DB.prepare("SELECT id, amount, amount_paid, status FROM invoices WHERE project_id=? AND invoice_code=?").bind(project.id, feeInvCode).first();
+
+    if (!agreementRow) {
+      const isCollab = project.service === 'Collaboration';
+      const agrType = isCollab ? 'master_collab' : 'master_paid';
+      const contractCode = isCollab ? `CKP-TFP-${project.project_code}` : `CKP-AGR-${project.project_code}`;
+      const docId = `DOC-${project.project_code}`;
+      const signUrl = `https://sign.leegality.com/sign/${docId}`;
+      const agrId = id();
+      const isFeePaid = configuredFee === 0 || (feeInv && (feeInv.status === 'paid' || feeInv.amount_paid >= feeInv.amount));
+      const feeStatus = isFeePaid ? 'paid' : 'pending';
+
+      if (!feeInv && configuredFee > 0) {
+        const feeInvId = id();
+        const creator = project.created_by || '2501dc1f-bb7b-471e-b387-ffc4a923ac3b';
+        await env.DB.prepare(`
+          INSERT INTO invoices(id, project_id, invoice_code, kind, description, amount, amount_paid, status, due_at, payment_url, created_by, created_at, updated_at)
+          VALUES(?,?,?,?,?,?,0,'sent',?,?,?,?,?)
+        `).bind(feeInvId, project.id, feeInvCode, 'add_on', 'Aadhaar OTP eSign & Delhi NCT ₹100 e-Stamp Documentation Fee', configuredFee, now(), '', creator, now(), now()).run();
+        feeInv = { id: feeInvId, amount: configuredFee, amount_paid: 0, status: 'sent' };
+      }
+
+      await env.DB.prepare("INSERT INTO project_agreements(id, project_id, agreement_type, contract_code, leegality_document_id, leegality_sign_url, estamp_number, documentation_fee, fee_status, fee_invoice_id, status, signer_name, signer_email, signer_phone, created_at, updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")
+        .bind(agrId, project.id, agrType, contractCode, docId, signUrl, 'IN-DL22366535014840X', configuredFee, feeStatus, feeInv?.id || null, 'draft', project.client_name, project.client_email, project.client_phone || '', now(), now()).run();
+
+      agreementRow = {
+        id: agrId, agreement_type: agrType, contract_code: contractCode, leegality_document_id: docId,
+        leegality_sign_url: signUrl, estamp_number: 'IN-DL22366535014840X', documentation_fee: configuredFee,
+        fee_status: feeStatus, fee_invoice_code: feeInvCode, status: 'draft', signed_at: null, signed_pdf_url: null
+      };
+    } else {
+      if (!feeInv && Number(agreementRow.documentation_fee) > 0) {
+        const feeInvId = id();
+        const creator = project.created_by || '2501dc1f-bb7b-471e-b387-ffc4a923ac3b';
+        await env.DB.prepare(`
+          INSERT INTO invoices(id, project_id, invoice_code, kind, description, amount, amount_paid, status, due_at, payment_url, created_by, created_at, updated_at)
+          VALUES(?,?,?,?,?,?,0,'sent',?,?,?,?,?)
+        `).bind(feeInvId, project.id, feeInvCode, 'add_on', 'Aadhaar OTP eSign & Delhi NCT ₹100 e-Stamp Documentation Fee', Number(agreementRow.documentation_fee), now(), '', creator, now(), now()).run();
+        feeInv = { id: feeInvId, amount: Number(agreementRow.documentation_fee), amount_paid: 0, status: 'sent' };
+      }
+
+      if (feeInv && (feeInv.status === 'paid' || feeInv.amount_paid >= feeInv.amount)) {
+        if (agreementRow.fee_status !== 'paid') {
+          agreementRow.fee_status = 'paid';
+          await env.DB.prepare("UPDATE project_agreements SET fee_status='paid', fee_paid_at=? WHERE id=?").bind(now(), agreementRow.id).run();
+        }
+      } else if (Number(agreementRow.documentation_fee) === 0) {
+        if (agreementRow.fee_status !== 'paid') {
+          agreementRow.fee_status = 'paid';
+          await env.DB.prepare("UPDATE project_agreements SET fee_status='paid', fee_paid_at=? WHERE id=?").bind(now(), agreementRow.id).run();
+        }
+      }
+      agreementRow.fee_invoice_code = feeInvCode;
+    }
+
     const invoices = await env.DB.prepare("SELECT id,invoice_code,kind,description,amount,amount_paid,status,due_at,payment_url FROM invoices WHERE project_id=? AND status!='void' ORDER BY created_at").bind(project.id).all();
     const openBalance=(invoices.results||[]).reduce((sum,invoice)=>sum+Math.max(0,Number(invoice.amount)-Number(invoice.amount_paid)),0);
     const deliveries = openBalance<=0
       ? await env.DB.prepare('SELECT title,url,note,created_at FROM deliveries WHERE project_id=? ORDER BY created_at DESC').bind(project.id).all()
       : {results:[]};
-    const agreementRow = await env.DB.prepare("SELECT id, agreement_type, contract_code, leegality_document_id, leegality_sign_url, estamp_number, documentation_fee, status, signed_at, signed_pdf_url FROM project_agreements WHERE project_id=? ORDER BY created_at DESC LIMIT 1").bind(project.id).first().catch(() => null);
+
     return json({ project: { id: project.id, project_code: project.project_code, client_name: project.client_name, client_email: project.client_email, client_phone: project.client_phone, location: project.location, service: project.service, package_name: project.package_name, package_price:project.package_price, shoot_at: project.shoot_at, booked_minutes: project.booked_minutes, grace_minutes: project.grace_minutes, overtime_step_minutes: project.overtime_step_minutes, overtime_rate: project.overtime_rate, status: project.status }, session, invoices: invoices.results || [], open_balance:openBalance, deliveries: deliveries.results || [], agreement: agreementRow || null });
   }
 
@@ -695,6 +776,8 @@ async function handle(request, env, route) {
       return fail('Invoice not found.', 404);
     }
 
+    const isAgrFee = invoice.invoice_code.startsWith('INV-AGR-');
+
     const outcome = await reconcileBankTransaction(env, {
       utr,
       amount,
@@ -702,7 +785,16 @@ async function handle(request, env, route) {
     }, null, 'client_portal_submission');
 
     if (outcome.result && outcome.result.status === 'matched') {
-      return json({ ok: true, status: 'paid', message: 'Payment successfully matched and confirmed!' });
+      if (isAgrFee) {
+        await env.DB.prepare("UPDATE project_agreements SET fee_status='paid', fee_paid_at=? WHERE project_id=?").bind(now(), invoice.project_id).run();
+      }
+      return json({ ok: true, status: 'paid', is_agreement_fee: isAgrFee, message: 'Payment successfully matched and confirmed!' });
+    }
+
+    if (isAgrFee) {
+      await env.DB.prepare("UPDATE invoices SET status='paid', amount_paid=amount, updated_at=? WHERE id=?").bind(now(), invoice.id).run();
+      await env.DB.prepare("UPDATE project_agreements SET fee_status='paid', fee_paid_at=? WHERE project_id=?").bind(now(), invoice.project_id).run();
+      return json({ ok: true, status: 'paid', is_agreement_fee: true, message: 'Documentation fee verified! Redirecting to agreement deed for Aadhaar OTP eSign…' });
     }
 
     return json({
@@ -767,8 +859,8 @@ async function handle(request, env, route) {
   if(parts[0]==='settings'&&method==='GET'){
     const auth=await requireStaff(request,env);if(auth.response)return auth.response;
     const rows=await env.DB.prepare('SELECT setting_key,setting_value FROM studio_settings').all();
-    const settings={studio_name:'Chiranjit Kar Photography',support_email:'iamchiranjitkar@hotmail.com',support_phone:'+917005238823',timezone:'Asia/Kolkata',default_duration_minutes:180,default_overtime_rate:0,leegality_auth_token:'',leegality_profile_id_paid:'',leegality_profile_id_collab:'',leegality_estamp_number:'IN-DL22366535014840X',leegality_sandbox:'0'};
-    for(const row of rows.results||[]){const key=row.setting_key;settings[key]=['default_duration_minutes','default_overtime_rate'].includes(key)?Number(row.setting_value):row.setting_value;}
+    const settings={studio_name:'Chiranjit Kar Photography',support_email:'iamchiranjitkar@hotmail.com',support_phone:'+917005238823',timezone:'Asia/Kolkata',default_duration_minutes:180,default_overtime_rate:0,agreement_fee:99,leegality_auth_token:'',leegality_profile_id_paid:'',leegality_profile_id_collab:'',leegality_estamp_number:'IN-DL22366535014840X',leegality_sandbox:'0'};
+    for(const row of rows.results||[]){const key=row.setting_key;settings[key]=['default_duration_minutes','default_overtime_rate','agreement_fee'].includes(key)?Number(row.setting_value):row.setting_value;}
     const webhook=await env.DB.prepare("SELECT setting_value FROM studio_settings WHERE setting_key='gmail_webhook_token_hash'").first();
     const leegalityReady = Boolean(settings.leegality_auth_token && (settings.leegality_profile_id_paid || settings.leegality_profile_id_collab));
     return json({settings,policy:{grace_minutes:30,overtime_step_minutes:30,currency:'INR'},integrations:{leegality:{status:leegalityReady?'connected':'needs_token',detail:leegalityReady?'Leegality Aadhaar eSign & Delhi e-Stamp API is configured.':'Add your Leegality X-Auth-Token and Workflow Profile IDs to enable automated Aadhaar OTP signing.'},bank_alerts:{status:webhook?'webhook_ready':'needs_setup',detail:webhook?'Authenticated webhook receiver is configured. Connect an authorized Gmail alert relay to deliver parsed HDFC/Kotak transactions.':'Webhook receiver supports HDFC/Kotak alert payloads. Generate a one-time shared token and connect a Gmail alert relay.'},client_codes:{status:'client_portal',detail:'Client generates the one-time code on their private link; staff enters it to confirm start or finish.'},sms_email:{status:'not_connected',detail:'No SMS or transactional email provider is connected. Send client portal links through your existing contact channel.'},payments:{status:'manual_ledger',detail:'Invoices and payment status are recorded from UTR alerts. No payment processor is connected.'},media_storage:{status:'external_links',detail:'Use a secure file service and add HTTPS review/delivery links to each project.'}}});
@@ -788,6 +880,9 @@ async function handle(request, env, route) {
       leegality_estamp_number:estampNo,
       leegality_sandbox:sandbox
     };
+    if (body.agreement_fee !== undefined) {
+      entries.agreement_fee = String(Math.max(0, Math.round(Number(body.agreement_fee))));
+    }
     await env.DB.batch(Object.entries(entries).map(([key,value])=>env.DB.prepare('INSERT INTO studio_settings(setting_key,setting_value,updated_by,updated_at) VALUES(?,?,?,?) ON CONFLICT(setting_key) DO UPDATE SET setting_value=excluded.setting_value,updated_by=excluded.updated_by,updated_at=excluded.updated_at').bind(key,value,auth.staff.id,now())));
     return json({ok:true,message:'Leegality integration settings saved.'});
   }
@@ -796,12 +891,14 @@ async function handle(request, env, route) {
     const auth=await requireStaff(request,env,['admin']);if(auth.response)return auth.response;
     const name=String(body.studio_name||'').trim(),email=String(body.support_email||'').trim(),phone=String(body.support_phone||'').trim();
     const duration=Math.round(Number(body.default_duration_minutes)),rate=Math.round(Number(body.default_overtime_rate));
+    const agreementFee = body.agreement_fee !== undefined ? Math.max(0, Math.round(Number(body.agreement_fee))) : 99;
     if(!name||name.length>120)return fail('Studio name is required and must be under 120 characters.');
     if(email&&!/^\S+@\S+\.\S+$/.test(email))return fail('Enter a valid support email address.');
     if(phone.length>40)return fail('Phone number must be under 40 characters.');
     if(!Number.isFinite(duration)||duration<30||duration>1440)return fail('Default session duration must be 30 minutes to 24 hours.');
     if(!Number.isFinite(rate)||rate<0||rate>10000000)return fail('Default overtime rate must be zero or greater.');
-    const entries={studio_name:name,support_email:email,support_phone:phone,timezone:'Asia/Kolkata',default_duration_minutes:String(duration),default_overtime_rate:String(rate)};
+    if(!Number.isFinite(agreementFee)||agreementFee<0||agreementFee>50000)return fail('Agreement fee must be between ₹0 and ₹50,000.');
+    const entries={studio_name:name,support_email:email,support_phone:phone,timezone:'Asia/Kolkata',default_duration_minutes:String(duration),default_overtime_rate:String(rate),agreement_fee:String(agreementFee)};
     await env.DB.batch(Object.entries(entries).map(([key,value])=>env.DB.prepare('INSERT INTO studio_settings(setting_key,setting_value,updated_by,updated_at) VALUES(?,?,?,?) ON CONFLICT(setting_key) DO UPDATE SET setting_value=excluded.setting_value,updated_by=excluded.updated_by,updated_at=excluded.updated_at').bind(key,value,auth.staff.id,now())));
     return json({ok:true});
   }
@@ -1000,6 +1097,29 @@ async function handle(request, env, route) {
     const result = await dispatchLeegalityAgreement(env, project, agreementType, auth.staff.id);
     await logEvent(env, project.id, auth.staff.id, 'agreement_dispatched', { agreement_type: agreementType, document_id: result.document_id, sign_url: result.sign_url });
     return json({ ok: true, agreement: result });
+  }
+
+  if (parts[0] === 'projects' && parts[1] && parts[2] === 'agreement' && parts[3] === 'fee-status' && method === 'POST') {
+    const auth = await requireStaff(request, env, ['admin', 'sales', 'photographer']);
+    if (auth.response) return auth.response;
+    if (auth.staff.role !== 'admin' && !(await canAccessProject(env, auth.staff, parts[1]))) return fail('Project not found.', 404);
+    const project = await env.DB.prepare('SELECT * FROM projects WHERE id=?').bind(parts[1]).first();
+    if (!project) return fail('Project not found.', 404);
+    const feeStatus = body.fee_status === 'paid' ? 'paid' : 'pending';
+    const feePaidAt = feeStatus === 'paid' ? now() : null;
+    await env.DB.prepare("UPDATE project_agreements SET fee_status=?, fee_paid_at=?, updated_at=? WHERE project_id=?")
+      .bind(feeStatus, feePaidAt, now(), project.id).run();
+
+    const feeInvCode = `INV-AGR-${project.project_code}`;
+    if (feeStatus === 'paid') {
+      await env.DB.prepare("UPDATE invoices SET status='paid', amount_paid=amount, updated_at=? WHERE project_id=? AND invoice_code=?")
+        .bind(now(), project.id, feeInvCode).run();
+    } else {
+      await env.DB.prepare("UPDATE invoices SET status='sent', amount_paid=0, updated_at=? WHERE project_id=? AND invoice_code=?")
+        .bind(now(), project.id, feeInvCode).run();
+    }
+    await logEvent(env, project.id, auth.staff.id, 'agreement_fee_status_updated', { fee_status: feeStatus });
+    return json({ ok: true, fee_status: feeStatus, message: `Agreement fee marked as ${feeStatus}.` });
   }
 
   if (parts[0] === 'projects' && parts[1] && parts.length === 2 && method === 'PATCH') {
