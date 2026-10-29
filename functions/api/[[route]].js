@@ -1,4 +1,5 @@
 import { DELHI_ESTAMP_BASE64 } from './stamp_data.js';
+import { MASTER_AGREEMENT_PDF_BASE64 } from './master_agreement_data.js';
 
 const COOKIE = '__Host-studio_session';
 const CLIENT_COOKIE = 'client_session';
@@ -189,6 +190,7 @@ async function dispatchLeegalityAgreement(env, project, agreementType = 'master_
         profileId,
         file: {
           name: `${contractCode}.pdf`,
+          file: MASTER_AGREEMENT_PDF_BASE64,
           fields: [
             { id: '1769351065891', name: 'Contract ID', value: contractCode, type: 'text' },
             { id: '1769351096036', name: 'Date', value: todayUS, type: 'date', format: 'mm/dd/yyyy' },
