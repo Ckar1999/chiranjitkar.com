@@ -20,7 +20,7 @@
         <input name="email" type="email" autocomplete="username" placeholder="producer@chiranjitkar.com" required>
       </label>
       <label>Master Security Passphrase
-        <input name="password" type="password" autocomplete="current-password" minlength="20" placeholder="••••••••••••••••••••" required>
+        <input name="password" type="password" autocomplete="current-password" minlength="12" placeholder="••••••••••••" required>
       </label>
       <button class="button gold" type="submit">Authenticate Session</button>
       <p class="notice" id="login-message" role="status"></p>
@@ -324,7 +324,7 @@
             </div>
             <div>
               <strong>Staff Session Tokens</strong>
-              <span>20+ Character Passwords · Secure 8-Hour Host-Bound Cookie</span>
+              <span>12+ Character Passwords · Secure 8-Hour Host-Bound Cookie</span>
             </div>
             <div>
               <strong>Personal Passphrase</strong>
@@ -445,10 +445,10 @@
       <label>Current Passphrase
         <input name="current_password" type="password" autocomplete="current-password" required>
       </label>
-      <label>New Passphrase (20+ Characters)
-        <input name="new_password" type="password" autocomplete="new-password" minlength="20" required>
+      <label>New Passphrase (12+ Characters)
+        <input name="new_password" type="password" autocomplete="new-password" minlength="12" required>
       </label>
-      <p class="policy-note">Requires 20+ characters. An automatic re-authentication will be initiated.</p>
+      <p class="policy-note">Requires 12+ characters. An automatic re-authentication will be initiated.</p>
       <div class="dialog-actions">
         <button type="button" class="button quiet" data-close-dialog>Cancel</button>
         <button type="submit" class="button gold">Commit Passphrase</button>

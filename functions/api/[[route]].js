@@ -350,7 +350,7 @@ async function handle(request, env, route) {
     const email = String(body.email || '').trim().toLowerCase();
     const password = String(body.password || '');
     if (!env.APP_SECRET) return fail('Studio authentication is not configured.',503);
-    if (!/^\S+@\S+\.\S+$/.test(email) || password.length < 20 || password.length > 200) return fail('Enter your work email and password (at least 20 characters).');
+    if (!/^\S+@\S+\.\S+$/.test(email) || password.length < 12 || password.length > 200) return fail('Enter your work email and password (at least 12 characters).');
     const since = new Date(Date.now() - 15 * 60_000).toISOString();
     const tries = await env.DB.prepare('SELECT COUNT(*) AS n FROM login_attempts WHERE email=? AND attempted_at>? AND succeeded=0').bind(email, since).first();
     if ((tries?.n || 0) >= 8) return fail('Too many attempts. Wait 15 minutes and try again.', 429);
@@ -401,7 +401,7 @@ async function handle(request, env, route) {
     const current = await passwordHash(String(body.current_password || ''), user.password_salt,env.APP_SECRET);
     if (current.hash !== user.password_hash) return fail('Current password is incorrect.', 401);
     const nextPassword = String(body.new_password || '');
-    if (nextPassword.length < 20 || nextPassword.length > 200) return fail('Choose a new password with at least 20 characters.');
+    if (nextPassword.length < 12 || nextPassword.length > 200) return fail('Choose a new password with at least 12 characters.');
     const hashed = await passwordHash(nextPassword,null,env.APP_SECRET);
     await env.DB.prepare('UPDATE staff SET password_hash=?,password_salt=?,updated_at=? WHERE id=?').bind(hashed.hash, hashed.salt, now(), auth.staff.id).run();
     await env.DB.prepare('DELETE FROM staff_sessions WHERE staff_id=?').bind(auth.staff.id).run();
