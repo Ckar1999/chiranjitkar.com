@@ -73,7 +73,7 @@ async function createMasterAgreementPdf(outputPath) {
   }
 
   // --- 1. Official Delhi e-Stamp Certificate Box ---
-  const stampBoxHeight = 58;
+  const stampBoxHeight = 68;
   currentPage.drawRectangle({
     x: margin,
     y: y - stampBoxHeight,
@@ -86,34 +86,41 @@ async function createMasterAgreementPdf(outputPath) {
 
   currentPage.drawText('GOVERNMENT OF NATIONAL CAPITAL TERRITORY OF DELHI', {
     x: margin + 10,
-    y: y - 16,
+    y: y - 15,
     size: 8.5,
     font: fontBold,
     color: rgb(0.08, 0.1, 0.15)
   });
-  currentPage.drawText('CERTIFICATE OF STAMP DUTY · NON-JUDICIAL E-STAMP (ARTICLE 5 AGREEMENT)', {
+  currentPage.drawText('CERTIFICATE OF STAMP DUTY · NON-JUDICIAL E-STAMP (ARTICLE 5 GENERAL AGREEMENT)', {
     x: margin + 10,
-    y: y - 29,
-    size: 8,
+    y: y - 27,
+    size: 7.8,
     font: fontBold,
     color: rgb(0.7, 0.35, 0.05)
   });
-  currentPage.drawText('Certificate No: IN-DL22366535014840X  |  Stamp Duty: Rs. 100.00  |  First Party: Chiranjit Kar  |  Second Party: Client/Collaborator', {
+  currentPage.drawText('Certificate No: IN-DL22366535014840X  |  Unique Doc Ref: SUBIN-DLDL75210370036032316761X  |  Duty: Rs. 100.00', {
     x: margin + 10,
-    y: y - 43,
-    size: 7.2,
+    y: y - 39,
+    size: 7,
     font: fontRegular,
-    color: rgb(0.25, 0.3, 0.35)
+    color: rgb(0.2, 0.25, 0.3)
   });
-  currentPage.drawText('Digital Verification: Verified under Indian Stamp Act 1899 & Section 10A Information Technology Act 2000', {
+  currentPage.drawText('First Party: CHIRANJIT KAR  |  Second Party: CLIENT OR COLLABORATOR  |  Consideration Price: Rs. 0 (Zero)', {
     x: margin + 10,
-    y: y - 53,
-    size: 6.8,
+    y: y - 50,
+    size: 7,
+    font: fontRegular,
+    color: rgb(0.2, 0.25, 0.3)
+  });
+  currentPage.drawText('Account Ref: IMPACC (IV)/ dl752103/ DELHI/ DL-ESD  |  Issued: 29-Dec-2025 10:56 AM  |  StockHolding (SHCIL) Verified', {
+    x: margin + 10,
+    y: y - 61,
+    size: 6.6,
     font: fontOblique,
-    color: rgb(0.4, 0.45, 0.5)
+    color: rgb(0.35, 0.4, 0.45)
   });
 
-  y -= (stampBoxHeight + 14);
+  y -= (stampBoxHeight + 12);
 
   // --- 2. Master Agreement Title ---
   currentPage.drawText('MASTER PHOTOGRAPHY & CREATIVE PRODUCTION AGREEMENT', {

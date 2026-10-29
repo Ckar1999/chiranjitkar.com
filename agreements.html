@@ -736,26 +736,41 @@
                             <div>
                                 <span class="text-[10px] font-mono tracking-[0.25em] text-gold-400 font-bold uppercase block">Government of National Capital Territory of Delhi</span>
                                 <h2 class="font-cinzel text-xl sm:text-2xl font-bold text-white mt-1">Official Non-Judicial e-Stamp Certificate</h2>
-                                <p class="text-xs text-neutral-400 font-mono mt-0.5">Certificate No: <strong class="text-gold-300 font-bold">${estamp}</strong> &bull; Duty: ₹100.00 &bull; Description: Article 5 Agreement</p>
+                                <p class="text-xs text-neutral-400 font-mono mt-0.5">Certificate No: <strong class="text-gold-300 font-bold">${estamp}</strong> &bull; Duty: ₹100.00 &bull; Description: Article 5 General Agreement</p>
                             </div>
-                            <div class="px-4 py-2 rounded-xl bg-gold-400/20 border border-gold-400/40 text-gold-300 font-mono text-xs uppercase tracking-widest font-bold text-center">
-                                ${isCollab ? 'TFP COLLABORATION' : 'PAID COMMISSION'}
+                            <div class="flex flex-col items-end gap-1">
+                                <div class="px-4 py-1.5 rounded-xl bg-gold-400/20 border border-gold-400/40 text-gold-300 font-mono text-xs uppercase tracking-widest font-bold text-center">
+                                    ${isCollab ? 'TFP COLLABORATION' : 'PAID COMMISSION'}
+                                </div>
+                                <span class="text-[10px] font-mono text-emerald-400">✓ SHCIL Base Certificate Verified</span>
                             </div>
                         </div>
 
                         <table class="print-table mt-4 w-full text-xs font-mono">
                             <tbody>
                                 <tr>
-                                    <th class="w-1/4">First Party (Photographer)</th>
+                                    <th class="w-1/4">First Party (Purchaser)</th>
                                     <td class="w-1/4 font-bold text-white">CHIRANJIT KAR</td>
-                                    <th class="w-1/4">Second Party (Client / Model)</th>
-                                    <td class="w-1/4 font-bold text-gold-300">${p.client_name}</td>
+                                    <th class="w-1/4">Second Party (Govt e-Stamp)</th>
+                                    <td class="w-1/4 font-bold text-gold-300">CLIENT OR COLLABORATOR (${p.client_name})</td>
+                                </tr>
+                                <tr>
+                                    <th>Unique Doc. Reference</th>
+                                    <td class="text-neutral-300 font-mono">SUBIN-DLDL75210370036032316761X</td>
+                                    <th>Account Reference</th>
+                                    <td class="text-neutral-300 font-mono">IMPACC (IV)/ dl752103/ DELHI/ DL-ESD</td>
+                                </tr>
+                                <tr>
+                                    <th>Certificate Issued Date</th>
+                                    <td class="text-neutral-300">29-Dec-2025 10:56 AM</td>
+                                    <th>Consideration Price</th>
+                                    <td class="text-neutral-300">₹0 (Zero Monetary Consideration)</td>
                                 </tr>
                                 <tr>
                                     <th>Stamp Duty Paid By</th>
-                                    <td class="text-neutral-300">CHIRANJIT KAR</td>
-                                    <th>State / Authority</th>
-                                    <td class="text-neutral-300">Delhi NCT &bull; SHCIL</td>
+                                    <td class="text-neutral-300">CHIRANJIT KAR (₹100.00)</td>
+                                    <th>Authority &amp; Verification</th>
+                                    <td class="text-neutral-300">Delhi NCT &bull; StockHolding (SHCIL)</td>
                                 </tr>
                             </tbody>
                         </table>
