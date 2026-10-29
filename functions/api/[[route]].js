@@ -181,6 +181,23 @@ async function dispatchLeegalityAgreement(env, project, agreementType = 'master_
   const phone10 = String(project.client_phone || '').replace(/[^0-9]/g, '').slice(-10) || '9876543210';
   const clientCity = String(project.client_city || (project.location ? project.location.split(',').pop().trim() : '') || 'New Delhi').trim() || 'New Delhi';
 
+  let clientState = 'Delhi';
+  if (project.location) {
+    const loc = project.location.toLowerCase();
+    if (loc.includes('maharashtra') || loc.includes('mumbai') || loc.includes('pune')) clientState = 'Maharashtra';
+    else if (loc.includes('tripura') || loc.includes('agartala')) clientState = 'Tripura';
+    else if (loc.includes('karnataka') || loc.includes('bangalore') || loc.includes('bengaluru')) clientState = 'Karnataka';
+    else if (loc.includes('west bengal') || loc.includes('kolkata')) clientState = 'West Bengal';
+  }
+  let meta = {};
+  try {
+    if (project.brief && project.brief.startsWith('{')) meta = JSON.parse(project.brief);
+  } catch (e) {}
+
+  const verifyState = String(project.client_state || meta.state || clientState).trim() || 'Delhi';
+  const verifyGender = String(project.client_gender || meta.gender || (project.client_name && project.client_name.toLowerCase().includes('chiranjit') ? 'M' : 'F')).toUpperCase().startsWith('M') ? 'M' : 'F';
+  const verifyYob = parseInt(project.client_yob || meta.yob || meta.yearOfBirth || (verifyGender === 'M' ? 1999 : 1998), 10);
+
   let docId = `DOC-${project.project_code}-${Date.now().toString().slice(-4)}`;
   let signUrl = '';
   let apiStatus = 'sent';
@@ -215,9 +232,9 @@ async function dispatchLeegalityAgreement(env, project, agreementType = 'master_
             email: project.client_email,
             phone: phone10,
             aadhaarConfig: {
-              verifyState: 'Delhi',
-              verifyYob: 1998,
-              verifyGender: 'F'
+              verifyState: verifyState,
+              verifyGender: verifyGender,
+              verifyYob: verifyYob
             }
           }
         ],
@@ -227,6 +244,7 @@ async function dispatchLeegalityAgreement(env, project, agreementType = 'master_
           state: 'Delhi',
           denomination: 100,
           stampSerial: estampNumber,
+          serialNumber: estampNumber,
           stampFile: DELHI_ESTAMP_BASE64
         },
         irn: contractCode
