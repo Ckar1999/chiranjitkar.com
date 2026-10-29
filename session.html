@@ -7,7 +7,7 @@
   <meta name="referrer" content="no-referrer">
   <meta name="theme-color" content="#070709">
   <title>Client Suite &amp; Live Session | Chiranjit Kar Photography</title>
-  <link rel="stylesheet" href="studio.css">
+  <link rel="stylesheet" href="studio.css?v=package-upgrade-v1">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -147,10 +147,65 @@
 
       <div id="session-summary" hidden></div>
 
+      <!-- Master Agreement & Leegality Aadhaar eSign -->
+      <div id="client-agreement-section" class="client-section agreement-box" hidden>
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
+          <div>
+            <span class="eyebrow" id="agreement-type-eyebrow">LEGAL COMPLIANCE &amp; GOVERNANCE</span>
+            <h2 id="agreement-title" style="font-family: var(--font-serif); font-size: 20px; margin: 4px 0 6px; color: #ffffff;">Master Photography Services Agreement</h2>
+            <p class="muted" id="agreement-subtitle" style="font-size:12px; margin:0; max-width:560px;">Official studio contract with Delhi NCT ₹100 e-Stamp and mandatory UIDAI Aadhaar OTP digital authentication.</p>
+          </div>
+          <span id="agreement-status-badge" class="status scheduled">Pending eSign</span>
+        </div>
+
+        <div class="agreement-details-card" style="background: rgba(10, 10, 14, 0.7); border: 1px solid var(--line-gold); border-radius: 12px; padding: 18px; margin: 16px 0;">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; font-size: 11.5px;">
+            <div>
+              <span style="color:var(--muted); display:block; font-size:9.5px; text-transform:uppercase; letter-spacing:0.1em;">Contract Reference</span>
+              <strong id="agr-contract-id" style="color:var(--gold-bright); font-family:monospace;">—</strong>
+            </div>
+            <div>
+              <span style="color:var(--muted); display:block; font-size:9.5px; text-transform:uppercase; letter-spacing:0.1em;">Govt e-Stamp Certificate</span>
+              <strong id="agr-estamp-no" style="font-family:monospace;">IN-DL22366535014840X</strong>
+            </div>
+            <div>
+              <span style="color:var(--muted); display:block; font-size:9.5px; text-transform:uppercase; letter-spacing:0.1em;">Payment &amp; Terms</span>
+              <span id="agr-payment-terms">20% Booking Advance · 80% Post-Shoot</span>
+            </div>
+            <div>
+              <span style="color:var(--muted); display:block; font-size:9.5px; text-transform:uppercase; letter-spacing:0.1em;">eSign Documentation Fee</span>
+              <strong style="color:var(--gold);">₹99.00 (UIDAI OTP)</strong>
+            </div>
+          </div>
+        </div>
+
+        <div id="agreement-action-area" style="margin-top:14px; display:flex; flex-wrap:wrap; gap:12px; align-items:center;">
+          <a id="agreement-sign-btn" href="#" target="_blank" rel="noopener noreferrer" class="button gold" style="padding:10px 20px; font-size:12px; text-decoration:none; display:inline-flex; align-items:center; gap:8px;">
+            <span>Aadhaar OTP eSign via Leegality ↗</span>
+          </a>
+          <a id="agreement-terms-btn" href="https://chiranjitkar.com/agreements" target="_blank" rel="noopener noreferrer" class="button quiet" style="padding:10px 16px; font-size:11.5px; text-decoration:none;">
+            Review Full Agreement Terms ↗
+          </a>
+          <a id="agreement-download-btn" href="#" target="_blank" rel="noopener noreferrer" class="button quiet" style="padding:10px 16px; font-size:11.5px; text-decoration:none;" hidden>
+            Download Executed PDF ↗
+          </a>
+          <p id="agreement-message" class="notice" role="status" style="margin:0; width:100%;"></p>
+        </div>
+      </div>
+
       <div id="client-deliveries" class="client-section" hidden>
         <span class="eyebrow">PRODUCTION DELIVERABLES</span>
         <div id="delivery-items"></div>
       </div>
+
+      <form id="client-package-upgrade" class="client-section package-upgrade" hidden>
+        <span class="eyebrow">PACKAGE UPGRADE</span>
+        <p class="muted">Upgrade to a higher package before your session begins. The 30% upgrade deposit is added to your invoice; the remaining 70% is due after the session.</p>
+        <label for="upgrade-package-select">Available upgrades</label>
+        <select id="upgrade-package-select" required><option value="">Loading packages…</option></select>
+        <button class="button gold" type="submit">Upgrade package</button>
+        <p id="upgrade-package-message" class="notice" role="status"></p>
+      </form>
 
       <div id="client-billing" class="client-section" hidden>
         <span class="eyebrow">FINANCIAL LEDGER &amp; INVOICES</span>
@@ -183,6 +238,6 @@
     </section>
   </main>
 
-  <script src="session.js" defer></script>
+  <script src="session.js?v=package-upgrade-v1" defer></script>
 </body>
 </html>

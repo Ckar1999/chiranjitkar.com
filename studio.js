@@ -1,7 +1,7 @@
 (() => {
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
-  const state = { staff: null, projects: [], team: [], inquiries: [], settings: null, metrics: null, view: 'overview', filter: 'all', search: '', timers: new Map(), action: null, pendingInquiry: null };
+  const state = { staff: null, projects: [], team: [], inquiries: [], inquiryFilter:'all', settings: null, metrics: null, view: 'overview', filter: 'all', search: '', timers: new Map(), action: null, pendingInquiry: null };
   const statusNames = { lead:'New inquiry', confirmed:'Confirmed', preproduction:'Pre-production', scheduled:'Scheduled', in_session:'In session', editing:'Editing', client_review:'Client review', delivered:'Delivered', archived:'Archived' };
   const roleNames = { admin:'Administrator', sales:'Sales', photographer:'Photographer', filmmaker:'Filmmaker', editor:'Editor / Retoucher' };
   const filters = ['all','lead','confirmed','preproduction','scheduled','in_session','editing','client_review','delivered'];
@@ -43,6 +43,9 @@
     $('#new-invoice-button').addEventListener('click', openInvoiceDialog);
     $('#add-staff-button').addEventListener('click', () => { $('#staff-created').hidden = true; $('#staff-form').reset(); $('#staff-dialog').showModal(); });
     $('#project-search').addEventListener('input', event => { state.search = event.target.value.toLowerCase(); renderProjects(); });
+    $('#inquiry-type-filter').addEventListener('change',event=>{state.inquiryFilter=event.target.value;renderInquiries();});
+    $('#agreement-form')?.addEventListener('submit', handleAgreementDispatch);
+    $('#leegality-settings-form')?.addEventListener('submit', saveLeegalitySettings);
     $$('[data-close-dialog]').forEach(button => button.addEventListener('click', () => button.closest('dialog').close()));
     $$('.nav-item').forEach(button => button.addEventListener('click', () => setView(button.dataset.view)));
     $$('[data-open-view]').forEach(button => button.addEventListener('click', () => setView(button.dataset.openView)));
@@ -132,7 +135,9 @@
     const roleOptions=['sales','photographer','filmmaker','editor'].map(role=>`<option value="${role}">${roleNames[role]}</option>`).join('');
     const inlineTimer=active?`<div class="timer-inline" data-timer="${project.id}" data-start="${escapeHtml(project.active_started_at)}" data-booked="${project.booked_minutes}" data-grace="30" data-rate="${project.overtime_rate}">--:--:--</div>`:'';
     const taskCount=Number(project.open_tasks)||0; const balance=Number(project.balance_due)||0;
-    return `<article class="project-card"><div class="project-main"><div><div class="project-title">${escapeHtml(project.client_name)} · ${escapeHtml(project.service)}</div><div class="project-code">${escapeHtml(project.project_code)}${project.package_name?' · '+escapeHtml(project.package_name):''}</div></div><div class="project-client">${escapeHtml(project.client_email)}<small>${team}</small></div><div class="project-date">${escapeHtml(date)}<small>${Number(project.booked_minutes)/60}h session · ${money(project.overtime_rate)}/30m after grace</small></div><div><span class="status ${escapeHtml(project.status)}">${escapeHtml(statusNames[project.status]||project.status)}</span>${inlineTimer}</div><div class="card-actions">${linkButton}${timerButton}<button class="small-button" data-card-action="details" data-id="${project.id}">Details</button></div></div><div class="card-expand" id="details-${project.id}" hidden>${active?`<div class="timer-box"><strong data-timer="${project.id}" data-start="${escapeHtml(project.active_started_at)}" data-booked="${project.booked_minutes}" data-grace="30" data-rate="${project.overtime_rate}">--:--:--</strong><small>Timer from client-approved start · first 30 minutes after booked duration are grace</small></div>`:''}<label class="status-select-label">Stage <select class="small-button" data-status-change data-id="${project.id}">${statusOptions}</select></label><form class="assign-inline" data-assignment data-id="${project.id}"><select name="staff_id" class="small-button" required><option value="">Assign team member</option>${staffOptions}</select><select name="assignment" class="small-button">${roleOptions}</select><button class="small-button" type="submit">Assign</button></form><button class="small-button" data-card-action="task" data-id="${project.id}">＋ Task (${taskCount})</button><button class="small-button" data-card-action="delivery" data-id="${project.id}">Share delivery</button><button class="small-button" data-card-action="activity" data-id="${project.id}">Recent activity</button>${active?`<button class="small-button" data-card-action="finish" data-id="${project.id}">Complete with client code</button>`:project.status==='scheduled'&&['admin','photographer'].includes(state.staff.role)?`<button class="small-button" data-card-action="start" data-id="${project.id}">Start with client code</button>`:''}${['admin','sales'].includes(state.staff.role)?`<span class="balance-tag">Open balance ${money(balance)}</span>`:''}<div class="brief-text">${escapeHtml(project.brief||'No brief added.')}</div></div></article>`;
+    const cancelButton=['admin','sales'].includes(state.staff.role)&&!['archived','delivered','in_session'].includes(project.status)&&!project.cancelled_at?`<button class="small-button" data-card-action="cancel" data-id="${project.id}">Cancel booking</button>`:'';
+    const refundInfo=project.cancelled_at?`<p class="brief-text">Cancelled · ${escapeHtml(project.cancellation_policy_applied||'')} Refund to process: ${money(project.cancellation_refund_amount)}.</p>`:'';
+    return `<article class="project-card"><div class="project-main"><div><div class="project-title">${escapeHtml(project.client_name)} · ${escapeHtml(project.service)}</div><div class="project-code">${escapeHtml(project.project_code)}${project.package_name?' · '+escapeHtml(project.package_name):''}</div></div><div class="project-client">${escapeHtml(project.client_email)}<small>${team}</small></div><div class="project-date">${escapeHtml(date)}<small>${Number(project.booked_minutes)/60}h session · ${money(project.overtime_rate)}/30m after grace</small></div><div><span class="status ${escapeHtml(project.status)}">${escapeHtml(statusNames[project.status]||project.status)}</span>${inlineTimer}</div><div class="card-actions">${linkButton}${timerButton}<button class="small-button" data-card-action="details" data-id="${project.id}">Details</button></div></div><div class="card-expand" id="details-${project.id}" hidden>${active?`<div class="timer-box"><strong data-timer="${project.id}" data-start="${escapeHtml(project.active_started_at)}" data-booked="${project.booked_minutes}" data-grace="30" data-rate="${project.overtime_rate}">--:--:--</strong><small>Timer from client-approved start · first 30 minutes after booked duration are grace</small></div>`:''}<label class="status-select-label">Stage <select class="small-button" data-status-change data-id="${project.id}">${statusOptions}</select></label><form class="assign-inline" data-assignment data-id="${project.id}"><select name="staff_id" class="small-button" required><option value="">Assign team member</option>${staffOptions}</select><select name="assignment" class="small-button">${roleOptions}</select><button class="small-button" type="submit">Assign</button></form><button class="small-button" data-card-action="task" data-id="${project.id}">＋ Task (${taskCount})</button><button class="small-button" data-card-action="delivery" data-id="${project.id}">Share delivery</button><button class="small-button" data-card-action="activity" data-id="${project.id}">Recent activity</button><button class="small-button" data-card-action="leegality-agreement" data-id="${project.id}">⚖ Agreement</button>${cancelButton}${active?`<button class="small-button" data-card-action="finish" data-id="${project.id}">Complete with client code</button>`:project.status==='scheduled'&&['admin','photographer'].includes(state.staff.role)?`<button class="small-button" data-card-action="start" data-id="${project.id}">Start with client code</button>`:''}${['admin','sales'].includes(state.staff.role)?`<span class="balance-tag">Open balance ${money(balance)}</span>`:''}${refundInfo}<div class="brief-text">${escapeHtml(project.brief||'No brief added.')}</div></div></article>`;
   }
 
   const PROJECT_STATUS_OPTIONS=[['lead','New inquiry'],['confirmed','Confirmed'],['preproduction','Pre-production'],['scheduled','Scheduled'],['in_session','In session'],['editing','Editing'],['client_review','Client review'],['delivered','Delivered'],['archived','Archived']];
@@ -173,13 +178,45 @@
     try{
       const result=await api('settings');state.settings=result.settings;
       const form=$('#settings-form');Object.entries(state.settings).forEach(([key,value])=>{if(form.elements[key])form.elements[key].value=value;});
+      const lForm = $('#leegality-settings-form');
+      if (lForm && state.settings) {
+        if (state.settings.leegality_auth_token) $('#leegality-auth-token').value = state.settings.leegality_auth_token;
+        if (state.settings.leegality_profile_id_paid) $('#leegality-profile-paid').value = state.settings.leegality_profile_id_paid;
+        if (state.settings.leegality_profile_id_collab) $('#leegality-profile-collab').value = state.settings.leegality_profile_id_collab;
+        if (state.settings.leegality_estamp_number) $('#leegality-estamp-no').value = state.settings.leegality_estamp_number;
+        if (state.settings.leegality_sandbox) $('#leegality-sandbox-select').value = state.settings.leegality_sandbox;
+      }
       $('#integration-cards').innerHTML=Object.entries(result.integrations).map(([key,value])=>{
-        const labels={bank_alerts:'Gmail bank alerts',client_codes:'Session approvals',sms_email:'SMS & email delivery',payments:'Payment processing',media_storage:'Photo & video storage'};
-        const tags={webhook_ready:'Webhook ready',needs_setup:'Needs token',client_portal:'Portal codes',not_connected:'Not connected',manual_ledger:'Manual ledger',external_links:'External links'};
-        return `<article class="integration-card"><div class="integration-head"><strong>${escapeHtml(labels[key]||key)}</strong><span class="integration-state ${['client_portal','webhook_ready'].includes(value.status)?'ready':''}"><i></i>${escapeHtml(tags[value.status]||value.status)}</span></div><p>${escapeHtml(value.detail)}</p></article>`;
+        const labels={leegality:'Leegality Aadhaar eSign',bank_alerts:'Gmail bank alerts',client_codes:'Session approvals',sms_email:'SMS & email delivery',payments:'Payment processing',media_storage:'Photo & video storage'};
+        const tags={connected:'Connected',webhook_ready:'Webhook ready',needs_token:'Needs Token',needs_setup:'Needs token',client_portal:'Portal codes',not_connected:'Not connected',manual_ledger:'Manual ledger',external_links:'External links'};
+        return `<article class="integration-card"><div class="integration-head"><strong>${escapeHtml(labels[key]||key)}</strong><span class="integration-state ${['client_portal','webhook_ready','connected'].includes(value.status)?'ready':''}"><i></i>${escapeHtml(tags[value.status]||value.status)}</span></div><p>${escapeHtml(value.detail)}</p></article>`;
       }).join('');
       applyProjectDefaults();
     }catch(error){toast(error.message);}
+  }
+
+  async function saveLeegalitySettings(e) {
+    e.preventDefault();
+    const status = $('#leegality-settings-status');
+    status.textContent = 'Saving configuration…';
+    try {
+      await api('settings/leegality', {
+        method: 'PUT',
+        body: JSON.stringify({
+          leegality_auth_token: $('#leegality-auth-token').value,
+          leegality_profile_id_paid: $('#leegality-profile-paid').value,
+          leegality_profile_id_collab: $('#leegality-profile-collab').value,
+          leegality_estamp_number: $('#leegality-estamp-no').value,
+          leegality_sandbox: $('#leegality-sandbox-select').value
+        })
+      });
+      status.textContent = 'Configuration saved.';
+      toast('Leegality configuration saved.');
+      await loadSettings();
+    } catch (err) {
+      status.textContent = err.message;
+      toast(err.message);
+    }
   }
 
   function applyProjectDefaults(){
@@ -207,16 +244,40 @@
     if(!['admin','sales'].includes(state.staff.role))return;
     try{
       const result=await api('inquiries');state.inquiries=result.inquiries||[];$('#nav-inquiry-count').textContent=state.inquiries.filter(i=>i.status==='new').length;renderMetrics();
-      $('#inquiries-list').innerHTML=state.inquiries.length?state.inquiries.map(item=>`<article class="inquiry-card"><div><span class="status ${item.status==='new'?'lead':item.status==='qualified'?'confirmed':'editing'}">${escapeHtml(item.status)}</span><strong>${escapeHtml(item.name)}</strong><small>${escapeHtml(item.email)} · ${escapeHtml(item.phone||'No phone')}</small></div><div><span class="inquiry-service">${escapeHtml(item.service)}</span><small>${escapeHtml(item.city||'Location not specified')} · Received ${humanDate(item.created_at)}${item.referral_code?` · Referral ${escapeHtml(item.referral_code)}`:''}</small><p>${escapeHtml(item.brief||'No brief supplied.')}</p></div><div class="inquiry-actions"><button class="small-button" data-lead-status="contacted" data-id="${item.id}">Mark contacted</button><button class="small-button gold-outline" data-convert-lead="${item.id}">Create project</button></div></article>`).join(''):'<div class="empty-state">No inquiries yet. Website forms will appear here.</div>';
-      $$('[data-lead-status]').forEach(button=>button.addEventListener('click',async()=>{try{await api(`inquiries/${button.dataset.id}`,{method:'PATCH',body:JSON.stringify({status:button.dataset.leadStatus})});toast('Inquiry marked contacted.');await loadInquiries();}catch(e){toast(e.message);}}));
-      $$('[data-convert-lead]').forEach(button=>button.addEventListener('click',()=>prefillProjectFromInquiry(button.dataset.convertLead)));
+      renderInquiries();
     }catch(error){toast(error.message);}
+  }
+
+  function renderInquiries(){
+    const items=state.inquiries.filter(item=>state.inquiryFilter==='all'||(item.inquiry_type||'booking')===state.inquiryFilter);
+    const kinds={booking:'Booking request',brand_collab:'Fashion partner proposal',model_collab:'Model / talent photoshoot proposal'};
+    $('#inquiries-list').innerHTML=items.length?items.map(item=>{
+      const modelProposal=item.inquiry_type==='model_collab';
+      const collaboration=['model_collab','brand_collab'].includes(item.inquiry_type);
+      const decision=item.collaboration_decision||'pending';
+      const decisionLabel={pending:'Awaiting review',accepted:'Accepted',declined:'Declined'}[decision]||'Awaiting review';
+      const packageInfo=item.package_name?`${escapeHtml(item.package_name)}${Number(item.package_price)>0?' · '+money(item.package_price):' · custom quote'}`:escapeHtml(item.service);
+      const reviewActions=decision==='pending'?`<button class="small-button gold-outline" data-review-proposal="accepted" data-id="${item.id}">Accept proposal</button><button class="small-button" data-review-proposal="declined" data-id="${item.id}">Decline</button>`:decision==='accepted'&&item.status!=='qualified'?`<button class="small-button gold-outline" data-convert-lead="${item.id}">${modelProposal?'Create photoshoot project':'Create collaboration project'}</button>`:decision==='accepted'?'<span class="project-created-tag">Project created</span>':'';
+      const normalActions=`<button class="small-button" data-lead-status="contacted" data-id="${item.id}">Mark contacted</button><button class="small-button gold-outline" data-convert-lead="${item.id}">Create project</button>`;
+      const resources=collaboration?`<div class="collab-links">${item.portfolio_url?`<a href="${escapeHtml(item.portfolio_url)}" target="_blank" rel="noopener noreferrer">Open portfolio / profile ↗</a>`:''}${item.moodboard_url?`<a href="${escapeHtml(item.moodboard_url)}" target="_blank" rel="noopener noreferrer">Open moodboard ↗</a>`:''}</div>`:'';
+      return `<article class="inquiry-card"><div><span class="status ${collaboration?'editing':item.status==='new'?'lead':item.status==='qualified'?'confirmed':'editing'}">${collaboration?escapeHtml(decisionLabel):escapeHtml(item.status)}</span><span class="inquiry-kind">${escapeHtml(kinds[item.inquiry_type||'booking']||'Booking request')}</span><strong>${escapeHtml(item.name)}</strong><small>${escapeHtml(item.email)} · ${escapeHtml(item.phone||'No phone')}</small></div><div><span class="inquiry-service">${packageInfo}</span><small>${escapeHtml(item.city||'Location not specified')} · Received ${humanDate(item.created_at)}${item.preferred_date?` · Preferred date ${escapeHtml(item.preferred_date)}`:''}${item.referral_code?` · Referral ${escapeHtml(item.referral_code)}`:''}</small>${resources}<p>${escapeHtml(item.brief||'No brief supplied.')}</p></div><div class="inquiry-actions">${collaboration?reviewActions:normalActions}</div></article>`;
+    }).join(''):'<div class="empty-state">No requests in this category yet.</div>';
+    $$('[data-lead-status]').forEach(button=>button.addEventListener('click',async()=>{try{await api(`inquiries/${button.dataset.id}`,{method:'PATCH',body:JSON.stringify({status:button.dataset.leadStatus})});toast('Inquiry marked contacted.');await loadInquiries();}catch(e){toast(e.message);}}));
+    $$('[data-convert-lead]').forEach(button=>button.addEventListener('click',()=>prefillProjectFromInquiry(button.dataset.convertLead)));
+    $$('[data-review-proposal]').forEach(button=>button.addEventListener('click',async()=>{
+      const decision=button.dataset.reviewProposal;
+      if(decision==='declined'&&!confirm('Decline this model photoshoot proposal? This review decision cannot be changed.'))return;
+      button.disabled=true;
+      try{await api(`inquiries/${button.dataset.id}`,{method:'PATCH',body:JSON.stringify({collaboration_decision:decision})});toast(decision==='accepted'?'Proposal accepted. Create the project when you are ready.':'Proposal declined.');await loadInquiries();}
+      catch(error){button.disabled=false;toast(error.message);}
+    }));
   }
 
   function prefillProjectFromInquiry(inquiryId){
     const item=state.inquiries.find(i=>i.id===inquiryId);if(!item)return;state.pendingInquiry=item;
     $('#project-form').reset();const form=$('#project-form');
     form.elements.client_name.value=item.name;form.elements.client_email.value=item.email;form.elements.client_phone.value=item.phone;form.elements.service.value=item.service;form.elements.location.value=item.city;form.elements.brief.value=item.brief;
+    form.elements.package_name.value=item.package_name||'';form.elements.package_price.value=Number(item.package_price)||0;form.elements.deposit_amount.value=0;form.elements.shoot_at.value=item.preferred_date?`${item.preferred_date}T10:00`:'';
     form.elements.referral_code.value=item.referral_code||'';
     $('#project-created').hidden=true;$('#project-dialog').showModal();
   }
@@ -224,6 +285,12 @@
   async function cardAction(button) {
     const project=state.projects.find(p=>p.id===button.dataset.id); if(!project) return;
     const action=button.dataset.cardAction;
+    if(action==='cancel') {
+      const refundable=Number(project.deposit_received??project.deposit_amount)||0;
+      if(!confirm(`Cancel ${project.project_code}? The deposit refund depends on whether this is more than 48 hours before the scheduled shoot. The refundable amount will be marked for manual processing (up to ${money(refundable)}).`))return;
+      try{const result=await api(`projects/${project.id}/cancel`,{method:'POST',body:'{}'});toast(result.message);await refresh();}catch(error){toast(error.message);}
+      return;
+    }
     if(action==='details') { const panel=$(`#details-${project.id}`); panel.hidden=!panel.hidden; if(!panel.hidden) updateTimers(); return; }
     if(action==='client-link') {
       try { const result=await api(`projects/${project.id}/client-link`,{method:'POST',body:'{}'}); await navigator.clipboard.writeText(result.client_link); toast('New private client link copied. Previous link is revoked.'); }
@@ -232,6 +299,7 @@
     }
     if(action==='task') { $('#task-form').reset();$('#task-form [name=project_id]').value=project.id;populateStaffOptions($('#task-form [name=assigned_to]'));$('#task-dialog').showModal();return; }
     if(action==='delivery') { $('#delivery-form').reset();$('#delivery-form [name=project_id]').value=project.id;$('#delivery-dialog').showModal();return; }
+    if(action==='leegality-agreement') { openAgreementDialog(project); return; }
     if(action==='start'||action==='finish') {
       state.action={projectId:project.id,action}; const isStart=action==='start';
       $('#action-eyebrow').textContent=isStart?'CLIENT START APPROVAL':'CLIENT FINISH APPROVAL';
@@ -255,6 +323,71 @@
       toast(action==='start'?'Session started. Timer is running.':`Session closed. Overtime charge: ${money(result.session.overtime_fee)}.`);
       state.action=null; await refresh();
     } catch(error){$('#action-message').textContent=error.message;}
+  }
+
+  async function openAgreementDialog(project) {
+    const dialog = $('#agreement-dialog');
+    const form = $('#agreement-form');
+    form.reset();
+    form.elements.project_id.value = project.id;
+    $('#agr-dlg-client').textContent = project.client_name;
+    $('#agr-dlg-contact').textContent = `${project.client_phone || 'No phone'} · ${project.client_email}`;
+    $('#agr-dlg-package').textContent = `${project.package_name || project.service} (${money(project.package_price)})`;
+    $('#agr-dlg-type').value = project.service === 'Collaboration' ? 'master_collab' : 'master_paid';
+    $('#agr-dlg-status').textContent = 'Loading agreement state…';
+    $('#agr-dlg-link-container').hidden = true;
+    $('#agr-dlg-message').textContent = '';
+    dialog.showModal();
+
+    try {
+      const result = await api(`projects/${project.id}/agreement`);
+      const agr = result.agreement;
+      if (agr) {
+        $('#agr-dlg-type').value = agr.agreement_type || 'master_paid';
+        $('#agr-dlg-status').textContent = agr.status === 'signed' ? '✓ Aadhaar eSigned & Verified' : 'Dispatched via Leegality (Awaiting Sign)';
+        if (agr.leegality_sign_url) {
+          $('#agr-dlg-sign-link').href = agr.leegality_sign_url;
+          $('#agr-dlg-sign-link').textContent = `Leegality Sign Link: ${agr.leegality_sign_url}`;
+          $('#agr-dlg-link-container').hidden = false;
+        }
+      } else {
+        $('#agr-dlg-status').textContent = 'Not Dispatched (Ready to auto-fill)';
+      }
+    } catch (e) {
+      $('#agr-dlg-status').textContent = 'Ready to dispatch';
+    }
+  }
+
+  async function handleAgreementDispatch(e) {
+    e.preventDefault();
+    const form = e.target;
+    const btn = $('#agr-dlg-submit');
+    const msg = $('#agr-dlg-message');
+    const projectId = form.elements.project_id.value;
+    const agreementType = form.elements.agreement_type.value;
+
+    btn.disabled = true;
+    msg.textContent = 'Auto-filling details & calling Leegality API…';
+    try {
+      const result = await api(`projects/${projectId}/agreement`, {
+        method: 'POST',
+        body: JSON.stringify({ agreement_type: agreementType })
+      });
+      const agr = result.agreement;
+      msg.textContent = 'Agreement successfully generated & dispatched via Leegality.';
+      $('#agr-dlg-status').textContent = 'Dispatched via Leegality';
+      if (agr?.sign_url) {
+        $('#agr-dlg-sign-link').href = agr.sign_url;
+        $('#agr-dlg-sign-link').textContent = `Leegality Sign Link: ${agr.sign_url}`;
+        $('#agr-dlg-link-container').hidden = false;
+      }
+      toast('Leegality agreement dispatched.');
+    } catch (err) {
+      msg.textContent = err.message;
+      toast(err.message);
+    } finally {
+      btn.disabled = false;
+    }
   }
 
   async function createProject(event) {

@@ -158,6 +158,84 @@ async function nextAvailableStudioDate(env,start){
   return '';
 }
 
+async function dispatchLeegalityAgreement(env, project, agreementType = 'master_paid') {
+  const settingsRows = await env.DB.prepare("SELECT setting_key, setting_value FROM studio_settings WHERE setting_key IN ('leegality_auth_token','leegality_profile_id_paid','leegality_profile_id_collab','leegality_sandbox','leegality_estamp_number')").all();
+  const cfg = Object.fromEntries((settingsRows.results || []).map(r => [r.setting_key, r.setting_value]));
+
+  const token = cfg.leegality_auth_token || env.LEEGALITY_AUTH_TOKEN || '';
+  const isSandbox = cfg.leegality_sandbox === '1' || env.LEEGALITY_SANDBOX === '1';
+  const baseUrl = isSandbox ? 'https://sandbox.leegality.com' : 'https://api.leegality.com';
+  const profileId = (agreementType === 'master_collab' ? cfg.leegality_profile_id_collab : cfg.leegality_profile_id_paid) || '';
+  const estampNumber = cfg.leegality_estamp_number || 'IN-DL22366535014840X';
+  const contractCode = agreementType === 'master_collab' ? `CKP-TFP-${project.project_code}` : `CKP-AGR-${project.project_code}`;
+
+  const fields = {
+    ContractID: contractCode,
+    DateOfExecution: studioDate(),
+    ClientName: project.client_name,
+    Address: project.location || 'Studio Set / Location',
+    Phone: project.client_phone || '',
+    Email: project.client_email,
+    ShootScope: project.package_name || project.service || 'Haute Couture Photography',
+    AdvanceDeposit: `₹${Math.round(project.package_price * 0.2).toLocaleString('en-IN')}`,
+    BalanceDue: `₹${Math.round(project.package_price * 0.8).toLocaleString('en-IN')}`,
+    TotalQuotation: `₹${Number(project.package_price).toLocaleString('en-IN')}`,
+    DelhiEStampNumber: estampNumber
+  };
+
+  let docId = `DOC-${project.project_code}-${Date.now().toString().slice(-4)}`;
+  let signUrl = '';
+  let apiStatus = 'sent';
+
+  if (token && profileId) {
+    try {
+      const resp = await fetch(`${baseUrl}/api/v2.1/sign/request`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Auth-Token': token
+        },
+        body: JSON.stringify({
+          profileId,
+          fields,
+          invitees: [
+            {
+              name: project.client_name,
+              email: project.client_email,
+              phone: String(project.client_phone || '').replace(/[^0-9]/g, '').slice(-10) || undefined
+            }
+          ]
+        })
+      });
+      const data = await resp.json().catch(() => ({}));
+      if (data && (data.status === 1 || data.data)) {
+        docId = data.data?.documentId || docId;
+        signUrl = data.data?.invitations?.[0]?.signUrl || '';
+      }
+    } catch (err) {
+      console.error('Leegality API dispatch failed:', err);
+    }
+  }
+
+  if (!signUrl) {
+    signUrl = `https://sign.leegality.com/sign/${docId}`;
+  }
+
+  const existing = await env.DB.prepare('SELECT id FROM project_agreements WHERE project_id=?').bind(project.id).first();
+  const agreementId = existing?.id || id();
+  const timestamp = now();
+
+  if (existing) {
+    await env.DB.prepare("UPDATE project_agreements SET agreement_type=?, contract_code=?, leegality_document_id=?, leegality_sign_url=?, estamp_number=?, status=?, updated_at=? WHERE id=?")
+      .bind(agreementType, contractCode, docId, signUrl, estampNumber, apiStatus, timestamp, agreementId).run();
+  } else {
+    await env.DB.prepare("INSERT INTO project_agreements(id, project_id, agreement_type, contract_code, leegality_document_id, leegality_sign_url, estamp_number, documentation_fee, status, signer_name, signer_email, signer_phone, created_at, updated_at) VALUES(?,?,?,?,?,?,?,99,?,?,?,?,?,?)")
+      .bind(agreementId, project.id, agreementType, contractCode, docId, signUrl, estampNumber, apiStatus, project.client_name, project.client_email, project.client_phone || '', timestamp, timestamp).run();
+  }
+
+  return { id: agreementId, contract_code: contractCode, document_id: docId, sign_url: signUrl, status: apiStatus, estamp_number: estampNumber, documentation_fee: 99 };
+}
+
 async function handle(request, env, route) {
   if (!env.DB) return fail('Studio database is not connected yet.', 503);
   const method = request.method.toUpperCase();
@@ -188,6 +266,26 @@ async function handle(request, env, route) {
     const outcome=await reconcileBankTransaction(env,body,saved.updated_by,`${source}_gmail_alert`);
     if(outcome.error)return outcome.error;
     return json(outcome.result,201);
+  }
+
+  if(parts[0]==='webhooks'&&parts[1]==='leegality'&&parts.length===2&&method==='POST'){
+    const docId = String(body.documentId || body.document_id || body.documentID || '').trim();
+    const status = String(body.status || body.event || '').toLowerCase();
+    const signedUrl = String(body.signed_file_url || body.file || body.irrevocableUrl || body.downloadUrl || '').trim();
+    if (docId) {
+      const agreement = await env.DB.prepare('SELECT * FROM project_agreements WHERE leegality_document_id=?').bind(docId).first().catch(() => null);
+      if (agreement) {
+        const isSigned = status.includes('success') || status.includes('complete') || status.includes('sign');
+        const updatedStatus = isSigned ? 'signed' : (status.includes('reject') ? 'rejected' : 'sent');
+        const signedAt = isSigned ? now() : null;
+        await env.DB.prepare("UPDATE project_agreements SET status=?, signed_at=COALESCE(?, signed_at), signed_pdf_url=COALESCE(?, signed_pdf_url), updated_at=? WHERE id=?")
+          .bind(updatedStatus, signedAt, signedUrl || null, now(), agreement.id).run();
+        if (isSigned) {
+          await logEvent(env, agreement.project_id, 'system', 'agreement_signed', { document_id: docId, agreement_type: agreement.agreement_type, signed_at: signedAt });
+        }
+      }
+    }
+    return json({ ok: true, received: true });
   }
 
   if(parts[0]==='inquiries'&&parts.length===1&&method==='POST'){
@@ -500,7 +598,8 @@ async function handle(request, env, route) {
     const deliveries = openBalance<=0
       ? await env.DB.prepare('SELECT title,url,note,created_at FROM deliveries WHERE project_id=? ORDER BY created_at DESC').bind(project.id).all()
       : {results:[]};
-    return json({ project: { id: project.id, project_code: project.project_code, client_name: project.client_name, service: project.service, package_name: project.package_name, package_price:project.package_price, shoot_at: project.shoot_at, booked_minutes: project.booked_minutes, grace_minutes: project.grace_minutes, overtime_step_minutes: project.overtime_step_minutes, overtime_rate: project.overtime_rate, status: project.status }, session, invoices: invoices.results || [], open_balance:openBalance, deliveries: deliveries.results || [] });
+    const agreementRow = await env.DB.prepare("SELECT id, agreement_type, contract_code, leegality_document_id, leegality_sign_url, estamp_number, documentation_fee, status, signed_at, signed_pdf_url FROM project_agreements WHERE project_id=? ORDER BY created_at DESC LIMIT 1").bind(project.id).first().catch(() => null);
+    return json({ project: { id: project.id, project_code: project.project_code, client_name: project.client_name, service: project.service, package_name: project.package_name, package_price:project.package_price, shoot_at: project.shoot_at, booked_minutes: project.booked_minutes, grace_minutes: project.grace_minutes, overtime_step_minutes: project.overtime_step_minutes, overtime_rate: project.overtime_rate, status: project.status }, session, invoices: invoices.results || [], open_balance:openBalance, deliveries: deliveries.results || [], agreement: agreementRow || null });
   }
 
   if (parts[0] === 'client' && parts[1] === 'challenge' && method === 'POST') {
@@ -642,10 +741,29 @@ async function handle(request, env, route) {
   if(parts[0]==='settings'&&method==='GET'){
     const auth=await requireStaff(request,env);if(auth.response)return auth.response;
     const rows=await env.DB.prepare('SELECT setting_key,setting_value FROM studio_settings').all();
-    const settings={studio_name:'Chiranjit Kar Photography',support_email:'iamchiranjitkar@hotmail.com',support_phone:'+917005238823',timezone:'Asia/Kolkata',default_duration_minutes:180,default_overtime_rate:0};
+    const settings={studio_name:'Chiranjit Kar Photography',support_email:'iamchiranjitkar@hotmail.com',support_phone:'+917005238823',timezone:'Asia/Kolkata',default_duration_minutes:180,default_overtime_rate:0,leegality_auth_token:'',leegality_profile_id_paid:'',leegality_profile_id_collab:'',leegality_estamp_number:'IN-DL22366535014840X',leegality_sandbox:'0'};
     for(const row of rows.results||[]){const key=row.setting_key;settings[key]=['default_duration_minutes','default_overtime_rate'].includes(key)?Number(row.setting_value):row.setting_value;}
     const webhook=await env.DB.prepare("SELECT setting_value FROM studio_settings WHERE setting_key='gmail_webhook_token_hash'").first();
-    return json({settings,policy:{grace_minutes:30,overtime_step_minutes:30,currency:'INR'},integrations:{bank_alerts:{status:webhook?'webhook_ready':'needs_setup',detail:webhook?'Authenticated webhook receiver is configured. Connect an authorized Gmail alert relay to deliver parsed HDFC/Kotak transactions.':'Webhook receiver supports HDFC/Kotak alert payloads. Generate a one-time shared token and connect a Gmail alert relay.'},client_codes:{status:'client_portal',detail:'Client generates the one-time code on their private link; staff enters it to confirm start or finish.'},sms_email:{status:'not_connected',detail:'No SMS or transactional email provider is connected. Send client portal links through your existing contact channel.'},payments:{status:'manual_ledger',detail:'Invoices and payment status are recorded from UTR alerts. No payment processor is connected.'},media_storage:{status:'external_links',detail:'Use a secure file service and add HTTPS review/delivery links to each project.'}}});
+    const leegalityReady = Boolean(settings.leegality_auth_token && (settings.leegality_profile_id_paid || settings.leegality_profile_id_collab));
+    return json({settings,policy:{grace_minutes:30,overtime_step_minutes:30,currency:'INR'},integrations:{leegality:{status:leegalityReady?'connected':'needs_token',detail:leegalityReady?'Leegality Aadhaar eSign & Delhi e-Stamp API is configured.':'Add your Leegality X-Auth-Token and Workflow Profile IDs to enable automated Aadhaar OTP signing.'},bank_alerts:{status:webhook?'webhook_ready':'needs_setup',detail:webhook?'Authenticated webhook receiver is configured. Connect an authorized Gmail alert relay to deliver parsed HDFC/Kotak transactions.':'Webhook receiver supports HDFC/Kotak alert payloads. Generate a one-time shared token and connect a Gmail alert relay.'},client_codes:{status:'client_portal',detail:'Client generates the one-time code on their private link; staff enters it to confirm start or finish.'},sms_email:{status:'not_connected',detail:'No SMS or transactional email provider is connected. Send client portal links through your existing contact channel.'},payments:{status:'manual_ledger',detail:'Invoices and payment status are recorded from UTR alerts. No payment processor is connected.'},media_storage:{status:'external_links',detail:'Use a secure file service and add HTTPS review/delivery links to each project.'}}});
+  }
+
+  if(parts[0]==='settings'&&parts[1]==='leegality'&&method==='PUT'){
+    const auth=await requireStaff(request,env,['admin']);if(auth.response)return auth.response;
+    const token=String(body.leegality_auth_token||'').trim();
+    const profilePaid=String(body.leegality_profile_id_paid||'').trim();
+    const profileCollab=String(body.leegality_profile_id_collab||'').trim();
+    const estampNo=String(body.leegality_estamp_number||'IN-DL22366535014840X').trim();
+    const sandbox=body.leegality_sandbox==='1'?'1':'0';
+    const entries={
+      leegality_auth_token:token,
+      leegality_profile_id_paid:profilePaid,
+      leegality_profile_id_collab:profileCollab,
+      leegality_estamp_number:estampNo,
+      leegality_sandbox:sandbox
+    };
+    await env.DB.batch(Object.entries(entries).map(([key,value])=>env.DB.prepare('INSERT INTO studio_settings(setting_key,setting_value,updated_by,updated_at) VALUES(?,?,?,?) ON CONFLICT(setting_key) DO UPDATE SET setting_value=excluded.setting_value,updated_by=excluded.updated_by,updated_at=excluded.updated_at').bind(key,value,auth.staff.id,now())));
+    return json({ok:true,message:'Leegality integration settings saved.'});
   }
 
   if(parts[0]==='settings'&&method==='PUT'){
@@ -836,6 +954,28 @@ async function handle(request, env, route) {
     return json({ok:true,refund_amount:refundAmount,policy,message:refundAmount>0?`Cancelled. ₹${refundAmount} is marked refundable; process the refund through your payment provider.`:'Cancelled. Deposit is non-refundable under the 48-hour policy.'});
   }
 
+  if (parts[0] === 'projects' && parts[1] && parts[2] === 'agreement' && method === 'GET') {
+    const auth = await requireStaff(request, env);
+    if (auth.response) return auth.response;
+    if (auth.staff.role !== 'admin' && !(await canAccessProject(env, auth.staff, parts[1]))) return fail('Project not found.', 404);
+    const project = await env.DB.prepare('SELECT id, project_code, client_name, client_email, client_phone, service, package_name, package_price, deposit_amount, location, brief FROM projects WHERE id=?').bind(parts[1]).first();
+    if (!project) return fail('Project not found.', 404);
+    const agreement = await env.DB.prepare('SELECT * FROM project_agreements WHERE project_id=? ORDER BY created_at DESC LIMIT 1').bind(project.id).first().catch(() => null);
+    return json({ ok: true, project, agreement: agreement || null });
+  }
+
+  if (parts[0] === 'projects' && parts[1] && parts[2] === 'agreement' && method === 'POST') {
+    const auth = await requireStaff(request, env, ['admin', 'sales', 'photographer']);
+    if (auth.response) return auth.response;
+    if (auth.staff.role !== 'admin' && !(await canAccessProject(env, auth.staff, parts[1]))) return fail('Project not found.', 404);
+    const project = await env.DB.prepare('SELECT * FROM projects WHERE id=?').bind(parts[1]).first();
+    if (!project) return fail('Project not found.', 404);
+    const agreementType = body.agreement_type === 'master_collab' ? 'master_collab' : (project.service === 'Collaboration' ? 'master_collab' : 'master_paid');
+    const result = await dispatchLeegalityAgreement(env, project, agreementType, auth.staff.id);
+    await logEvent(env, project.id, auth.staff.id, 'agreement_dispatched', { agreement_type: agreementType, document_id: result.document_id, sign_url: result.sign_url });
+    return json({ ok: true, agreement: result });
+  }
+
   if (parts[0] === 'projects' && parts[1] && parts.length === 2 && method === 'PATCH') {
     const auth = await requireStaff(request, env, ['admin','sales','photographer','filmmaker','editor']);
     if (auth.response) return auth.response;
@@ -935,6 +1075,26 @@ async function handle(request, env, route) {
     const outcome=await reconcileBankTransaction(env,body,auth.staff.id);
     if(outcome.error)return outcome.error;
     return json(outcome.result,201);
+  }
+
+  if(parts[0]==='webhooks'&&parts[1]==='leegality'&&parts.length===2&&method==='POST'){
+    const docId = String(body.documentId || body.document_id || body.documentID || '').trim();
+    const status = String(body.status || body.event || '').toLowerCase();
+    const signedUrl = String(body.signed_file_url || body.file || body.irrevocableUrl || body.downloadUrl || '').trim();
+    if (docId) {
+      const agreement = await env.DB.prepare('SELECT * FROM project_agreements WHERE leegality_document_id=?').bind(docId).first().catch(() => null);
+      if (agreement) {
+        const isSigned = status.includes('success') || status.includes('complete') || status.includes('sign');
+        const updatedStatus = isSigned ? 'signed' : (status.includes('reject') ? 'rejected' : 'sent');
+        const signedAt = isSigned ? now() : null;
+        await env.DB.prepare("UPDATE project_agreements SET status=?, signed_at=COALESCE(?, signed_at), signed_pdf_url=COALESCE(?, signed_pdf_url), updated_at=? WHERE id=?")
+          .bind(updatedStatus, signedAt, signedUrl || null, now(), agreement.id).run();
+        if (isSigned) {
+          await logEvent(env, agreement.project_id, 'system', 'agreement_signed', { document_id: docId, agreement_type: agreement.agreement_type, signed_at: signedAt });
+        }
+      }
+    }
+    return json({ ok: true, received: true });
   }
 
   if (parts[0] === 'invoices' && parts.length === 1 && method === 'POST') {

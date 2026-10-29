@@ -171,7 +171,7 @@
       const result = await api('client/project');
       activeProject = result.project;
       activeSession = result.session;
-      renderProjectView(activeProject, activeSession, result.invoices || [], result.deliveries || []);
+      renderProjectView(activeProject, activeSession, result.invoices || [], result.deliveries || [], result.agreement || null);
     } catch (error) {
       showError(error.message);
     }
@@ -180,7 +180,7 @@
   function loadProjectDetails(projectItem) {
     activeProject = projectItem;
     activeSession = projectItem.session || null;
-    renderProjectView(activeProject, activeSession, projectItem.invoices || [], projectItem.deliveries || []);
+    renderProjectView(activeProject, activeSession, projectItem.invoices || [], projectItem.deliveries || [], projectItem.agreement || null);
 
     // Project picker if multiple
     const picker = $('#client-project-picker');
@@ -203,7 +203,7 @@
     }
   }
 
-  function renderProjectView(project, session, invoices, deliveries) {
+  function renderProjectView(project, session, invoices, deliveries, agreement) {
     $('#session-loading').hidden = true;
     $('#session-error').hidden = true;
     $('#client-no-projects').hidden = true;
@@ -217,6 +217,7 @@
     $('#session-status').textContent = statusNames[project.status] || project.status;
     $('#session-status').className = `status ${project.status}`;
 
+    renderClientAgreement(project, agreement);
     renderClientResources(invoices, deliveries);
     renderPackageUpgrades(project,session);
 
@@ -239,6 +240,53 @@
 
     if (refreshHandle) clearInterval(refreshHandle);
     refreshHandle = setInterval(refreshSessionState, 5000);
+  }
+
+  function renderClientAgreement(project, agreement) {
+    const box = $('#client-agreement-section');
+    if (!box) return;
+
+    box.hidden = false;
+    const isCollab = project.service === 'Collaboration' || (agreement && agreement.agreement_type === 'master_collab');
+    const contractCode = agreement?.contract_code || (isCollab ? `CKP-TFP-${project.project_code}` : `CKP-AGR-${project.project_code}`);
+    const estamp = agreement?.estamp_number || 'IN-DL22366535014840X';
+    
+    $('#agreement-title').textContent = isCollab ? 'Master Unpaid / TFP Collaboration Agreement' : 'Master Photography Services Agreement';
+    $('#agreement-subtitle').textContent = isCollab
+      ? 'Official model collaboration & likeness release agreement with Delhi NCT ₹100 e-Stamp and UIDAI Aadhaar OTP digital execution.'
+      : 'Official paid photography service contract with Delhi NCT ₹100 e-Stamp, strict 20% advance / 80% post-shoot terms, and UIDAI Aadhaar OTP digital execution.';
+
+    $('#agr-contract-id').textContent = contractCode;
+    $('#agr-estamp-no').textContent = estamp;
+    $('#agr-payment-terms').textContent = isCollab ? 'TFP Portfolio Exchange · Non-Monetary' : '20% Advance · 80% Post-Shoot (No-RAW)';
+
+    const badge = $('#agreement-status-badge');
+    const signBtn = $('#agreement-sign-btn');
+    const downloadBtn = $('#agreement-download-btn');
+    const msg = $('#agreement-message');
+
+    if (agreement && agreement.status === 'signed') {
+      badge.textContent = '✓ Aadhaar eSigned';
+      badge.className = 'status confirmed';
+      signBtn.hidden = true;
+      msg.textContent = `Agreement executed and digitally verified via Leegality.`;
+      msg.className = 'notice success';
+      if (agreement.signed_pdf_url) {
+        downloadBtn.href = agreement.signed_pdf_url;
+        downloadBtn.hidden = false;
+      } else {
+        downloadBtn.hidden = true;
+      }
+    } else {
+      badge.textContent = 'Pending eSign';
+      badge.className = 'status scheduled';
+      signBtn.hidden = false;
+      downloadBtn.hidden = true;
+      const signUrl = agreement?.leegality_sign_url || `https://sign.leegality.com/sign/DOC-${project.project_code}`;
+      signBtn.href = signUrl;
+      msg.textContent = 'Review contract specifics and execute your legally binding Aadhaar OTP eSign on the official Delhi ₹100 e-Stamp.';
+      msg.className = 'notice';
+    }
   }
 
   async function renderPackageUpgrades(project,session){

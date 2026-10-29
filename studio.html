@@ -265,6 +265,51 @@
             <p class="field-help" style="margin-top:10px;">Target Endpoint: <code>https://chiranjitkar.com/api/webhooks/bank-alerts</code>. Rotating will require updating the Apps Script trigger credential.</p>
           </section>
 
+          <section class="settings-card leegality-setup" style="margin-top:18px;">
+            <div class="settings-card-head">
+              <div>
+                <span class="eyebrow">LEGAL COMPLIANCE &amp; ESIGN</span>
+                <h3>Leegality Aadhaar eSign &amp; Delhi e-Stamp Configuration</h3>
+                <p class="muted">Direct integration with Leegality to execute master agreements on official Delhi NCT ₹100 e-Stamp.</p>
+              </div>
+              <span class="settings-icon">⚖</span>
+            </div>
+            <form id="leegality-settings-form" class="settings-grid" style="display:grid; grid-template-columns:1fr; gap:12px; margin-top:12px;">
+              <label>
+                Leegality X-Auth-Token
+                <input type="password" id="leegality-auth-token" placeholder="Enter Leegality API Auth Token">
+              </label>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                <label>
+                  Paid Master Agreement Profile ID
+                  <input type="text" id="leegality-profile-paid" placeholder="e.g. PROF-PAID-01">
+                </label>
+                <label>
+                  Collaboration Profile ID
+                  <input type="text" id="leegality-profile-collab" placeholder="e.g. PROF-COLLAB-01">
+                </label>
+              </div>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                <label>
+                  Delhi e-Stamp Certificate No.
+                  <input type="text" id="leegality-estamp-no" value="IN-DL22366535014840X">
+                </label>
+                <label>
+                  Environment Mode
+                  <select id="leegality-sandbox-select">
+                    <option value="0">Live Production (api.leegality.com)</option>
+                    <option value="1">Sandbox / Test (sandbox.leegality.com)</option>
+                  </select>
+                </label>
+              </div>
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+                <button type="submit" class="button gold">Save Leegality Config</button>
+                <span id="leegality-settings-status" class="notice" role="status"></span>
+              </div>
+            </form>
+            <p class="field-help" style="margin-top:12px;">Webhook Endpoint: <code>https://chiranjitkar.com/api/webhooks/leegality</code>. Set this in Leegality under Integrations &gt; Webhooks.</p>
+          </section>
+
           <div class="section-heading settings-section-title" style="margin-top:32px;">
             <div>
               <h2>Security Architecture</h2>
@@ -321,7 +366,7 @@
         <label>Booked Duration (Hours)<input name="booked_hours" type="number" min="0.5" max="24" step="0.5" value="3" required></label>
         <label>Overtime Rate (₹ / 30 Min)<input name="overtime_rate" type="number" min="0" step="100" placeholder="e.g. 3000" required></label>
         <label>Total Package Fee (₹)<input name="package_price" type="number" min="0" step="500" placeholder="50000"></label>
-        <label>Deposit Paid (₹)<input name="deposit_amount" type="number" min="0" step="500" value="0"></label>
+        <label>Deposit Received So Far (₹)<input name="deposit_amount" type="number" min="0" step="1" value="0"><small class="field-help">Only enter money already received. Required booking deposit is calculated as 30% of the package price.</small></label>
         <label>Shoot Date &amp; Call Time<input name="shoot_at" type="datetime-local"></label>
         <label>Location / Stage<input name="location" placeholder="Studio Stage 2 / Location Base"></label>
         <label>Delivery Due Date<input name="delivery_due_at" type="date"></label>
@@ -329,7 +374,7 @@
           <textarea name="brief" rows="3" placeholder="Shot list, lighting references, talent details, deliverables required…"></textarea>
         </label>
       </div>
-      <p class="policy-note">Client approval is cryptographically required to start and finish the timer. Each shoot includes its booked duration plus a 30-minute grace window before overtime commences.</p>
+      <p class="policy-note">Booking deposit is 30% of the package price, with the remaining 70% due after the session. Cancellations more than 48 hours before the shoot are refundable; within 48 hours the deposit is non-refundable. Final delivery links remain hidden until all invoices are paid. Client approval is required to start and finish the timer; each shoot includes its booked duration plus a 30-minute grace window.</p>
       <div class="dialog-actions">
         <button type="button" class="button quiet" data-close-dialog>Cancel</button>
         <button class="button gold" type="submit">Establish Production</button>
@@ -478,6 +523,61 @@
         <button type="button" class="button quiet" data-close-dialog>Cancel</button>
         <button type="submit" class="button gold">Publish to Client</button>
       </div>
+    </form>
+  </dialog>
+
+  <dialog id="agreement-dialog" class="dialog">
+    <form id="agreement-form" class="dialog-card compact-dialog" style="max-width:540px;">
+      <div class="dialog-head">
+        <div>
+          <span class="eyebrow">LEGAL COMPLIANCE &amp; ESIGN</span>
+          <h2>Dispatch Leegality Master Agreement</h2>
+        </div>
+        <button type="button" class="icon-button" data-close-dialog aria-label="Close">×</button>
+      </div>
+      <input name="project_id" type="hidden">
+      <div style="background:rgba(255,255,255,0.03); border:1px solid var(--line); border-radius:8px; padding:12px; margin-bottom:12px; font-size:12px; line-height:1.6;">
+        <div style="display:flex; justify-content:space-between;">
+          <span class="muted">Client / Signer:</span>
+          <strong id="agr-dlg-client">—</strong>
+        </div>
+        <div style="display:flex; justify-content:space-between;">
+          <span class="muted">Phone &amp; Email:</span>
+          <span id="agr-dlg-contact">—</span>
+        </div>
+        <div style="display:flex; justify-content:space-between;">
+          <span class="muted">Package Scope:</span>
+          <span id="agr-dlg-package">—</span>
+        </div>
+        <div style="display:flex; justify-content:space-between;">
+          <span class="muted">e-Stamp Duty:</span>
+          <span style="color:var(--gold);">Delhi NCT ₹100 (IN-DL22366535014840X)</span>
+        </div>
+        <div style="display:flex; justify-content:space-between;">
+          <span class="muted">Aadhaar eSign Fee:</span>
+          <strong>₹99.00</strong>
+        </div>
+      </div>
+
+      <label>Agreement Contract Type
+        <select name="agreement_type" id="agr-dlg-type">
+          <option value="master_paid">Master Paid Photography Agreement (Strict 20% / 80% / No-RAW)</option>
+          <option value="master_collab">Master Unpaid / TFP Collaboration Agreement (Likeness &amp; Attribution)</option>
+        </select>
+      </label>
+
+      <div id="agr-dlg-status-box" style="margin:12px 0; padding:10px; border-radius:6px; background:rgba(212,175,55,0.1); border:1px solid var(--line-gold); font-size:11.5px;">
+        <span class="muted">Status: </span><strong id="agr-dlg-status">Not Dispatched</strong>
+        <div id="agr-dlg-link-container" style="margin-top:6px;" hidden>
+          <a id="agr-dlg-sign-link" href="#" target="_blank" rel="noopener noreferrer" style="color:var(--gold-bright); text-decoration:underline; word-break:break-all;">Open Leegality Signing Link ↗</a>
+        </div>
+      </div>
+
+      <div class="dialog-actions">
+        <button type="button" class="button quiet" data-close-dialog>Close</button>
+        <button type="submit" id="agr-dlg-submit" class="button gold">Dispatch via Leegality</button>
+      </div>
+      <p id="agr-dlg-message" class="notice" role="status"></p>
     </form>
   </dialog>
 
