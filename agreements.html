@@ -69,6 +69,162 @@
     <script type="application/ld+json">
     {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Home", "item": "https://chiranjitkar.com/"}, {"@type": "ListItem", "position": 2, "name": "Agreements", "item": "https://chiranjitkar.com/agreements"}]}
     </script>
+    <style>
+        @media print {
+            /* 1. Global Reset & Print Layout */
+            nav, footer, #back-to-top, .no-print, #hero-actions { display: none !important; }
+
+            @page {
+                size: A4 portrait;
+                margin: 14mm 14mm 16mm 14mm;
+            }
+
+            html, body {
+                background: #ffffff !important;
+                color: #000000 !important;
+                font-family: 'Times New Roman', Times, Georgia, serif !important;
+                font-size: 10pt !important;
+                line-height: 1.45 !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            .max-w-4xl, .max-w-7xl, #personalized-agreement-view {
+                max-width: 100% !important;
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+
+            /* 2. Hero Header in Print */
+            #hero-section {
+                padding: 0 0 10pt 0 !important;
+                margin-bottom: 12pt !important;
+                border-bottom: 2pt solid #000000 !important;
+                text-align: center !important;
+                background: none !important;
+            }
+            #hero-eyebrow {
+                font-size: 8pt !important;
+                font-family: 'Courier New', Courier, monospace !important;
+                letter-spacing: 0.15em !important;
+                color: #333333 !important;
+                text-transform: uppercase !important;
+                font-weight: bold !important;
+            }
+            #hero-title {
+                font-size: 17pt !important;
+                font-family: 'Cinzel', Georgia, serif !important;
+                font-weight: bold !important;
+                color: #000000 !important;
+                margin: 4pt 0 !important;
+                letter-spacing: 0.05em !important;
+                text-transform: uppercase !important;
+            }
+            #hero-subtitle {
+                font-size: 9pt !important;
+                color: #444444 !important;
+                font-style: italic !important;
+            }
+
+            /* 3. Official Delhi e-Stamp Certificate Box */
+            .estamp-print-card {
+                border: 2pt solid #000000 !important;
+                outline: 1pt solid #000000 !important;
+                outline-offset: -3pt !important;
+                background: #fafafa !important;
+                padding: 8pt 10pt !important;
+                margin-bottom: 12pt !important;
+                break-inside: avoid !important;
+                page-break-inside: avoid !important;
+            }
+            .estamp-print-card h2 {
+                font-size: 13pt !important;
+                color: #000000 !important;
+                font-family: 'Cinzel', Georgia, serif !important;
+            }
+
+            /* 4. Structured Legal Table */
+            .print-table {
+                width: 100% !important;
+                border-collapse: collapse !important;
+                margin: 8pt 0 !important;
+                break-inside: avoid !important;
+                page-break-inside: avoid !important;
+            }
+            .print-table th, .print-table td {
+                border: 1pt solid #222222 !important;
+                padding: 4.5pt 7pt !important;
+                font-size: 9pt !important;
+                color: #000000 !important;
+                vertical-align: top !important;
+            }
+            .print-table th {
+                background: #f0f0f0 !important;
+                font-weight: bold !important;
+                text-transform: uppercase !important;
+                font-size: 8pt !important;
+                letter-spacing: 0.04em !important;
+            }
+
+            /* 5. Legal Articles & Page Breaks */
+            .liquid-card, .liquid-glass {
+                background: transparent !important;
+                border: none !important;
+                box-shadow: none !important;
+                padding: 0 !important;
+                margin-bottom: 12pt !important;
+            }
+            .legal-article {
+                margin-bottom: 9pt !important;
+                break-inside: avoid !important;
+                page-break-inside: avoid !important;
+            }
+            .legal-article h4 {
+                font-size: 10.5pt !important;
+                font-weight: bold !important;
+                color: #000000 !important;
+                margin-bottom: 2.5pt !important;
+                font-family: 'Times New Roman', Times, serif !important;
+                text-transform: uppercase !important;
+                letter-spacing: 0.02em !important;
+            }
+            .legal-article p {
+                font-size: 9pt !important;
+                line-height: 1.4 !important;
+                color: #1a1a1a !important;
+                text-align: justify !important;
+            }
+
+            /* 6. Signature Block */
+            .signature-print-block {
+                border: 1.5pt solid #000000 !important;
+                padding: 10pt !important;
+                margin-top: 14pt !important;
+                break-inside: avoid !important;
+                page-break-inside: avoid !important;
+                background: #fdfdfd !important;
+            }
+            .signature-grid {
+                display: flex !important;
+                justify-content: space-between !important;
+                gap: 16pt !important;
+            }
+            .signature-col {
+                width: 48% !important;
+                border: 1pt solid #555555 !important;
+                padding: 8pt !important;
+                background: #ffffff !important;
+            }
+
+            /* Typography cleanups */
+            .text-white { color: #000000 !important; }
+            .text-neutral-300, .text-neutral-400, .text-neutral-500 { color: #222222 !important; }
+            .text-gold-400, .text-gold-300 { color: #000000 !important; }
+            .border-white\/10, .border-gold-400\/30, .border-gold-400\/40 { border-color: #333333 !important; }
+            .bg-noir-950, .bg-noir-900 { background: #ffffff !important; }
+        }
+    </style>
 </head>
 <body class="bg-noir-950 text-neutral-100 font-sans selection:bg-gold-500 selection:text-noir-950 min-h-screen relative overflow-x-hidden max-w-full w-full">
 
@@ -186,23 +342,29 @@
     
 
     <!-- PAGE HERO -->
-    <section class="pt-36 sm:pt-44 pb-16 px-4 sm:px-8 border-b border-white/10 bg-radial-vignette text-center">
+    <section id="hero-section" class="pt-36 sm:pt-44 pb-16 px-4 sm:px-8 border-b border-white/10 bg-radial-vignette text-center">
         <div class="max-w-4xl mx-auto editorial-reveal">
-            <span class="text-[11px] font-semibold tracking-[0.35em] uppercase text-gold-400 block mb-3 font-mono">
+            <span id="hero-eyebrow" class="text-[11px] font-semibold tracking-[0.35em] uppercase text-gold-400 block mb-3 font-mono">
                 Governance, Transparency &amp; Ethics
             </span>
-            <h1 class="font-cinzel text-4xl sm:text-6xl font-bold text-white tracking-tight mb-4">
+            <h1 id="hero-title" class="font-cinzel text-4xl sm:text-6xl font-bold text-white tracking-tight mb-4">
                 Agreements &amp; Policies
             </h1>
-            <p class="text-neutral-400 font-editorial text-xl sm:text-2xl italic max-w-2xl mx-auto leading-relaxed">
+            <p id="hero-subtitle" class="text-neutral-400 font-editorial text-xl sm:text-2xl italic max-w-2xl mx-auto leading-relaxed">
                 Clear, industry-standard legal frameworks governing model releases, client commissions, and identity verification.
             </p>
+            <div id="hero-actions" class="hidden mt-6 flex flex-wrap items-center justify-center gap-3 no-print"></div>
         </div>
     </section>
 
     <!-- CONTENT SECTION -->
     <section class="py-20 px-4 sm:px-8 relative z-10">
-        <div class="max-w-4xl mx-auto space-y-16 text-neutral-300 text-sm leading-relaxed font-light">
+        <div class="max-w-4xl mx-auto">
+            <!-- Dynamic Personalized Agreement View -->
+            <div id="personalized-agreement-view" class="hidden space-y-12"></div>
+
+            <!-- Public Policy View (Default) -->
+            <div id="public-policy-view" class="space-y-16 text-neutral-300 text-sm leading-relaxed font-light">
             
             <!-- Quick Summary Navigation -->
             <div class="p-6 rounded-2xl liquid-glass border border-gold-400/30 flex flex-wrap items-center justify-between gap-4 text-xs font-mono">
@@ -305,6 +467,7 @@
                 </p>
             </div>
 
+            </div>
         </div>
     </section>
 
@@ -468,6 +631,395 @@
     <script src="liquid.js"></script>
     <script>
         lucide.createIcons();
+    </script>
+
+    <!-- PERSONALIZED CLIENT AGREEMENT DYNAMIC ENGINE -->
+    <script>
+    (async function initPersonalizedAgreement() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const hashParams = new URLSearchParams(window.location.hash.startsWith('#') ? window.location.hash.slice(1) : '');
+        const key = urlParams.get('key') || hashParams.get('key') || '';
+        const code = urlParams.get('code') || hashParams.get('code') || '';
+
+        if (!key && !code) return; // Keep public policy view
+
+        try {
+            const headers = { 'Content-Type': 'application/json' };
+            if (key) headers['Authorization'] = 'Bearer ' + key;
+            const endpoint = code ? `/api/client/project?code=${encodeURIComponent(code)}` : '/api/client/project';
+            const res = await fetch(endpoint, { headers });
+            if (!res.ok) return;
+            const data = await res.json();
+            if (!data || !data.project) return;
+
+            const p = data.project;
+            const agr = data.agreement || {};
+            const isCollab = p.service === 'Collaboration' || agr.agreement_type === 'master_collab';
+            const contractCode = agr.contract_code || (isCollab ? `CKP-TFP-${p.project_code}` : `CKP-AGR-${p.project_code}`);
+            const estamp = agr.estamp_number || 'IN-DL22366535014840X';
+            const signUrl = agr.leegality_sign_url || `https://sign.leegality.com/sign/DOC-${p.project_code}`;
+            const isSigned = agr.status === 'signed';
+
+            // Update Hero
+            const eyebrow = document.getElementById('hero-eyebrow');
+            const title = document.getElementById('hero-title');
+            const subtitle = document.getElementById('hero-subtitle');
+            const heroActions = document.getElementById('hero-actions');
+
+            if (eyebrow) eyebrow.innerHTML = `UNIFIED STUDIO CONTRACT DEED &bull; DELHI NCT ₹100 E-STAMP (<span class="text-white">${estamp}</span>)`;
+            if (title) title.textContent = 'Master Photography & Creative Production Agreement';
+            if (subtitle) subtitle.innerHTML = `Universal binding agreement executed for <strong class="text-white font-sans">${p.client_name}</strong> &bull; Reference: <span class="font-mono text-gold-400 font-bold">${contractCode}</span>`;
+
+            if (heroActions) {
+                heroActions.classList.remove('hidden');
+                heroActions.innerHTML = `
+                    <a href="/session#key=${encodeURIComponent(key)}" class="px-5 py-2.5 rounded-full bg-white/5 border border-white/20 text-neutral-300 text-xs font-mono tracking-wider hover:bg-white/10 hover:text-white transition-all">
+                        &larr; Return to Client Suite
+                    </a>
+                    <button onclick="window.print()" class="px-5 py-2.5 rounded-full bg-white/10 border border-gold-400/40 text-gold-300 text-xs font-mono tracking-wider hover:bg-gold-400/20 hover:text-white transition-all flex items-center gap-1.5 shadow-lg">
+                        <span>🖨 Download / Print Official PDF</span>
+                    </button>
+                    ${isSigned ? `
+                        <span class="px-5 py-2.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-mono font-bold">
+                            &check; Aadhaar eSigned
+                        </span>
+                    ` : `
+                        <a href="${signUrl}" target="_blank" rel="noopener noreferrer" class="px-6 py-2.5 rounded-full bg-gradient-to-r from-gold-500 to-gold-400 text-noir-950 text-xs font-cinzel font-bold tracking-widest uppercase hover:brightness-110 shadow-lg transition-all">
+                            Aadhaar OTP eSign on Leegality &nearr;
+                        </a>
+                    `}
+                `;
+            }
+
+            // Hide public policy sections & show personalized agreement
+            const publicView = document.getElementById('public-policy-view');
+            const personalView = document.getElementById('personalized-agreement-view');
+            if (publicView) publicView.style.display = 'none';
+            if (personalView) {
+                personalView.classList.remove('hidden');
+
+                const totalQuotation = Number(p.package_price || 0);
+                const advanceDeposit = Math.round(totalQuotation * 0.2);
+                const balanceDue = Math.round(totalQuotation * 0.8);
+                const shootDateStr = p.shoot_at ? new Date(p.shoot_at).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'full', timeStyle: 'short' }) : 'To be scheduled with studio';
+                const clientEmail = p.client_email || 'Verified on file';
+                const clientPhone = p.client_phone || 'Verified on file';
+                const clientLocation = p.location || 'Studio Set / Hauz Khas, New Delhi';
+
+                personalView.innerHTML = `
+                    <!-- 1. OFFICIAL DELHI E-STAMP CERTIFICATE HEADER -->
+                    <div class="estamp-print-card p-6 sm:p-8 rounded-3xl liquid-card border-2 border-gold-400/40 relative overflow-hidden bg-gradient-to-b from-gold-500/10 via-noir-900 to-noir-950">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-6 border-b border-white/10">
+                            <div>
+                                <span class="text-[10px] font-mono tracking-[0.25em] text-gold-400 font-bold uppercase block">Government of National Capital Territory of Delhi</span>
+                                <h2 class="font-cinzel text-xl sm:text-2xl font-bold text-white mt-1">Official Non-Judicial e-Stamp Certificate</h2>
+                                <p class="text-xs text-neutral-400 font-mono mt-0.5">Certificate No: <strong class="text-gold-300 font-bold">${estamp}</strong> &bull; Duty: ₹100.00 &bull; Description: Article 5 Agreement</p>
+                            </div>
+                            <div class="px-4 py-2 rounded-xl bg-gold-400/20 border border-gold-400/40 text-gold-300 font-mono text-xs uppercase tracking-widest font-bold text-center">
+                                ${isCollab ? 'TFP COLLABORATION' : 'PAID COMMISSION'}
+                            </div>
+                        </div>
+
+                        <table class="print-table mt-4 w-full text-xs font-mono">
+                            <tbody>
+                                <tr>
+                                    <th class="w-1/4">First Party (Photographer)</th>
+                                    <td class="w-1/4 font-bold text-white">CHIRANJIT KAR</td>
+                                    <th class="w-1/4">Second Party (Client / Model)</th>
+                                    <td class="w-1/4 font-bold text-gold-300">${p.client_name}</td>
+                                </tr>
+                                <tr>
+                                    <th>Stamp Duty Paid By</th>
+                                    <td class="text-neutral-300">CHIRANJIT KAR</td>
+                                    <th>State / Authority</th>
+                                    <td class="text-neutral-300">Delhi NCT &bull; SHCIL</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- 2. SCHEDULE A: ENGAGEMENT CLASSIFICATION & SPECIFICS -->
+                    <div class="p-8 sm:p-10 rounded-3xl liquid-card border border-white/10 space-y-6">
+                        <div class="flex items-center justify-between flex-wrap gap-4 border-b border-white/10 pb-5">
+                            <div>
+                                <span class="text-[10.5px] font-mono tracking-widest text-gold-400 uppercase font-bold">SCHEDULE A</span>
+                                <h3 class="font-cinzel text-xl font-bold text-white mt-0.5">Engagement Classification &amp; Project Schedule</h3>
+                            </div>
+                            <span class="px-3 py-1 rounded-full text-[11px] font-mono ${isSigned ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' : 'bg-gold-400/15 text-gold-300 border border-gold-400/30'}">
+                                ${isSigned ? 'Status: ✓ Digitally Executed' : 'Status: Pending Aadhaar OTP eSign'}
+                            </span>
+                        </div>
+
+                        <!-- Classification Badge -->
+                        <div class="p-4 rounded-2xl bg-white/5 border border-white/10 flex flex-wrap items-center justify-between gap-4 text-xs font-mono">
+                            <div class="flex items-center gap-3">
+                                <span class="w-3 h-3 rounded-full ${isCollab ? 'bg-neutral-500' : 'bg-gold-400 shadow-[0_0_8px_rgba(212,175,55,0.8)]'}"></span>
+                                <span class="${!isCollab ? 'text-gold-300 font-bold' : 'text-neutral-400'}">[ ${!isCollab ? '✓' : ' '} ] Paid Commercial Commission</span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <span class="w-3 h-3 rounded-full ${isCollab ? 'bg-gold-400 shadow-[0_0_8px_rgba(212,175,55,0.8)]' : 'bg-neutral-500'}"></span>
+                                <span class="${isCollab ? 'text-gold-300 font-bold' : 'text-neutral-400'}">[ ${isCollab ? '✓' : ' '} ] TFP Creative / Model Collaboration</span>
+                            </div>
+                        </div>
+
+                        <!-- Table Grid -->
+                        <table class="print-table w-full text-xs">
+                            <tbody>
+                                <tr>
+                                    <th class="w-1/4">Contract Reference</th>
+                                    <td class="w-1/4 font-mono font-bold text-gold-300">${contractCode}</td>
+                                    <th class="w-1/4">Date of Execution</th>
+                                    <td class="w-1/4 font-mono">${new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
+                                </tr>
+                                <tr>
+                                    <th>Client / Model Name</th>
+                                    <td class="font-bold text-white">${p.client_name}</td>
+                                    <th>Contact Coordinates</th>
+                                    <td class="font-mono text-neutral-300">${clientEmail}<br>${clientPhone}</td>
+                                </tr>
+                                <tr>
+                                    <th>Scope &amp; Package</th>
+                                    <td class="text-white font-medium">${p.package_name || p.service}</td>
+                                    <th>Booked Scope</th>
+                                    <td class="text-neutral-300">${Math.floor((p.booked_minutes || 180)/60)} Hours (${p.booked_minutes || 180} mins) + 30m courtesy grace</td>
+                                </tr>
+                                <tr>
+                                    <th>Scheduled Date &amp; Time</th>
+                                    <td class="text-white font-medium">${shootDateStr}</td>
+                                    <th>Production Location</th>
+                                    <td class="text-neutral-300">${clientLocation}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- 3. SCHEDULE B: FINANCIAL & DELIVERABLES FRAMEWORK -->
+                    <div class="p-8 sm:p-10 rounded-3xl liquid-card border border-white/10 space-y-6">
+                        <div class="border-b border-white/10 pb-4">
+                            <span class="text-[10.5px] font-mono tracking-widest text-gold-400 uppercase font-bold">SCHEDULE B</span>
+                            <h3 class="font-cinzel text-xl font-bold text-white mt-0.5">Financial Terms &amp; Production Deliverables</h3>
+                        </div>
+
+                        <table class="print-table w-full text-xs">
+                            <thead>
+                                <tr>
+                                    <th class="w-1/2">Clause &amp; Obligation</th>
+                                    <th class="w-1/2">Contractual Provision</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${isCollab ? `
+                                <tr>
+                                    <td class="font-bold text-white">B.1 Consideration &amp; Professional Fees</td>
+                                    <td class="font-mono text-gold-300 font-bold">₹0.00 (Zero Monetary Fees &bull; Mutual TFP Portfolio Exchange)</td>
+                                </tr>
+                                <tr>
+                                    <td class="font-bold text-white">B.2 Production Deliverables</td>
+                                    <td class="text-neutral-300">High-resolution color-graded, professionally retouched master photographs (as agreed for looks produced).</td>
+                                </tr>
+                                <tr>
+                                    <td class="font-bold text-white">B.3 Model Likeness Grant</td>
+                                    <td class="text-neutral-300">Perpetual, worldwide, irrevocable grant allowing Photographer to publish, exhibition, and submit imagery across portfolios and media.</td>
+                                </tr>
+                                <tr>
+                                    <td class="font-bold text-white">B.4 Mandatory Credit &amp; Attribution</td>
+                                    <td class="font-mono text-white font-bold">Mandatory tag and credit to <span class="text-gold-300">@iamchiranjitkar</span> on all public social media and publication posts.</td>
+                                </tr>
+                                ` : `
+                                <tr>
+                                    <td class="font-bold text-white">B.1 Agreed Total Commission Quotation</td>
+                                    <td class="font-mono font-bold text-white text-sm">₹${totalQuotation.toLocaleString('en-IN')}</td>
+                                </tr>
+                                <tr>
+                                    <td class="font-bold text-white">B.2 Strict 20% Advance Booking Deposit</td>
+                                    <td class="font-mono font-bold text-gold-300">₹${advanceDeposit.toLocaleString('en-IN')} (Strictly non-refundable; reserves studio dates &amp; creative crew)</td>
+                                </tr>
+                                <tr>
+                                    <td class="font-bold text-white">B.3 Strict 80% Post-Shoot Balance Due</td>
+                                    <td class="font-mono font-bold text-gold-300">₹${balanceDue.toLocaleString('en-IN')} (Strictly due upon session conclusion, prior to master file release)</td>
+                                </tr>
+                                <tr>
+                                    <td class="font-bold text-white">B.4 UIDAI Aadhaar Documentation Fee</td>
+                                    <td class="font-mono text-neutral-300">₹99.00 (UIDAI OTP identity validation fee)</td>
+                                </tr>
+                                <tr>
+                                    <td class="font-bold text-white">B.5 Proprietary RAW Files Policy</td>
+                                    <td class="font-bold text-rose-400 font-mono">Strict No-RAW Policy &bull; Under no circumstances are unedited RAW files released.</td>
+                                </tr>
+                                `}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- 4. OFFICIAL 10 MASTER OPERATIVE ARTICLES -->
+                    <div class="p-8 sm:p-12 rounded-3xl liquid-card border border-white/10 space-y-6 text-neutral-300 text-xs sm:text-sm leading-relaxed">
+                        <div class="border-b border-white/10 pb-4">
+                            <span class="text-[10px] font-mono tracking-widest text-gold-400 uppercase font-bold">OPERATIVE COVENANTS</span>
+                            <h3 class="font-cinzel text-xl sm:text-2xl font-bold text-white mt-1">Universal Contractual Articles</h3>
+                        </div>
+
+                        <!-- Article 1 -->
+                        <div class="legal-article">
+                            <h4 class="font-cinzel text-sm sm:text-base font-bold text-white flex items-center gap-2">
+                                <span class="text-gold-400 font-mono text-xs">1.</span> Scope of Engagement &amp; Studio Direction
+                            </h4>
+                            <p class="font-light text-neutral-300">
+                                Chiranjit Kar Photography agrees to provide high-fashion visual production services as scheduled in Schedule A. The Photographer retains sole artistic and creative direction, photographic framing, lighting methodology, and post-processing discretion. The Client confirms familiarity with the aesthetic standards exhibited in the Photographer's portfolio.
+                            </p>
+                        </div>
+
+                        <!-- Article 2 -->
+                        <div class="legal-article">
+                            <h4 class="font-cinzel text-sm sm:text-base font-bold text-white flex items-center gap-2">
+                                <span class="text-gold-400 font-mono text-xs">2.</span> Consideration &amp; Strict Financial Settlement
+                            </h4>
+                            <p class="font-light text-neutral-300">
+                                ${isCollab ? `
+                                    This engagement is executed as a mutual Time-for-Print (TFP) exchange with ₹0 monetary compensation. Delivery of retouched master imagery and mutual likeness release constitutes full and final consideration.
+                                ` : `
+                                    For Paid Commissions, the Client shall remit the agreed fee of <strong>₹${totalQuotation.toLocaleString('en-IN')}</strong>. The <strong>20% advance booking deposit (₹${advanceDeposit.toLocaleString('en-IN')})</strong> locks studio dates and crew. The remaining <strong>80% balance (₹${balanceDue.toLocaleString('en-IN')})</strong> is payable immediately post-session wrap. Master deliverables are held until all dues are cleared.
+                                `}
+                            </p>
+                        </div>
+
+                        <!-- Article 3 -->
+                        <div class="legal-article">
+                            <h4 class="font-cinzel text-sm sm:text-base font-bold text-white flex items-center gap-2">
+                                <span class="text-gold-400 font-mono text-xs">3.</span> Proprietary Raw Files Policy (Strict No-RAW)
+                            </h4>
+                            <p class="font-light text-neutral-300">
+                                <strong>Under no circumstances whatsoever are unedited RAW files, DNGs, or digital negatives delivered, sold, or shared.</strong> RAW files represent incomplete proprietary artistic negative assets. The Client shall receive watermarked low-resolution proofing contacts solely for curation selection, and final master deliverables as color-graded retouched files.
+                            </p>
+                        </div>
+
+                        <!-- Article 4 -->
+                        <div class="legal-article">
+                            <h4 class="font-cinzel text-sm sm:text-base font-bold text-white flex items-center gap-2">
+                                <span class="text-gold-400 font-mono text-xs">4.</span> Proofing Selects &amp; Post-Production Timelines
+                            </h4>
+                            <p class="font-light text-neutral-300">
+                                Digital proofing contacts will be uploaded to the Client Concierge Suite within <strong>48 hours</strong> of session completion. The Client shall submit selections within 14 calendar days. Master color-graded retouched deliverables are fulfilled within <strong>1 to 2 months</strong> following curation receipt and complete financial settlement.
+                            </p>
+                        </div>
+
+                        <!-- Article 5 -->
+                        <div class="legal-article">
+                            <h4 class="font-cinzel text-sm sm:text-base font-bold text-white flex items-center gap-2">
+                                <span class="text-gold-400 font-mono text-xs">5.</span> Master Copyright &amp; Moral Rights
+                            </h4>
+                            <p class="font-light text-neutral-300">
+                                Pursuant to Section 17 of the Indian Copyright Act, 1957, Chiranjit Kar is the sole and exclusive author and master copyright proprietor of all original captures, composite edits, and final imagery worldwide in perpetuity. No transfer of master copyright is granted or implied.
+                            </p>
+                        </div>
+
+                        <!-- Article 6 -->
+                        <div class="legal-article">
+                            <h4 class="font-cinzel text-sm sm:text-base font-bold text-white flex items-center gap-2">
+                                <span class="text-gold-400 font-mono text-xs">6.</span> License Grant &amp; Usage Rights
+                            </h4>
+                            <p class="font-light text-neutral-300">
+                                The Photographer grants the Client/Model a worldwide, royalty-free, perpetual license to display delivered retouched photographs across personal portfolios, modeling agency representation, and social media. Commercial syndication, resale, or sub-licensing to third-party stock agencies is strictly forbidden. ${isCollab ? '<strong>Mandatory photo credit and social tagging to @iamchiranjitkar is required on all public releases.</strong>' : ''}
+                            </p>
+                        </div>
+
+                        <!-- Article 7 -->
+                        <div class="legal-article">
+                            <h4 class="font-cinzel text-sm sm:text-base font-bold text-white flex items-center gap-2">
+                                <span class="text-gold-400 font-mono text-xs">7.</span> Cancellation &amp; 48-Hour Rescheduling Protocol
+                            </h4>
+                            <p class="font-light text-neutral-300">
+                                Written notice delivered at least <strong>48 hours prior to call time</strong> permits the Client to transfer the full advance booking deposit to an alternate available studio date within 90 days. Cancellations initiated under 48 hours forfeit the advance deposit to compensate reserved studio crew and venue blockage.
+                            </p>
+                        </div>
+
+                        <!-- Article 8 -->
+                        <div class="legal-article">
+                            <h4 class="font-cinzel text-sm sm:text-base font-bold text-white flex items-center gap-2">
+                                <span class="text-gold-400 font-mono text-xs">8.</span> Safe Set Protocol, Dignity &amp; Chaperone Rights
+                            </h4>
+                            <p class="font-light text-neutral-300">
+                                The studio enforces an uncompromising standard of mutual dignity, professional ethics, and physical safety. Clients and models hold the absolute right to bring a personal companion or chaperone to the production. Zero tolerance is strictly enforced against harassment, misconduct, or unsafe requests.
+                            </p>
+                        </div>
+
+                        <!-- Article 9 -->
+                        <div class="legal-article">
+                            <h4 class="font-cinzel text-sm sm:text-base font-bold text-white flex items-center gap-2">
+                                <span class="text-gold-400 font-mono text-xs">9.</span> Limitation of Liability
+                            </h4>
+                            <p class="font-light text-neutral-300">
+                                In the unforeseen event of catastrophic technical equipment malfunction, memory card corruption, or act of God preventing fulfillment, the Photographer's total aggregate liability is strictly capped to either a full refund of monies paid or a complimentary rescheduled shoot.
+                            </p>
+                        </div>
+
+                        <!-- Article 10 -->
+                        <div class="legal-article">
+                            <h4 class="font-cinzel text-sm sm:text-base font-bold text-white flex items-center gap-2">
+                                <span class="text-gold-400 font-mono text-xs">10.</span> Electronic Execution &amp; New Delhi Jurisdiction
+                            </h4>
+                            <p class="font-light text-neutral-300">
+                                This Agreement is executed electronically pursuant to Section 10A of the Information Technology Act, 2000. It is deemed executed in New Delhi, India under Delhi Stamp Duty. Any disputes arising hereunder shall be subject to the exclusive jurisdiction of the competent courts of New Delhi, NCT of Delhi.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- 5. DIGITAL SIGNATURES & VERIFICATION SEAL -->
+                    <div class="signature-print-block p-8 sm:p-10 rounded-3xl liquid-card border-2 border-gold-400/30 space-y-6">
+                        <div class="flex items-center justify-between border-b border-white/10 pb-4">
+                            <div>
+                                <span class="text-[10px] font-mono tracking-widest text-gold-400 uppercase font-bold">EXECUTION &amp; AUTHENTICATION</span>
+                                <h3 class="font-cinzel text-lg font-bold text-white">Execution Signatures &amp; Legal Seals</h3>
+                            </div>
+                            <span class="text-xs font-mono text-neutral-400">UIDAI OTP Digital eSign</span>
+                        </div>
+
+                        <div class="signature-grid grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2">
+                            <!-- Party 1: Studio -->
+                            <div class="signature-col p-6 rounded-2xl liquid-glass border border-white/10 space-y-3">
+                                <span class="text-gold-400 font-mono text-[10px] uppercase font-bold block">First Party (Photographer &amp; Studio)</span>
+                                <div class="font-editorial text-2xl text-gold-300 italic pt-1">Chiranjit Kar</div>
+                                <div class="text-[11px] font-mono text-neutral-400 space-y-0.5">
+                                    <div class="text-white font-medium">Lead Photographer &amp; Studio Director</div>
+                                    <div>Chiranjit Kar Photography &bull; New Delhi</div>
+                                    <div class="text-emerald-400 font-bold">&check; Digital Verification &amp; Seal Applied</div>
+                                </div>
+                            </div>
+
+                            <!-- Party 2: Client -->
+                            <div class="signature-col p-6 rounded-2xl liquid-glass border ${isSigned ? 'border-emerald-500/30' : 'border-gold-400/30'} space-y-3">
+                                <span class="text-gold-400 font-mono text-[10px] uppercase font-bold block">Second Party (${isCollab ? 'Model / Collaborator' : 'Client Entity'})</span>
+                                <div class="font-editorial text-2xl text-white italic pt-1">${p.client_name}</div>
+                                <div class="text-[11px] font-mono text-neutral-400 space-y-0.5">
+                                    <div>Status: <strong class="${isSigned ? 'text-emerald-400' : 'text-gold-300'}">${isSigned ? '&check; Executed via Aadhaar OTP' : 'Pending Aadhaar OTP eSign'}</strong></div>
+                                    <div>Leegality Ref: <span class="text-neutral-300 font-bold font-mono">${agr.leegality_document_id || 'DOC-' + p.project_code}</span></div>
+                                    <div class="text-neutral-500 text-[10px]">Documentation Fee: ₹99.00 (UIDAI OTP Service)</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Footer Actions in Card -->
+                        <div class="pt-4 flex flex-wrap items-center justify-between gap-4 border-t border-white/10 no-print">
+                            <a href="/session#key=${encodeURIComponent(key)}" class="text-xs font-mono text-gold-400 hover:text-gold-300 transition-colors flex items-center gap-1">
+                                &larr; Return to Client Concierge
+                            </a>
+                            <div class="flex items-center gap-3">
+                                <button onclick="window.print()" class="px-5 py-2.5 rounded-full bg-white/5 border border-white/20 text-neutral-300 text-xs font-mono tracking-wider hover:bg-white/10 hover:text-white transition-all">
+                                    🖨 Download / Print PDF
+                                </button>
+                                ${!isSigned ? `
+                                    <a href="${signUrl}" target="_blank" rel="noopener noreferrer" class="px-6 py-2.5 rounded-full bg-gradient-to-r from-gold-500 to-gold-400 text-noir-950 text-xs font-cinzel font-bold tracking-widest uppercase hover:brightness-110 shadow-lg transition-all">
+                                        Proceed to Aadhaar OTP eSign &nearr;
+                                    </a>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        } catch (err) {
+            console.error('Failed to load personalized agreement:', err);
+        }
+    })();
     </script>
 </body>
 </html>

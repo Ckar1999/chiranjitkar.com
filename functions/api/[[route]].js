@@ -1,3 +1,5 @@
+import { DELHI_ESTAMP_BASE64 } from './stamp_data.js';
+
 const COOKIE = '__Host-studio_session';
 const CLIENT_COOKIE = 'client_session';
 const ROLES = new Set(['admin', 'sales', 'photographer', 'filmmaker', 'editor']);
@@ -164,24 +166,17 @@ async function dispatchLeegalityAgreement(env, project, agreementType = 'master_
 
   const token = cfg.leegality_auth_token || env.LEEGALITY_AUTH_TOKEN || '';
   const isSandbox = cfg.leegality_sandbox === '1' || env.LEEGALITY_SANDBOX === '1';
-  const baseUrl = isSandbox ? 'https://sandbox.leegality.com' : 'https://api.leegality.com';
-  const profileId = (agreementType === 'master_collab' ? cfg.leegality_profile_id_collab : cfg.leegality_profile_id_paid) || '';
+  const baseUrl = isSandbox ? 'https://sandbox.leegality.com' : 'https://app1.leegality.com';
+  const profileId = (agreementType === 'master_collab' ? cfg.leegality_profile_id_collab : cfg.leegality_profile_id_paid) || 'dhZSbBk';
   const estampNumber = cfg.leegality_estamp_number || 'IN-DL22366535014840X';
   const contractCode = agreementType === 'master_collab' ? `CKP-TFP-${project.project_code}` : `CKP-AGR-${project.project_code}`;
 
-  const fields = {
-    ContractID: contractCode,
-    DateOfExecution: studioDate(),
-    ClientName: project.client_name,
-    Address: project.location || 'Studio Set / Location',
-    Phone: project.client_phone || '',
-    Email: project.client_email,
-    ShootScope: project.package_name || project.service || 'Haute Couture Photography',
-    AdvanceDeposit: `₹${Math.round(project.package_price * 0.2).toLocaleString('en-IN')}`,
-    BalanceDue: `₹${Math.round(project.package_price * 0.8).toLocaleString('en-IN')}`,
-    TotalQuotation: `₹${Number(project.package_price).toLocaleString('en-IN')}`,
-    DelhiEStampNumber: estampNumber
-  };
+  const nowDt = new Date();
+  const mm = String(nowDt.getMonth() + 1).padStart(2, '0');
+  const dd = String(nowDt.getDate()).padStart(2, '0');
+  const yyyy = nowDt.getFullYear();
+  const todayUS = `${mm}/${dd}/${yyyy}`;
+  const phone10 = String(project.client_phone || '').replace(/[^0-9]/g, '').slice(-10) || '9876543210';
 
   let docId = `DOC-${project.project_code}-${Date.now().toString().slice(-4)}`;
   let signUrl = '';
@@ -189,28 +184,59 @@ async function dispatchLeegalityAgreement(env, project, agreementType = 'master_
 
   if (token && profileId) {
     try {
-      const resp = await fetch(`${baseUrl}/api/v2.1/sign/request`, {
+      const payload = {
+        profileId,
+        file: {
+          name: `${contractCode}.pdf`,
+          fields: [
+            { id: '1769351065891', name: 'Contract ID', value: contractCode, type: 'text' },
+            { id: '1769351096036', name: 'Date', value: todayUS, type: 'date', format: 'mm/dd/yyyy' },
+            { id: '1769351924210', name: 'Collaborator Name', value: project.client_name, type: 'text' },
+            { id: '1769352237988', name: 'Address', value: project.location || 'Studio Set, Hauz Khas, New Delhi', type: 'text' },
+            { id: '1769352288464', name: 'Phone Number', value: phone10, type: 'text' },
+            { id: '1769352332429', name: 'Email ID', value: project.client_email, type: 'text' },
+            { id: '1769351978909', name: 'Collaborator Name', value: project.client_name, type: 'text' },
+            { id: '1769351126190', name: 'Date', value: todayUS, type: 'date', format: 'mm/dd/yyyy' },
+            { id: '1769351129812', name: 'Date', value: todayUS, type: 'date', format: 'mm/dd/yyyy' },
+            { id: '1769352371986', name: 'City Name', value: 'New Delhi', type: 'text' },
+            { id: '1769356992373', name: 'Collaborator Name', value: project.client_name, type: 'text' }
+          ]
+        },
+        invitees: [
+          {
+            name: project.client_name,
+            email: project.client_email,
+            phone: phone10,
+            aadhaarConfig: {
+              verifyState: 'Delhi',
+              verifyYob: 1998,
+              verifyGender: 'F'
+            }
+          }
+        ],
+        stampUpload: {
+          firstPartyName: 'CHIRANJIT KAR',
+          secondPartyName: project.client_name,
+          state: 'Delhi',
+          denomination: 100,
+          stampSerial: estampNumber,
+          stampFile: DELHI_ESTAMP_BASE64
+        },
+        irn: contractCode
+      };
+
+      const resp = await fetch(`${baseUrl}/api/v3.0/sign/request`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'X-Auth-Token': token
         },
-        body: JSON.stringify({
-          profileId,
-          fields,
-          invitees: [
-            {
-              name: project.client_name,
-              email: project.client_email,
-              phone: String(project.client_phone || '').replace(/[^0-9]/g, '').slice(-10) || undefined
-            }
-          ]
-        })
+        body: JSON.stringify(payload)
       });
       const data = await resp.json().catch(() => ({}));
       if (data && (data.status === 1 || data.data)) {
         docId = data.data?.documentId || docId;
-        signUrl = data.data?.invitations?.[0]?.signUrl || '';
+        signUrl = data.data?.invitees?.[0]?.signUrl || data.data?.invitations?.[0]?.signUrl || '';
       }
     } catch (err) {
       console.error('Leegality API dispatch failed:', err);
@@ -401,7 +427,7 @@ async function handle(request, env, route) {
     const current = await passwordHash(String(body.current_password || ''), user.password_salt,env.APP_SECRET);
     if (current.hash !== user.password_hash) return fail('Current password is incorrect.', 401);
     const nextPassword = String(body.new_password || '');
-    if (nextPassword.length < 8 || nextPassword.length > 200) return fail('Choose a new password with at least 8 characters.');
+    if (nextPassword.length < 12 || nextPassword.length > 200) return fail('Choose a new password with at least 12 characters.');
     const hashed = await passwordHash(nextPassword,null,env.APP_SECRET);
     await env.DB.prepare('UPDATE staff SET password_hash=?,password_salt=?,updated_at=? WHERE id=?').bind(hashed.hash, hashed.salt, now(), auth.staff.id).run();
     await env.DB.prepare('DELETE FROM staff_sessions WHERE staff_id=?').bind(auth.staff.id).run();
@@ -599,7 +625,7 @@ async function handle(request, env, route) {
       ? await env.DB.prepare('SELECT title,url,note,created_at FROM deliveries WHERE project_id=? ORDER BY created_at DESC').bind(project.id).all()
       : {results:[]};
     const agreementRow = await env.DB.prepare("SELECT id, agreement_type, contract_code, leegality_document_id, leegality_sign_url, estamp_number, documentation_fee, status, signed_at, signed_pdf_url FROM project_agreements WHERE project_id=? ORDER BY created_at DESC LIMIT 1").bind(project.id).first().catch(() => null);
-    return json({ project: { id: project.id, project_code: project.project_code, client_name: project.client_name, service: project.service, package_name: project.package_name, package_price:project.package_price, shoot_at: project.shoot_at, booked_minutes: project.booked_minutes, grace_minutes: project.grace_minutes, overtime_step_minutes: project.overtime_step_minutes, overtime_rate: project.overtime_rate, status: project.status }, session, invoices: invoices.results || [], open_balance:openBalance, deliveries: deliveries.results || [], agreement: agreementRow || null });
+    return json({ project: { id: project.id, project_code: project.project_code, client_name: project.client_name, client_email: project.client_email, client_phone: project.client_phone, location: project.location, service: project.service, package_name: project.package_name, package_price:project.package_price, shoot_at: project.shoot_at, booked_minutes: project.booked_minutes, grace_minutes: project.grace_minutes, overtime_step_minutes: project.overtime_step_minutes, overtime_rate: project.overtime_rate, status: project.status }, session, invoices: invoices.results || [], open_balance:openBalance, deliveries: deliveries.results || [], agreement: agreementRow || null });
   }
 
   if (parts[0] === 'client' && parts[1] === 'challenge' && method === 'POST') {

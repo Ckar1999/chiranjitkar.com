@@ -251,10 +251,8 @@
     const contractCode = agreement?.contract_code || (isCollab ? `CKP-TFP-${project.project_code}` : `CKP-AGR-${project.project_code}`);
     const estamp = agreement?.estamp_number || 'IN-DL22366535014840X';
     
-    $('#agreement-title').textContent = isCollab ? 'Master Unpaid / TFP Collaboration Agreement' : 'Master Photography Services Agreement';
-    $('#agreement-subtitle').textContent = isCollab
-      ? 'Official model collaboration & likeness release agreement with Delhi NCT ₹100 e-Stamp and UIDAI Aadhaar OTP digital execution.'
-      : 'Official paid photography service contract with Delhi NCT ₹100 e-Stamp, strict 20% advance / 80% post-shoot terms, and UIDAI Aadhaar OTP digital execution.';
+    $('#agreement-title').textContent = 'Master Photography & Creative Production Agreement';
+    $('#agreement-subtitle').textContent = 'Universal studio deed with Delhi NCT ₹100 e-Stamp and UIDAI Aadhaar OTP digital execution, governing both Paid Commissions & TFP Collaborations.';
 
     $('#agr-contract-id').textContent = contractCode;
     $('#agr-estamp-no').textContent = estamp;
@@ -262,8 +260,16 @@
 
     const badge = $('#agreement-status-badge');
     const signBtn = $('#agreement-sign-btn');
+    const termsBtn = $('#agreement-terms-btn');
     const downloadBtn = $('#agreement-download-btn');
     const msg = $('#agreement-message');
+
+    if (termsBtn) {
+      const currentKey = key || '';
+      termsBtn.href = currentKey 
+        ? `/agreements?key=${encodeURIComponent(currentKey)}` 
+        : `/agreements?code=${encodeURIComponent(project.project_code || '')}`;
+    }
 
     if (agreement && agreement.status === 'signed') {
       badge.textContent = '✓ Aadhaar eSigned';
