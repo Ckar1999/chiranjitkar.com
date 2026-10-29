@@ -7,6 +7,7 @@ function buildHtmlPdf(outputPath) {
   const logoB64 = fs.readFileSync(path.join(assetsDir, 'camera_logo.png')).toString('base64');
   const sigB64 = fs.readFileSync(path.join(assetsDir, 'signature.png')).toString('base64');
   const sealB64 = fs.readFileSync(path.join(assetsDir, 'verified_seal.png')).toString('base64');
+  const flourishB64 = fs.readFileSync(path.join(assetsDir, 'estamp_flourish.png')).toString('base64');
 
   const html = `<!DOCTYPE html>
 <html lang="en">
@@ -155,49 +156,84 @@ function buildHtmlPdf(outputPath) {
       background: #faf8f4;
       border: 1.1pt solid #c9a44e;
       border-radius: 4pt;
-      padding: 9pt 12pt;
-      margin-bottom: 11pt;
+      padding: 6pt 10pt 5pt;
+      margin-bottom: 9pt;
+      text-align: center;
     }
 
-    .estamp-header-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 0.6pt solid #e6dfd1;
-      padding-bottom: 4pt;
-      margin-bottom: 6pt;
+    .estamp-flourish {
+      width: 250px;
+      height: auto;
+      margin: 0 auto;
+      display: block;
+      opacity: 0.95;
     }
 
-    .estamp-headline {
+    .estamp-title-center {
+      font-family: 'Cinzel', serif;
+      font-size: 8.8pt;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      color: #0c0d12;
+      margin-top: 1pt;
+    }
+
+    .estamp-subtitle-center {
       font-family: 'Montserrat', sans-serif;
-      font-size: 8.2pt;
+      font-size: 7.2pt;
       font-weight: 700;
       letter-spacing: 0.08em;
       text-transform: uppercase;
-      color: #0c0d12;
-    }
-
-    .estamp-subhead {
-      font-family: 'Montserrat', sans-serif;
-      font-size: 7.2pt;
-      font-weight: 600;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
       color: #9e6b12;
+      margin-bottom: 3pt;
     }
 
-    .estamp-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 3pt 16pt;
+    .estamp-table {
+      width: 100%;
+      border-collapse: collapse;
       font-family: 'Montserrat', sans-serif;
-      font-size: 7pt;
-      color: #333;
+      font-size: 6.7pt;
+      line-height: 1.4;
+      text-align: left;
+      margin: 1pt 0;
     }
 
-    .estamp-grid div strong {
-      color: #111;
+    .estamp-table td {
+      padding: 1.2pt 2pt;
+      vertical-align: top;
+    }
+
+    .est-lbl {
+      color: #555555;
+      width: 22%;
+      white-space: nowrap;
+    }
+
+    .est-sep {
+      color: #888888;
+      width: 2%;
+      text-align: center;
+    }
+
+    .est-val {
+      color: #1a1b1f;
+      width: 26%;
+      word-break: break-word;
+    }
+
+    .est-val strong {
+      color: #0c0d12;
       font-weight: 600;
+    }
+
+    .estamp-footer-notice {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 6.2pt;
+      color: #666;
+      letter-spacing: 0.02em;
+      margin-top: 2.5pt;
+      border-top: 0.5pt solid #eae3d2;
+      padding-top: 2.5pt;
     }
 
     /* Deed Heading */
@@ -463,19 +499,65 @@ function buildHtmlPdf(outputPath) {
 
         <!-- Official e-Stamp Certificate Box -->
         <div class="estamp-card">
-          <div class="estamp-header-row">
-            <div class="estamp-headline">Government of National Capital Territory of Delhi</div>
-            <div class="estamp-subhead">Certificate of Stamp Duty · Non-Judicial e-Stamp (Article 5 Agreement)</div>
-          </div>
-          <div class="estamp-grid">
-            <div>Certificate No: <strong>IN-DL22366535014840X</strong></div>
-            <div>Duty Amount: <strong>Rs. 100.00 (One Hundred only)</strong></div>
-            <div>Unique Doc. Ref: <strong>SUBIN-DLDL75210370036032316761X</strong></div>
-            <div>Account Ref: <strong>IMPACC (IV)/ dl752103/ DELHI/ DL-ESD</strong></div>
-            <div>First Party: <strong>CHIRANJIT KAR</strong></div>
-            <div>Second Party: <strong>CLIENT OR COLLABORATOR</strong></div>
-            <div>Issue Date: <strong>29-Dec-2025</strong></div>
-            <div>Verification: <strong>StockHolding (SHCIL) Verified · Not Locked</strong></div>
+          <img src="data:image/png;base64,${flourishB64}" class="estamp-flourish" alt="Decorative Divider">
+          <div class="estamp-title-center">Government of National Capital Territory of Delhi</div>
+          <div class="estamp-subtitle-center">e-Stamp · Certificate of Stamp Duty · Non-Judicial</div>
+          
+          <table class="estamp-table">
+            <tr>
+              <td class="est-lbl">Certificate No.</td>
+              <td class="est-sep">:</td>
+              <td class="est-val"><strong>IN-DL22366535014840X</strong></td>
+              <td class="est-lbl">Certificate Issued Date</td>
+              <td class="est-sep">:</td>
+              <td class="est-val">29-Dec-2025 10:56 AM</td>
+            </tr>
+            <tr>
+              <td class="est-lbl">Account Reference</td>
+              <td class="est-sep">:</td>
+              <td class="est-val">IMPACC (IV)/ dl752103/ DELHI/ DL-ESD</td>
+              <td class="est-lbl">Unique Doc. Reference</td>
+              <td class="est-sep">:</td>
+              <td class="est-val"><strong>SUBIN-DLDL75210370036032316761X</strong></td>
+            </tr>
+            <tr>
+              <td class="est-lbl">Purchased by</td>
+              <td class="est-sep">:</td>
+              <td class="est-val"><strong>CHIRANJIT KAR</strong></td>
+              <td class="est-lbl">Description of Document</td>
+              <td class="est-sep">:</td>
+              <td class="est-val">Article 5 General Agreement</td>
+            </tr>
+            <tr>
+              <td class="est-lbl">Property Description</td>
+              <td class="est-sep">:</td>
+              <td class="est-val">Not Applicable</td>
+              <td class="est-lbl">Consideration Price (Rs.)</td>
+              <td class="est-sep">:</td>
+              <td class="est-val">0 (Zero)</td>
+            </tr>
+            <tr>
+              <td class="est-lbl">First Party</td>
+              <td class="est-sep">:</td>
+              <td class="est-val"><strong>CHIRANJIT KAR</strong></td>
+              <td class="est-lbl">Second Party</td>
+              <td class="est-sep">:</td>
+              <td class="est-val"><strong>CLIENT OR COLLABORATOR</strong></td>
+            </tr>
+            <tr>
+              <td class="est-lbl">Stamp Duty Paid By</td>
+              <td class="est-sep">:</td>
+              <td class="est-val"><strong>CHIRANJIT KAR</strong></td>
+              <td class="est-lbl">Stamp Duty Amount(Rs.)</td>
+              <td class="est-sep">:</td>
+              <td class="est-val"><strong>100 (One Hundred only)</strong></td>
+            </tr>
+          </table>
+
+          <img src="data:image/png;base64,${flourishB64}" class="estamp-flourish" alt="Decorative Divider">
+          
+          <div class="estamp-footer-notice">
+            StockHolding Base Certificate Verified · Status: <strong>Not Locked</strong> · Discrepancy email: estamping@stockholding.com
           </div>
         </div>
 
@@ -733,6 +815,13 @@ function buildHtmlPdf(outputPath) {
   console.log('Rendering luxury PDF with Chrome headless engine...');
   execSync(cmd);
   console.log(`Generated luxury Master Agreement PDF successfully: ${outputPath} (${fs.statSync(outputPath).size} bytes)`);
+
+  const dataJsPath = path.join(__dirname, '../functions/api/master_agreement_data.js');
+  if (fs.existsSync(path.dirname(dataJsPath))) {
+    const b64 = fs.readFileSync(outputPath).toString('base64');
+    fs.writeFileSync(dataJsPath, `export const MASTER_AGREEMENT_PDF_BASE64 = "${b64}";\n`);
+    console.log(`Updated ${dataJsPath} with new base64 payload (${b64.length} chars)`);
+  }
 }
 
 buildHtmlPdf(process.argv[2] || path.join(__dirname, '../Master_Photography_And_Creative_Production_Agreement.pdf'));
