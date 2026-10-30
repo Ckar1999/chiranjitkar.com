@@ -1397,7 +1397,7 @@ async function handle(request, env, route) {
     const settings = Object.fromEntries((settingsRows.results || []).map(r => [r.setting_key, r.setting_value]));
 
     const campaigns = await env.DB.prepare("SELECT * FROM foundation_campaigns WHERE status = 'active' ORDER BY created_at DESC").all().catch(() => ({ results: [] }));
-    const disbSum = await env.DB.prepare('SELECT COALESCE(SUM(amount), 0) AS total, COUNT(DISTINCT application_id) AS beneficiaries FROM foundation_disbursements').first().catch(() => ({ total: 0, beneficiaries: 0 }));
+    const disbSum = await env.DB.prepare('SELECT COALESCE(SUM(amount), 0) AS total, COUNT(DISTINCT application_id) AS beneficiaries FROM foundation_disbursements_v2').first().catch(() => ({ total: 0, beneficiaries: 0 }));
 
     return json({
       ok: true,
@@ -1418,118 +1418,157 @@ async function handle(request, env, route) {
     });
   }
 
-  // Public: Submit Student Assistance Application (Teacher/Headmaster verified)
-  if (parts[0] === 'foundation' && parts[1] === 'apply' && method === 'POST') {
-    const studentName = String(body.student_name || '').trim();
-    const classGrade = String(body.class_grade || '').trim();
-    const schoolName = String(body.school_name || '').trim();
-    const schoolAddress = String(body.school_address || '').trim();
-    const schoolDistrict = String(body.school_district || 'West Tripura').trim();
-    const schoolState = String(body.school_state || 'Tripura').trim();
-    const teacherName = String(body.teacher_name || '').trim();
-    const teacherDesignation = String(body.teacher_designation || '').trim();
-    const teacherPhone = String(body.teacher_phone || '').replace(/[^0-9]/g, '').slice(-10);
-    const teacherEmail = String(body.teacher_email || '').trim();
-    const rawAadhaar = String(body.student_aadhaar || '').replace(/[^0-9]/g, '');
-    const assistanceType = String(body.assistance_type || 'study_materials').trim();
-    const specificNeeds = String(body.specific_needs || '').trim();
-    const documentUrl = String(body.document_url || '').trim();
-    const documentName = String(body.document_name || 'School_Requisition_Certificate.pdf').trim();
-    const campaignId = String(body.campaign_id || '').trim();
+  // Helper: Standardize DOB format to DD/MM/YYYY
+  function standardizeDob(raw) {
+    if (!raw) return '';
+    let str = String(raw).trim();
+    if (str.includes('-')) {
+      const p = str.split('-');
+      if (p.length === 3) {
+        if (p[0].length === 4) return `${p[2].padStart(2,'0')}/${p[1].padStart(2,'0')}/${p[0]}`;
+        return `${p[0].padStart(2,'0')}/${p[1].padStart(2,'0')}/${p[2]}`;
+      }
+    }
+    return str;
+  }
 
-    if (!studentName || studentName.length < 2) return fail('Please enter the full legal name of the student.', 422);
-    if (!classGrade) return fail('Please specify the current class/grade of the student.', 422);
-    if (!schoolName || schoolName.length < 3) return fail('Please enter the official name of the school / educational institution.', 422);
-    if (!teacherName || teacherName.length < 2) return fail('Please enter the recommending teacher or headmaster’s full name.', 422);
-    if (!teacherDesignation) return fail('Please enter the teacher or headmaster’s designation.', 422);
-    if (!teacherPhone || teacherPhone.length < 10) return fail('Please provide a valid 10-digit mobile number for the recommending teacher / headmaster.', 422);
-    if (!rawAadhaar || rawAadhaar.length !== 12) return fail('Please provide a valid 12-digit Student Aadhaar Number. This is strictly required to ensure fair 1-package-per-month distribution.', 422);
-    if (!specificNeeds || specificNeeds.length < 10) return fail('Please describe the specific books, notebooks, or study materials required.', 422);
-    if (!documentUrl) return fail('Please upload the Requisition Letter bearing the official School Seal and Teacher / Headmaster signature.', 422);
+  // Student Profile Registration (One-time, permanent legal name & Aadhaar, with mandatory Aadhaar card upload)
+  if (parts[0] === 'foundation' && parts[1] === 'student' && parts[2] === 'register' && method === 'POST') {
+    const rawAadhaar = String(body.aadhaar || '').replace(/[^0-9]/g, '');
+    const legalName = String(body.legal_name || '').trim();
+    const dob = standardizeDob(body.dob);
+    const fatherName = String(body.father_guardian_name || '').trim();
+    const phone = String(body.guardian_phone || '').replace(/[^0-9]/g, '').slice(-10);
+    const email = String(body.email || '').trim();
+    const address = String(body.residential_address || '').trim();
+    const district = String(body.district || 'West Tripura').trim();
+    const state = String(body.state || 'Tripura').trim();
+    const pincode = String(body.pincode || '').replace(/[^0-9]/g, '');
+    const schoolName = String(body.current_school_name || '').trim();
+    const currentClass = String(body.current_class || '').trim();
+    const aadhaarImageUrl = String(body.aadhaar_image_url || '').trim();
+    const aadhaarImageName = String(body.aadhaar_image_name || 'Student_Aadhaar_Card.jpg').trim();
+
+    if (!rawAadhaar || rawAadhaar.length !== 12) return fail('Please provide a valid 12-digit Student Aadhaar Number.', 422);
+    if (!legalName || legalName.length < 3) return fail('Please enter the full legal name of the student as per Aadhaar/School records.', 422);
+    if (!dob || dob.length < 8) return fail('Please enter a valid Date of Birth in DD/MM/YYYY format.', 422);
+    if (!fatherName || fatherName.length < 2) return fail('Please enter the Father / Mother / Guardian’s full name.', 422);
+    if (!phone || phone.length < 10) return fail('Please provide a valid 10-digit contact mobile number.', 422);
+    if (!address || address.length < 8) return fail('Please provide the complete residential address (Village/Para, Post Office, PIN).', 422);
+    if (!pincode || pincode.length !== 6) return fail('Please enter a valid 6-digit postal PIN code.', 422);
+    if (!schoolName) return fail('Please enter the school currently enrolled in.', 422);
+    if (!currentClass) return fail('Please select the current class/grade of the student.', 422);
+    if (!aadhaarImageUrl) return fail('Please upload a clear photo or scanned PDF of the Student’s Aadhaar Card. The Foundation Desk verifies every account manually before granting aid.', 422);
 
     const aadhaarHash = await digest(`fnd_aadhaar_salt:${rawAadhaar}`);
     const aadhaarLast4 = rawAadhaar.slice(-4);
-    const currentMonth = new Date().toISOString().slice(0, 7); // Format: YYYY-MM
+    const formattedAadhaar = `${rawAadhaar.slice(0,4)} ${rawAadhaar.slice(4,8)} ${rawAadhaar.slice(8,12)}`;
 
-    // Anti-Scam Guard: Check 1 application per Aadhaar per calendar month
-    const existing = await env.DB.prepare('SELECT id, application_code, created_at, status FROM foundation_applications WHERE student_aadhaar_hash=? AND application_month=?').bind(aadhaarHash, currentMonth).first().catch(() => null);
+    // Check if student profile already registered
+    const existing = await env.DB.prepare('SELECT id, legal_name, aadhaar_last4, dob, verification_status FROM foundation_students WHERE aadhaar_hash=?').bind(aadhaarHash).first().catch(() => null);
     if (existing) {
-      return fail(`An educational assistance application for Student Aadhaar Ending In XXXX-XXXX-${aadhaarLast4} has already been registered in ${currentMonth} (Ref: ${existing.application_code}, Status: ${existing.status}). Under our Foundation Charter, to ensure fair distribution across all underprivileged children, each student may submit only 1 aid application per calendar month. If there is an urgent school emergency, please contact the foundation desk directly at +91 9402369889.`, 409);
+      return json({
+        ok: true,
+        already_registered: true,
+        student_id: existing.id,
+        legal_name: existing.legal_name,
+        aadhaar_last4: existing.aadhaar_last4,
+        verification_status: existing.verification_status,
+        message: `A permanent student profile already exists under the legal name "${existing.legal_name}" (Aadhaar: XXXX-XXXX-${existing.aadhaar_last4}). Student Legal Name and Aadhaar are permanent and immutable. You can log in directly using your Date of Birth.`
+      });
     }
 
-    // Auto-resolve campaign if not provided
-    let activeCampaignId = campaignId;
-    if (!activeCampaignId) {
-      const activeCamp = await env.DB.prepare("SELECT id FROM foundation_campaigns WHERE status='active' ORDER BY created_at DESC LIMIT 1").first().catch(() => null);
-      activeCampaignId = activeCamp?.id || null;
-    }
-
-    // Clean and standardize DOB (e.g. 10/10/1999 or 1999-10-10)
-    let cleanDob = String(body.student_dob || '').trim();
-    if (cleanDob.includes('-')) {
-      const p = cleanDob.split('-');
-      if (p.length === 3 && p[0].length === 4) cleanDob = `${p[2].padStart(2,'0')}/${p[1].padStart(2,'0')}/${p[0]}`;
-    }
-
-    const appId = id();
-    const appCode = `CKF-${currentMonth.replace('-', '')}-${Math.floor(1000 + Math.random() * 9000)}`;
+    const studentId = id();
     const timestamp = now();
 
     await env.DB.prepare(`
-      INSERT INTO foundation_applications (
-        id, application_code, campaign_id, student_name, student_aadhaar_hash, student_aadhaar_last4,
-        student_dob, student_gender, class_grade, school_name, school_address, school_district, school_state,
-        teacher_name, teacher_designation, teacher_phone, teacher_email, assistance_type, specific_needs,
-        document_url, document_name, status, application_month, created_at, updated_at
+      INSERT INTO foundation_students (
+        id, aadhaar_hash, aadhaar_number, aadhaar_last4, legal_name, dob, gender,
+        father_guardian_name, guardian_phone, email, residential_address,
+        district, state, pincode, current_school_name, current_class,
+        annual_family_income, aadhaar_image_url, aadhaar_image_name, verification_status,
+        created_at, updated_at
       ) VALUES (
-        ?, ?, ?, ?, ?, ?,
         ?, ?, ?, ?, ?, ?, ?,
-        ?, ?, ?, ?, ?, ?,
-        ?, ?, 'pending_review', ?, ?, ?
+        ?, ?, ?, ?,
+        ?, ?, ?, ?, ?,
+        ?, ?, ?, 'pending_verification',
+        ?, ?
       )
     `).bind(
-      appId, appCode, activeCampaignId, studentName, aadhaarHash, aadhaarLast4,
-      cleanDob || null, body.student_gender || null, classGrade, schoolName, schoolAddress, schoolDistrict, schoolState,
-      teacherName, teacherDesignation, teacherPhone, teacherEmail || null, assistanceType, specificNeeds,
-      documentUrl, documentName, currentMonth, timestamp, timestamp
+      studentId, aadhaarHash, formattedAadhaar, aadhaarLast4, legalName, dob, body.gender || 'Not specified',
+      fatherName, phone, email || null, address,
+      district, state, pincode, schoolName, currentClass,
+      body.annual_family_income || null, aadhaarImageUrl, aadhaarImageName,
+      timestamp, timestamp
     ).run();
 
     return json({
       ok: true,
-      application_code: appCode,
-      student_aadhaar_last4: aadhaarLast4,
+      already_registered: false,
+      student_id: studentId,
+      legal_name: legalName,
+      aadhaar_last4: aadhaarLast4,
+      verification_status: 'pending_verification',
       login_credentials: {
-        account_id: `Aadhaar (XXXX-XXXX-${aadhaarLast4})`,
-        password_hint: 'Date of Birth (DD/MM/YYYY)'
+        account_id: formattedAadhaar,
+        password: dob
       },
-      message: 'Educational aid application submitted successfully. An account has been created using your Aadhaar Number and Date of Birth for live tracking.'
+      message: 'Student account created successfully! The Foundation Desk will manually verify your Aadhaar Card against official records before approving campaign aid.'
     });
   }
 
-  // Student / Teacher Portal: Login & Live Application Tracking
-  // Account = Aadhaar Number | Password = Date of Birth (DD/MM/YYYY)
+  // Student Login & Live Profile / Tracking Dashboard
+  // User ID: 12-digit Aadhaar Number | Password: Date of Birth (DD/MM/YYYY)
   if (parts[0] === 'foundation' && parts[1] === 'student' && parts[2] === 'login' && method === 'POST') {
     const rawAadhaar = String(body.aadhaar || '').replace(/[^0-9]/g, '');
-    let rawDob = String(body.dob || '').trim();
+    const rawDob = standardizeDob(body.dob);
 
-    if (!rawAadhaar || rawAadhaar.length !== 12) {
-      return fail('Please enter your 12-digit Student Aadhaar Number.', 422);
-    }
-    if (!rawDob) {
-      return fail('Please enter your Date of Birth (DD/MM/YYYY).', 422);
-    }
+    if (!rawAadhaar || rawAadhaar.length !== 12) return fail('Please enter your 12-digit Student Aadhaar Number.', 422);
+    if (!rawDob) return fail('Please enter your Date of Birth in DD/MM/YYYY format.', 422);
 
-    // Standardize DOB format to DD/MM/YYYY
-    if (rawDob.includes('-')) {
-      const parts = rawDob.split('-');
-      if (parts.length === 3) {
-        if (parts[0].length === 4) rawDob = `${parts[2].padStart(2,'0')}/${parts[1].padStart(2,'0')}/${parts[0]}`;
-        else rawDob = `${parts[0].padStart(2,'0')}/${parts[1].padStart(2,'0')}/${parts[2]}`;
+    const aadhaarHash = await digest(`fnd_aadhaar_salt:${rawAadhaar}`);
+    let student = await env.DB.prepare('SELECT * FROM foundation_students WHERE aadhaar_hash=?').bind(aadhaarHash).first().catch(() => null);
+
+    if (!student) {
+      // Fallback check against applications v1 if registered earlier
+      const appV1 = await env.DB.prepare('SELECT * FROM foundation_applications WHERE student_aadhaar_hash=? ORDER BY created_at DESC LIMIT 1').bind(aadhaarHash).first().catch(() => null);
+      if (appV1) {
+        student = {
+          id: appV1.id,
+          legal_name: appV1.student_name,
+          aadhaar_last4: appV1.student_aadhaar_last4,
+          dob: standardizeDob(appV1.student_dob),
+          father_guardian_name: 'Guardian',
+          guardian_phone: appV1.teacher_phone,
+          residential_address: appV1.school_address,
+          district: appV1.school_district,
+          state: appV1.school_state,
+          pincode: '799001',
+          current_school_name: appV1.school_name,
+          current_class: appV1.class_grade
+        };
       }
     }
 
-    const aadhaarHash = await digest(`fnd_aadhaar_salt:${rawAadhaar}`);
-    const apps = await env.DB.prepare(`
+    if (!student) {
+      return fail('No foundation student account found for this Aadhaar Number. Please create a student account below.', 404);
+    }
+
+    if (standardizeDob(student.dob) !== rawDob) {
+      return fail('Incorrect Date of Birth for this student account. Please enter the exact DOB submitted on your profile (DD/MM/YYYY).', 401);
+    }
+
+    // Fetch student applications from v2 (and v1)
+    const appsV2 = await env.DB.prepare(`
+      SELECT a.*, c.title AS campaign_title, c.kit_summary AS campaign_kit 
+      FROM foundation_applications_v2 a 
+      LEFT JOIN foundation_campaigns c ON c.id = a.campaign_id 
+      WHERE a.student_id=? 
+      ORDER BY a.created_at DESC
+    `).bind(student.id).all().catch(() => ({ results: [] }));
+
+    const appsV1 = await env.DB.prepare(`
       SELECT a.*, c.title AS campaign_title, c.kit_summary AS campaign_kit 
       FROM foundation_applications a 
       LEFT JOIN foundation_campaigns c ON c.id = a.campaign_id 
@@ -1537,58 +1576,171 @@ async function handle(request, env, route) {
       ORDER BY a.created_at DESC
     `).bind(aadhaarHash).all().catch(() => ({ results: [] }));
 
-    const list = apps.results || [];
-    if (!list.length) {
-      return fail('No aid application found matching this Aadhaar Number. Please submit an application or verify the digits.', 404);
-    }
+    const combinedApps = [...(appsV2.results || []), ...(appsV1.results || [])];
+    const appliedCampaignIds = new Set(combinedApps.map(a => a.campaign_id));
 
-    // Verify Date of Birth against registered records
-    const matched = list.some(app => {
-      if (!app.student_dob) return true; // if dob wasn't strictly entered
-      let dbDob = String(app.student_dob).trim();
-      if (dbDob.includes('-')) {
-        const p = dbDob.split('-');
-        if (p[0].length === 4) dbDob = `${p[2].padStart(2,'0')}/${p[1].padStart(2,'0')}/${p[0]}`;
-      }
-      return dbDob === rawDob;
-    });
+    // Fetch student academic performance tracking records
+    const acadRecords = await env.DB.prepare(`
+      SELECT * FROM foundation_academic_records 
+      WHERE student_id=? 
+      ORDER BY created_at DESC
+    `).bind(student.id).all().catch(() => ({ results: [] }));
 
-    if (!matched) {
-      return fail('Incorrect Date of Birth for this Aadhaar Number. Please enter the exact DOB submitted on the application (DD/MM/YYYY).', 401);
-    }
+    // Fetch active campaigns and mark if student already applied
+    const campaigns = await env.DB.prepare("SELECT * FROM foundation_campaigns WHERE status='active' ORDER BY created_at DESC").all().catch(() => ({ results: [] }));
+    const campaignList = (campaigns.results || []).map(c => ({
+      ...c,
+      already_applied: appliedCampaignIds.has(c.id),
+      user_application: combinedApps.find(a => a.campaign_id === c.id) || null
+    }));
 
-    const primary = list[0];
     return json({
       ok: true,
       student: {
-        name: primary.student_name,
-        aadhaar_last4: primary.student_aadhaar_last4,
-        dob: primary.student_dob,
-        school_name: primary.school_name,
-        district: primary.school_district,
-        state: primary.school_state
+        id: student.id,
+        legal_name: student.legal_name,
+        aadhaar_last4: student.aadhaar_last4,
+        dob: student.dob,
+        father_guardian_name: student.father_guardian_name,
+        guardian_phone: student.guardian_phone,
+        email: student.email,
+        residential_address: student.residential_address,
+        district: student.district,
+        state: student.state,
+        pincode: student.pincode,
+        current_school_name: student.current_school_name,
+        current_class: student.current_class,
+        verification_status: student.verification_status || 'pending_verification',
+        academic_standing: student.academic_standing || 'eligible',
+        academic_standing_notes: student.academic_standing_notes || null
       },
-      applications: list.map(a => ({
-        id: a.id,
-        application_code: a.application_code,
-        campaign_title: a.campaign_title || 'Direct Educational Assistance',
-        kit_summary: a.campaign_kit || a.specific_needs,
-        status: a.status,
-        class_grade: a.class_grade,
-        assistance_type: a.assistance_type,
-        specific_needs: a.specific_needs,
-        shipping_carrier: a.shipping_carrier || 'India Post',
-        tracking_number: a.tracking_number || null,
-        shipped_at: a.shipped_at || null,
-        delivered_at: a.delivered_at || null,
-        created_at: a.created_at,
-        updated_at: a.updated_at,
-        teacher_name: a.teacher_name,
-        teacher_designation: a.teacher_designation,
-        document_name: a.document_name,
-        rejection_reason: a.rejection_reason,
-        review_notes: a.review_notes
-      }))
+      applications: combinedApps,
+      academic_records: acadRecords.results || [],
+      active_campaigns: campaignList
+    });
+  }
+
+  // Student: Submit Terminal Exam Report Card / Academic Performance Record
+  if (parts[0] === 'foundation' && parts[1] === 'student' && parts[2] === 'academic-record' && method === 'POST') {
+    const rawAadhaar = String(body.aadhaar || '').replace(/[^0-9]/g, '');
+    const rawDob = standardizeDob(body.dob);
+    const examTerm = String(body.exam_term || '').trim();
+    const percentage = parseFloat(body.percentage) || 0;
+    const grade = String(body.grade || '').trim();
+    const marksheetUrl = String(body.marksheet_url || '').trim();
+    const marksheetName = String(body.marksheet_name || 'Term_Marksheet.jpg').trim();
+    const teacherRemarks = String(body.teacher_remarks || '').trim();
+
+    if (!rawAadhaar || rawAadhaar.length !== 12) return fail('Valid 12-digit Aadhaar Number is required.', 422);
+    if (!rawDob) return fail('Valid Date of Birth is required.', 422);
+    if (!examTerm) return fail('Please specify the examination term (e.g. Unit Test, Half-Yearly, Annual Exam).', 422);
+    if (!marksheetUrl) return fail('Please upload a clear photo or PDF scan of your Terminal Marksheet / Report Card.', 422);
+
+    const aadhaarHash = await digest(`fnd_aadhaar_salt:${rawAadhaar}`);
+    const student = await env.DB.prepare('SELECT * FROM foundation_students WHERE aadhaar_hash=?').bind(aadhaarHash).first().catch(() => null);
+    if (!student) return fail('Student account not found.', 404);
+    if (standardizeDob(student.dob) !== rawDob) return fail('Incorrect credentials.', 401);
+
+    const recordId = id();
+    const timestamp = now();
+    const academicYear = body.academic_year || '2026-2027';
+
+    await env.DB.prepare(`
+      INSERT INTO foundation_academic_records (
+        id, student_id, academic_year, exam_term, percentage, grade,
+        marksheet_url, marksheet_name, teacher_remarks, performance_rating,
+        created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+      recordId, student.id, academicYear, examTerm, percentage, grade || null,
+      marksheetUrl, marksheetName, teacherRemarks || null,
+      percentage >= 75 ? 'exemplary' : percentage >= 50 ? 'good' : percentage >= 35 ? 'satisfactory' : 'poor',
+      timestamp
+    ).run();
+
+    return json({
+      ok: true,
+      record_id: recordId,
+      message: 'Academic performance record and marksheet submitted successfully! The Foundation Desk will review your progress to maintain scholarship status.'
+    });
+  }
+
+  // Submit Application for an Active Campaign (Enforces 1 Application Per Campaign)
+  if (parts[0] === 'foundation' && parts[1] === 'student' && parts[2] === 'apply-campaign' && method === 'POST') {
+    const rawAadhaar = String(body.aadhaar || '').replace(/[^0-9]/g, '');
+    const rawDob = standardizeDob(body.dob);
+    const campaignId = String(body.campaign_id || '').trim();
+    const documentUrl = String(body.document_url || '').trim();
+    const documentName = String(body.document_name || 'School_Requisition_Certificate.pdf').trim();
+    const specificNeeds = String(body.specific_needs || '').trim();
+    const assistanceType = String(body.assistance_type || 'study_materials').trim();
+    const teacherName = String(body.teacher_name || '').trim();
+    const teacherDesignation = String(body.teacher_designation || '').trim();
+    const teacherPhone = String(body.teacher_phone || '').replace(/[^0-9]/g, '').slice(-10);
+    const teacherEmail = String(body.teacher_email || '').trim();
+
+    if (!rawAadhaar || rawAadhaar.length !== 12) return fail('Valid 12-digit Aadhaar Number is required.', 422);
+    if (!rawDob) return fail('Valid Date of Birth is required.', 422);
+    if (!campaignId) return fail('Please select an active campaign to apply for.', 422);
+    if (!teacherName || !teacherPhone || teacherPhone.length < 10) return fail('Recommending teacher name and 10-digit mobile number are required.', 422);
+    if (!specificNeeds || specificNeeds.length < 10) return fail('Please detail the specific textbooks and study materials requested.', 422);
+    if (!documentUrl) return fail('Please attach the official Requisition Document bearing the School Rubber Stamp and Teacher/Headmaster signature.', 422);
+
+    const aadhaarHash = await digest(`fnd_aadhaar_salt:${rawAadhaar}`);
+    const student = await env.DB.prepare('SELECT * FROM foundation_students WHERE aadhaar_hash=?').bind(aadhaarHash).first().catch(() => null);
+    if (!student) return fail('Student account not found. Please create your profile first.', 404);
+    if (standardizeDob(student.dob) !== rawDob) return fail('Incorrect Date of Birth credentials.', 401);
+
+    if (student.verification_status !== 'verified') {
+      return fail('Your student account is currently under manual Aadhaar document verification by the Foundation desk. The administrator will inspect your uploaded Aadhaar card to verify legal name and DOB before campaign aid can be granted. Please check back shortly.', 403);
+    }
+
+    if (student.academic_standing === 'ineligible_poor_performance') {
+      return fail(`Application restricted: Student account is currently flagged under Academic Review (${student.academic_standing_notes || 'Poor terminal exam performance'}). The Foundation requires students to demonstrate active effort and academic dedication to remain eligible for subsequent aid campaigns. Please contact your Headmaster or submit your updated term marksheet in the Student Dashboard for review.`, 403);
+    }
+
+    const campaign = await env.DB.prepare('SELECT * FROM foundation_campaigns WHERE id=?').bind(campaignId).first().catch(() => null);
+    if (!campaign) return fail('Campaign drive not found.', 404);
+    if (campaign.status !== 'active') return fail('This campaign drive is currently closed or paused by the administrator.', 409);
+
+    // ANTI-DUPLICATE GUARD: Check if already applied for THIS campaign
+    const existingApp = await env.DB.prepare('SELECT id, application_code, status, created_at FROM foundation_applications_v2 WHERE student_id=? AND campaign_id=?').bind(student.id, campaign.id).first().catch(() => null);
+    if (existingApp) {
+      return fail(`You have already submitted an application for "${campaign.title}" (Ref: ${existingApp.application_code}, Status: ${existingApp.status}). Under our Foundation Charter, each student is eligible to receive aid only ONCE per campaign drive to prevent duplicate allocations. You can track your existing parcel dispatch above.`, 409);
+    }
+
+    const appId = id();
+    const currentYearMonth = new Date().toISOString().slice(0, 7).replace('-', '');
+    const appCode = `CKF-${currentYearMonth}-${Math.floor(1000 + Math.random() * 9000)}`;
+    const timestamp = now();
+
+    await env.DB.prepare(`
+      INSERT INTO foundation_applications_v2 (
+        id, application_code, student_id, campaign_id, academic_year,
+        class_grade, school_name, school_address, school_district, school_state,
+        teacher_name, teacher_designation, teacher_phone, teacher_email,
+        assistance_type, specific_needs, document_url, document_name,
+        status, created_at, updated_at
+      ) VALUES (
+        ?, ?, ?, ?, '2026-2027',
+        ?, ?, ?, ?, ?,
+        ?, ?, ?, ?,
+        ?, ?, ?, ?,
+        'pending_review', ?, ?
+      )
+    `).bind(
+      appId, appCode, student.id, campaign.id,
+      body.class_grade || student.current_class, body.school_name || student.current_school_name,
+      body.school_address || student.residential_address, student.district, student.state,
+      teacherName, teacherDesignation || 'Teacher In-Charge', teacherPhone, teacherEmail || null,
+      assistanceType, specificNeeds, documentUrl, documentName,
+      timestamp, timestamp
+    ).run();
+
+    return json({
+      ok: true,
+      application_code: appCode,
+      message: `Your application for "${campaign.title}" has been registered successfully! The Foundation Desk will verify the school credentials and contact your teacher.`
     });
   }
 
@@ -1601,20 +1753,55 @@ async function handle(request, env, route) {
     const settings = Object.fromEntries((settingsRows.results || []).map(r => [r.setting_key, r.setting_value]));
 
     const annualBudget = parseInt(settings.annual_budget || '500000', 10);
-    const disbRow = await env.DB.prepare('SELECT COALESCE(SUM(amount), 0) AS total, COUNT(*) AS count FROM foundation_disbursements').first().catch(() => ({ total: 0, count: 0 }));
+    const disbRow = await env.DB.prepare('SELECT COALESCE(SUM(amount), 0) AS total, COUNT(*) AS count FROM foundation_disbursements_v2').first().catch(() => ({ total: 0, count: 0 }));
     const totalDisbursed = Number(disbRow?.total || 0);
     const remainingBudget = Math.max(0, annualBudget - totalDisbursed);
 
-    const counts = await env.DB.prepare('SELECT status, COUNT(*) AS count FROM foundation_applications GROUP BY status').all().catch(() => ({ results: [] }));
+    const counts = await env.DB.prepare('SELECT status, COUNT(*) AS count FROM foundation_applications_v2 GROUP BY status').all().catch(() => ({ results: [] }));
     const statusCounts = Object.fromEntries((counts.results || []).map(r => [r.status, r.count]));
 
     const campaigns = await env.DB.prepare('SELECT * FROM foundation_campaigns ORDER BY created_at DESC').all().catch(() => ({ results: [] }));
-    const applications = await env.DB.prepare('SELECT id, application_code, campaign_id, student_name, student_aadhaar_last4, class_grade, school_name, school_district, school_state, teacher_name, teacher_designation, teacher_phone, teacher_email, assistance_type, specific_needs, document_url, document_name, status, rejection_reason, review_notes, application_month, created_at, updated_at FROM foundation_applications ORDER BY created_at DESC LIMIT 50').all().catch(() => ({ results: [] }));
+    
+    // Fetch applications with joined student profile details
+    const applications = await env.DB.prepare(`
+      SELECT 
+        a.id, a.application_code, a.campaign_id, a.class_grade, a.school_name, a.school_district, a.school_state,
+        a.teacher_name, a.teacher_designation, a.teacher_phone, a.teacher_email, a.assistance_type, a.specific_needs,
+        a.document_url, a.document_name, a.shipping_carrier, a.tracking_number, a.status, a.rejection_reason,
+        a.review_notes, a.created_at, a.updated_at,
+        s.legal_name AS student_name, s.aadhaar_last4 AS student_aadhaar_last4, s.father_guardian_name, s.guardian_phone,
+        s.residential_address, s.dob AS student_dob
+      FROM foundation_applications_v2 a
+      JOIN foundation_students s ON s.id = a.student_id
+      ORDER BY a.created_at DESC LIMIT 50
+    `).all().catch(() => ({ results: [] }));
+
     const disbursements = await env.DB.prepare(`
-      SELECT d.*, a.student_name, a.school_name, a.application_code 
-      FROM foundation_disbursements d 
-      JOIN foundation_applications a ON a.id = d.application_id 
+      SELECT d.*, COALESCE(s.legal_name, 'Student') AS student_name, a.school_name, a.application_code 
+      FROM foundation_disbursements_v2 d 
+      LEFT JOIN foundation_applications_v2 a ON a.id = d.application_id 
+      LEFT JOIN foundation_students s ON s.id = a.student_id
       ORDER BY d.created_at DESC LIMIT 50
+    `).all().catch(() => ({ results: [] }));
+
+    const students = await env.DB.prepare(`
+      SELECT 
+        id, legal_name, aadhaar_number, aadhaar_last4, dob, gender,
+        father_guardian_name, guardian_phone, email, residential_address,
+        district, state, pincode, current_school_name, current_class,
+        annual_family_income, aadhaar_image_url, aadhaar_image_name,
+        verification_status, verified_by, verified_at, verification_notes,
+        academic_standing, academic_standing_notes,
+        created_at, updated_at
+      FROM foundation_students
+      ORDER BY created_at DESC LIMIT 50
+    `).all().catch(() => ({ results: [] }));
+
+    const acadRecords = await env.DB.prepare(`
+      SELECT r.*, s.legal_name AS student_name, s.current_class 
+      FROM foundation_academic_records r
+      JOIN foundation_students s ON s.id = r.student_id
+      ORDER BY r.created_at DESC LIMIT 50
     `).all().catch(() => ({ results: [] }));
 
     return json({
@@ -1632,11 +1819,37 @@ async function handle(request, env, route) {
         verified: statusCounts.verified || 0,
         approved: statusCounts.approved || 0,
         disbursed: statusCounts.disbursed || 0,
-        rejected: statusCounts.rejected || 0
+        rejected: statusCounts.rejected || 0,
+        students_pending_verification: (students.results || []).filter(s => s.verification_status === 'pending_verification').length
       },
       campaigns: campaigns.results || [],
       applications: applications.results || [],
+      students: students.results || [],
+      academic_records: acadRecords.results || [],
       disbursements: disbursements.results || []
+    });
+  }
+
+  // Admin: Manually Verify or Reject Student Profile & Aadhaar Image
+  if (parts[0] === 'foundation' && parts[1] === 'admin' && parts[2] === 'students' && parts[3] && parts[4] === 'verify' && method === 'POST') {
+    const auth = await requireStaff(request, env, ['admin']);
+    if (auth.response) return auth.response;
+
+    const studentId = parts[3];
+    const newStatus = body.status === 'rejected' ? 'rejected' : 'verified';
+    const notes = String(body.notes || '').trim();
+    const timestamp = now();
+
+    await env.DB.prepare(`
+      UPDATE foundation_students 
+      SET verification_status=?, verification_notes=?, verified_by=?, verified_at=?, updated_at=?
+      WHERE id=?
+    `).bind(newStatus, notes, auth.staff.name, timestamp, timestamp, studentId).run();
+
+    return json({
+      ok: true,
+      status: newStatus,
+      message: `Student account manually ${newStatus === 'verified' ? 'verified & approved' : 'rejected'}.`
     });
   }
 
@@ -1697,10 +1910,16 @@ async function handle(request, env, route) {
     const timestamp = now();
 
     await env.DB.prepare(`
+      UPDATE foundation_applications_v2 
+      SET status=?, review_notes=?, rejection_reason=?, reviewed_by=?, reviewed_at=?, updated_at=?
+      WHERE id=?
+    `).bind(newStatus, reviewNotes, rejectionReason, auth.staff.name, timestamp, timestamp, applicationId).run().catch(() => {});
+
+    await env.DB.prepare(`
       UPDATE foundation_applications 
       SET status=?, review_notes=?, rejection_reason=?, reviewed_by=?, reviewed_at=?, updated_at=?
       WHERE id=?
-    `).bind(newStatus, reviewNotes, rejectionReason, auth.staff.name, timestamp, timestamp, applicationId).run();
+    `).bind(newStatus, reviewNotes, rejectionReason, auth.staff.name, timestamp, timestamp, applicationId).run().catch(() => {});
 
     return json({ ok: true, status: newStatus, message: `Application updated to ${newStatus}.` });
   }
@@ -1721,10 +1940,16 @@ async function handle(request, env, route) {
     if (!trackingNumber) return fail('Tracking Consignment Number / Waybill is required.', 422);
 
     await env.DB.prepare(`
+      UPDATE foundation_applications_v2 
+      SET shipping_carrier=?, tracking_number=?, shipped_at=?, delivered_at=COALESCE(?, delivered_at), status=?, updated_at=?
+      WHERE id=?
+    `).bind(shippingCarrier, trackingNumber, shippedAt, deliveredAt, newStatus, timestamp, applicationId).run().catch(() => {});
+
+    await env.DB.prepare(`
       UPDATE foundation_applications 
       SET shipping_carrier=?, tracking_number=?, shipped_at=?, delivered_at=COALESCE(?, delivered_at), status=?, updated_at=?
       WHERE id=?
-    `).bind(shippingCarrier, trackingNumber, shippedAt, deliveredAt, newStatus, timestamp, applicationId).run();
+    `).bind(shippingCarrier, trackingNumber, shippedAt, deliveredAt, newStatus, timestamp, applicationId).run().catch(() => {});
 
     return json({
       ok: true,
@@ -1752,7 +1977,16 @@ async function handle(request, env, route) {
     if (!itemSummary) return fail('Summary of items purchased is required.', 422);
     if (isNaN(amount) || amount <= 0) return fail('Valid invoice amount in INR is required.', 422);
 
-    const app = await env.DB.prepare('SELECT id, application_code, student_name FROM foundation_applications WHERE id=?').bind(applicationId).first();
+    let app = await env.DB.prepare(`
+      SELECT a.id, a.application_code, s.legal_name AS student_name 
+      FROM foundation_applications_v2 a 
+      JOIN foundation_students s ON s.id = a.student_id 
+      WHERE a.id=?
+    `).bind(applicationId).first().catch(() => null);
+
+    if (!app) {
+      app = await env.DB.prepare('SELECT id, application_code, student_name FROM foundation_applications WHERE id=?').bind(applicationId).first().catch(() => null);
+    }
     if (!app) return fail('Application not found.', 404);
 
     const disbId = id();
@@ -1760,7 +1994,7 @@ async function handle(request, env, route) {
     const timestamp = now();
 
     await env.DB.prepare(`
-      INSERT INTO foundation_disbursements (
+      INSERT INTO foundation_disbursements_v2 (
         id, application_id, bill_code, vendor_name, item_summary, amount, bill_date, bill_receipt_url, created_by, created_at
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
@@ -1768,12 +2002,13 @@ async function handle(request, env, route) {
     ).run();
 
     // Mark application as disbursed
-    await env.DB.prepare("UPDATE foundation_applications SET status='disbursed', updated_at=? WHERE id=?").bind(timestamp, applicationId).run();
+    await env.DB.prepare("UPDATE foundation_applications_v2 SET status='disbursed', updated_at=? WHERE id=?").bind(timestamp, applicationId).run().catch(() => {});
+    await env.DB.prepare("UPDATE foundation_applications SET status='disbursed', updated_at=? WHERE id=?").bind(timestamp, applicationId).run().catch(() => {});
 
     // Fetch updated budget metrics
-    const settingsRows = await env.DB.prepare('SELECT setting_value FROM foundation_settings WHERE setting_key="annual_budget"').first();
+    const settingsRows = await env.DB.prepare('SELECT setting_value FROM foundation_settings WHERE setting_key="annual_budget"').first().catch(() => null);
     const annualBudget = parseInt(settingsRows?.setting_value || '500000', 10);
-    const disbSum = await env.DB.prepare('SELECT COALESCE(SUM(amount), 0) AS total FROM foundation_disbursements').first();
+    const disbSum = await env.DB.prepare('SELECT COALESCE(SUM(amount), 0) AS total FROM foundation_disbursements_v2').first().catch(() => null);
     const totalDisbursed = Number(disbSum?.total || 0);
     const remainingBudget = Math.max(0, annualBudget - totalDisbursed);
 
@@ -1783,6 +2018,116 @@ async function handle(request, env, route) {
       total_disbursed: totalDisbursed,
       remaining_budget: remainingBudget,
       message: `Disbursement bill ${billCode} of ₹${amount.toLocaleString('en-IN')} recorded and deducted from annual budget.`
+    });
+  }
+
+  // Admin: Generate / Fetch Official Acceptance & Intimation Letter to School Headmaster
+  if (parts[0] === 'foundation' && parts[1] === 'admin' && parts[2] === 'applications' && parts[3] && parts[4] === 'generate-letter' && method === 'POST') {
+    const auth = await requireStaff(request, env, ['admin']);
+    if (auth.response) return auth.response;
+
+    const applicationId = parts[3];
+    let app = await env.DB.prepare(`
+      SELECT a.*, s.legal_name AS student_name, s.aadhaar_last4, s.dob AS student_dob, s.father_guardian_name, s.guardian_phone, s.residential_address
+      FROM foundation_applications_v2 a
+      JOIN foundation_students s ON s.id = a.student_id
+      WHERE a.id=?
+    `).bind(applicationId).first().catch(() => null);
+
+    if (!app) {
+      app = await env.DB.prepare('SELECT * FROM foundation_applications WHERE id=?').bind(applicationId).first().catch(() => null);
+    }
+    if (!app) return fail('Application not found.', 404);
+
+    const timestamp = now();
+    let letter = await env.DB.prepare('SELECT * FROM foundation_school_letters WHERE application_id=?').bind(applicationId).first().catch(() => null);
+
+    if (!letter) {
+      const letterId = id();
+      const letterCode = `CKF-LTR-${new Date().toISOString().slice(0, 7).replace('-', '')}-${Math.floor(1000 + Math.random() * 9000)}`;
+      const letterContent = `OFFICIAL INTIMATION OF SCHOLARSHIP & STUDY MATERIAL ASSISTANCE APPROVAL\n\nTo:\nThe Respected Headmaster / Teacher In-Charge\n${app.school_name}\n${app.school_address || app.school_district}, ${app.school_state || 'Tripura'}\n\nSubject: Official Intimation of Educational Aid Approval for Student: ${app.student_name} (Class: ${app.class_grade})\n\nRespected Sir / Madam,\n\nGreetings from the Chiranjit Kar Foundation. First and foremost, we offer our deepest respect and sincere gratitude to you and your esteemed teaching faculty for your noble service in educating the children of our society.\n\nFollowing your formal recommendation and official school seal certification, we are pleased to inform you that the application of your student, ${app.student_name} (Aadhaar: XXXX-XXXX-${app.aadhaar_last4 || 'XXXX'}), has been APPROVED under our Foundation Educational Aid Initiative.\n\nApproved Assistance Scope:\n- Tailored educational materials / books / uniform: ${app.specific_needs || 'Standard Syllabus Books, Exercise Registers & Exam Kits'}\n\nDISPATCH & HANDOVER PROTOCOL:\n1. The study materials package is being prepared and will be delivered directly to your school address via India Post Speed Post.\n2. We humbly request the Headmaster or Teacher In-Charge to personally receive the consignment and formally hand it over to ${app.student_name} in person.\n3. We have also formally alerted the student's parents / guardian (${app.father_guardian_name || 'Guardian'}, Phone: ${app.guardian_phone || 'Registered Phone'}) regarding this dispatch.\n\nCONTINUOUS ACADEMIC MONITORING:\nAs part of our Foundation Charter, we kindly request your faculty to continuously track ${app.student_name}'s academic progress, exam results, and school attendance. Satisfactory academic dedication is required for the child to remain eligible for subsequent aid campaigns.\n\nThank you for partnering with us to keep deserving children learning with dignity.\n\nSincerely in Education,\nChiranjit Kar\nFounder & Philanthropic Steward\nChiranjit Kar Foundation\nDesk: +91 9402369889 | Agartala, Tripura`;
+
+      await env.DB.prepare(`
+        INSERT INTO foundation_school_letters (
+          id, application_id, student_id, letter_code, school_name, headmaster_or_teacher,
+          letter_content, dispatch_carrier, dispatch_tracking, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).bind(
+        letterId, applicationId, app.student_id || applicationId, letterCode,
+        app.school_name, app.teacher_name || 'Headmaster', letterContent,
+        app.shipping_carrier || 'India Post Speed Post', app.tracking_number || null,
+        timestamp
+      ).run();
+
+      // Update application
+      await env.DB.prepare(`
+        UPDATE foundation_applications_v2 
+        SET headmaster_letter_id=?, headmaster_letter_status='dispatched_to_school', updated_at=?
+        WHERE id=?
+      `).bind(letterId, timestamp, applicationId).run().catch(() => {});
+
+      letter = {
+        id: letterId,
+        letter_code: letterCode,
+        letter_content: letterContent,
+        school_name: app.school_name,
+        headmaster_or_teacher: app.teacher_name,
+        dispatch_carrier: app.shipping_carrier || 'India Post Speed Post',
+        dispatch_tracking: app.tracking_number || null,
+        created_at: timestamp
+      };
+    }
+
+    return json({
+      ok: true,
+      letter,
+      application: app
+    });
+  }
+
+  // Admin: Record Parent Notification Alert
+  if (parts[0] === 'foundation' && parts[1] === 'admin' && parts[2] === 'applications' && parts[3] && parts[4] === 'notify-parent' && method === 'POST') {
+    const auth = await requireStaff(request, env, ['admin']);
+    if (auth.response) return auth.response;
+
+    const applicationId = parts[3];
+    const timestamp = now();
+
+    await env.DB.prepare(`
+      UPDATE foundation_applications_v2 
+      SET parent_notification_status='sent', updated_at=?
+      WHERE id=?
+    `).bind(timestamp, applicationId).run().catch(() => {});
+
+    await env.DB.prepare(`
+      UPDATE foundation_school_letters 
+      SET parent_notified_at=?
+      WHERE application_id=?
+    `).bind(timestamp, applicationId).run().catch(() => {});
+
+    return json({ ok: true, message: 'Parent notification logged successfully.' });
+  }
+
+  // Admin: Update Student Academic Standing (Eligible, Probation, Ineligible due to Poor Performance)
+  if (parts[0] === 'foundation' && parts[1] === 'admin' && parts[2] === 'students' && parts[3] && parts[4] === 'academic-standing' && method === 'POST') {
+    const auth = await requireStaff(request, env, ['admin']);
+    if (auth.response) return auth.response;
+
+    const studentId = parts[3];
+    const standing = ['eligible', 'probation', 'ineligible_poor_performance'].includes(body.academic_standing) ? body.academic_standing : 'eligible';
+    const notes = String(body.notes || '').trim();
+    const timestamp = now();
+
+    await env.DB.prepare(`
+      UPDATE foundation_students 
+      SET academic_standing=?, academic_standing_notes=?, updated_at=?
+      WHERE id=?
+    `).bind(standing, notes, timestamp, studentId).run();
+
+    return json({
+      ok: true,
+      academic_standing: standing,
+      message: `Student academic standing updated to: ${standing}.`
     });
   }
 

@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chiranjit Kar Foundation | Direct Educational Aid for Underprivileged Students</title>
-    <meta name="description" content="A 100% private, self-funded educational initiative by Chiranjit Kar providing syllabus books, exercise notebooks, geometry kits, and exam study materials directly to underprivileged students.">
+    <title>Chiranjit Kar Foundation | Child Education, Study Materials &amp; Welfare (Nursery to Class 10)</title>
+    <meta name="description" content="A 100% private, self-funded educational initiative by Chiranjit Kar providing textbooks, teacher study notes, exercise notebooks, school uniforms, winter wear, and geometry kits to underprivileged children from Nursery to Class 10.">
     <meta name="robots" content="index, follow">
     <meta name="theme-color" content="#06120e">
 
@@ -78,6 +78,11 @@
             outline: none !important;
             box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.25) !important;
         }
+        .tab-btn.active {
+            background: #22c55e !important;
+            color: #000000 !important;
+            font-weight: 700 !important;
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col antialiased selection:bg-emerald-500 selection:text-black">
@@ -86,7 +91,7 @@
     <div class="bg-gradient-to-r from-emerald-950 via-emerald-900 to-black text-[12px] text-emerald-200 py-2 border-b border-emerald-800/40 px-4 text-center">
         <span class="inline-flex items-center gap-2">
             <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <strong>100% Private Philanthropic Initiative</strong> by Chiranjit Kar &bull; Zero Public Donations &bull; Direct Hand-to-Hand Student Support
+            <strong>100% Private Philanthropic Initiative</strong> by Chiranjit Kar &bull; Nursery to Class 10 Children &bull; Zero Public Donations &bull; Direct Hand-to-Hand Support
         </span>
     </div>
 
@@ -106,18 +111,18 @@
             <nav class="hidden md:flex items-center gap-6 text-sm font-medium text-neutral-300">
                 <a href="#charter" class="hover:text-emerald-400 transition">Our Charter</a>
                 <a href="#materials" class="hover:text-emerald-400 transition">What We Provide</a>
-                <a href="#campaign" class="hover:text-emerald-400 transition">Active Drive</a>
-                <a href="#verify" class="hover:text-emerald-400 transition">Verification Guide</a>
-                <a href="#apply" class="hover:text-emerald-400 transition">Apply Now</a>
+                <a href="#campaign" class="hover:text-emerald-400 transition">Active Drives</a>
+                <a href="#verify" class="hover:text-emerald-400 transition">School Seal Protocol</a>
+                <a href="#portal" class="hover:text-emerald-400 transition">Student Portal</a>
             </nav>
 
             <div class="flex items-center gap-3">
-                <button onclick="openTrackModal()" class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-white/5 hover:bg-white/10 text-emerald-300 border border-emerald-500/30 flex items-center gap-2 transition">
-                    <span>🔍</span> Track Application
+                <button onclick="switchPortalTab('login')" class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-white/5 hover:bg-white/10 text-emerald-300 border border-emerald-500/30 flex items-center gap-2 transition">
+                    <span>🔑</span> Student Login
                 </button>
-                <a href="#apply" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-emerald-500 hover:bg-emerald-400 text-black shadow-lg shadow-emerald-500/20 transition">
-                    Apply for Aid
-                </a>
+                <button onclick="switchPortalTab('register')" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-emerald-500 hover:bg-emerald-400 text-black shadow-lg shadow-emerald-500/20 transition">
+                    Register Student
+                </button>
             </div>
         </div>
     </header>
@@ -128,23 +133,23 @@
         <!-- Hero Section -->
         <section class="max-w-5xl mx-auto px-4 sm:px-6 pt-12 sm:pt-20 pb-16 text-center">
             <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono uppercase tracking-wider mb-6">
-                <span>🌱</span> Private Educational Stewardship &bull; Academic Year 2026–2027
+                <span>🌱</span> Direct Child Education &amp; Welfare &bull; Nursery to Class 10
             </div>
 
             <h1 class="text-3xl sm:text-5xl lg:text-6xl font-cinzel font-extrabold text-white tracking-tight leading-tight">
-                Standing Beside Every <span class="bg-gradient-to-r from-emerald-400 via-teal-300 to-gold-400 bg-clip-text text-transparent">Underprivileged Student</span>.
+                Standing Beside Every <span class="bg-gradient-to-r from-emerald-400 via-teal-300 to-gold-400 bg-clip-text text-transparent">Young Learner</span>.
             </h1>
 
             <p class="mt-6 text-base sm:text-xl text-neutral-300 font-light max-w-3xl mx-auto leading-relaxed">
-                Direct, transparent assistance with syllabus guidebooks, exercise notebooks, examination stationery kits, and school supplies. Hand-delivered or dispatched via <strong>India Post Speed Post</strong> directly to rural &amp; semi-urban school students across India.
+                Direct educational companionship for children from <strong>Nursery up to Class 10</strong>. We provide core syllabus books, educator study notes, writing registers, geometry kits, school uniforms, winter sweaters, and learning supplies. Hand-delivered or dispatched via <strong>India Post Speed Post</strong>.
             </p>
 
             <div class="mt-8 flex flex-wrap items-center justify-center gap-4">
-                <a href="#apply" class="px-6 py-3.5 rounded-xl font-bold bg-emerald-500 hover:bg-emerald-400 text-black text-sm sm:text-base shadow-xl shadow-emerald-500/30 transition flex items-center gap-2">
-                    <span>✍️</span> Submit Teacher-Verified Application
-                </a>
-                <button onclick="openTrackModal()" class="px-6 py-3.5 rounded-xl font-semibold bg-white/5 hover:bg-white/10 border border-white/10 text-white text-sm sm:text-base transition flex items-center gap-2">
-                    <span>📦</span> Student Login &amp; Parcel Tracking
+                <button onclick="switchPortalTab('register')" class="px-6 py-3.5 rounded-xl font-bold bg-emerald-500 hover:bg-emerald-400 text-black text-sm sm:text-base shadow-xl shadow-emerald-500/30 transition flex items-center gap-2">
+                    <span>✍️</span> Register Student Account (One-Time)
+                </button>
+                <button onclick="switchPortalTab('login')" class="px-6 py-3.5 rounded-xl font-semibold bg-white/5 hover:bg-white/10 border border-white/10 text-white text-sm sm:text-base transition flex items-center gap-2">
+                    <span>📦</span> Student Login &amp; Track Parcels
                 </button>
             </div>
 
@@ -152,29 +157,29 @@
             <div class="mt-14 grid grid-cols-2 sm:grid-cols-4 gap-4 text-left">
                 <div class="p-4 rounded-2xl liquid-card">
                     <span class="text-xl">🚫</span>
-                    <h4 class="font-bold text-white text-sm mt-2">Zero Public Funds</h4>
-                    <p class="text-xs text-neutral-400 mt-1">100% self-funded from personal creative earnings. No donations accepted.</p>
+                    <h4 class="font-bold text-white text-sm mt-2">100% Private</h4>
+                    <p class="text-xs text-neutral-400 mt-1">Zero public donations. 100% funded from personal creative earnings.</p>
                 </div>
                 <div class="p-4 rounded-2xl liquid-card">
                     <span class="text-xl">🏫</span>
                     <h4 class="font-bold text-white text-sm mt-2">School Seal Verified</h4>
-                    <p class="text-xs text-neutral-400 mt-1">Requisition certified by Headmaster or Teacher In-Charge to eliminate fraud.</p>
+                    <p class="text-xs text-neutral-400 mt-1">Certified by Headmaster or Teacher In-Charge to eliminate scam claims.</p>
                 </div>
                 <div class="p-4 rounded-2xl liquid-card">
                     <span class="text-xl">🛡️</span>
-                    <h4 class="font-bold text-white text-sm mt-2">1 Month Aadhaar Guard</h4>
-                    <p class="text-xs text-neutral-400 mt-1">Guarantees fair rotation so every deserving child gets assistance.</p>
+                    <h4 class="font-bold text-white text-sm mt-2">Locked Identity</h4>
+                    <p class="text-xs text-neutral-400 mt-1">Legal Name &amp; Aadhaar locked permanently. 1 application per campaign.</p>
                 </div>
                 <div class="p-4 rounded-2xl liquid-card">
                     <span class="text-xl">📬</span>
-                    <h4 class="font-bold text-white text-sm mt-2">India Post Tracking</h4>
-                    <p class="text-xs text-neutral-400 mt-1">Track parcel consignment directly to your school or village post office.</p>
+                    <h4 class="font-bold text-white text-sm mt-2">Speed Post Tracking</h4>
+                    <p class="text-xs text-neutral-400 mt-1">Track parcel consignment number live directly via India Post.</p>
                 </div>
             </div>
         </section>
 
         <!-- Active Campaign Banner (Loaded dynamically from API) -->
-        <section id="campaign" class="max-w-5xl mx-auto px-4 sm:px-6 py-8">
+        <section id="campaign" class="max-w-5xl mx-auto px-4 sm:px-6 py-6">
             <div id="campaign-container" class="p-6 sm:p-8 rounded-3xl liquid-card border-2 border-emerald-500/30 glow-emerald relative overflow-hidden">
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <div>
@@ -188,18 +193,18 @@
                             Winter 2026 Board &amp; Secondary Exam Prep Drive
                         </h2>
                         <p class="text-sm text-neutral-300 mt-2 max-w-2xl" id="camp-desc">
-                            Providing prescribed syllabus reference books, question banks, heavy ruled writing registers, and complete exam geometry kits for students appearing for upcoming annual examinations.
+                            Providing prescribed syllabus reference books, curated teacher study notes, exercise registers, and exam geometry kits for students from Nursery to Class 10.
                         </p>
                         <div class="mt-4 p-3 rounded-xl bg-black/40 border border-white/5 text-xs text-emerald-300 font-mono" id="camp-kit">
-                            <strong>📦 Kit Contents:</strong> Set of core syllabus books/guides, 12 writing registers, exam geometry box, ball pens set, waterproof bag.
+                            <strong>📦 Kit Contents:</strong> Prescribed textbooks/notes, 12 writing registers, geometry box, ball pens set, school bag / winter apparel.
                         </div>
                     </div>
                     <div class="flex flex-col items-center justify-center min-w-[200px] p-5 rounded-2xl bg-emerald-950/40 border border-emerald-800/40 text-center">
-                        <span class="text-xs font-mono text-neutral-400 uppercase">Target Audience</span>
-                        <span class="text-base font-bold text-white mt-1" id="camp-target">Class 8 to 12 Students</span>
-                        <a href="#apply" class="mt-4 w-full py-2.5 px-4 rounded-xl font-bold bg-emerald-500 hover:bg-emerald-400 text-black text-xs text-center transition shadow-md">
-                            Apply for this Kit
-                        </a>
+                        <span class="text-xs font-mono text-neutral-400 uppercase">Target Beneficiaries</span>
+                        <span class="text-base font-bold text-white mt-1" id="camp-target">Nursery to Class 10</span>
+                        <button onclick="switchPortalTab('login')" class="mt-4 w-full py-2.5 px-4 rounded-xl font-bold bg-emerald-500 hover:bg-emerald-400 text-black text-xs text-center transition shadow-md">
+                            Apply for this Drive
+                        </button>
                     </div>
                 </div>
             </div>
@@ -208,19 +213,19 @@
         <!-- What We Provide Section -->
         <section id="materials" class="max-w-5xl mx-auto px-4 sm:px-6 py-14">
             <div class="text-center max-w-2xl mx-auto mb-10">
-                <span class="text-xs font-mono uppercase tracking-widest text-emerald-400 font-bold">MATERIAL ASSISTANCE</span>
-                <h3 class="text-2xl sm:text-4xl font-cinzel font-bold text-white mt-2">Essential Tools for Academic Dignity</h3>
-                <p class="text-sm text-neutral-400 mt-2">Every student deserves the dignity of clean notebooks and prescribed syllabus books without financial anxiety.</p>
+                <span class="text-xs font-mono uppercase tracking-widest text-emerald-400 font-bold">EDUCATIONAL &amp; CHILD WELFARE SCOPE</span>
+                <h3 class="text-2xl sm:text-4xl font-cinzel font-bold text-white mt-2">Comprehensive Support for Children</h3>
+                <p class="text-sm text-neutral-400 mt-2">Our primary devotion is education, supplemented by essential school clothing and teacher collaborations.</p>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
                 <div class="p-6 rounded-2xl liquid-card">
                     <div class="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-2xl mb-4">
                         📚
                     </div>
-                    <h4 class="text-lg font-bold text-white">Prescribed Textbooks &amp; Guides</h4>
+                    <h4 class="text-base font-bold text-white">Syllabus Books &amp; Study Notes</h4>
                     <p class="text-xs text-neutral-300 mt-2 leading-relaxed">
-                        Official board syllabus textbooks, NCERT guides, test paper question banks, and reference materials specifically requested by the subject teacher.
+                        Prescribed textbooks, NCERT guides, board question banks, and curated study notes in collaboration with dedicated teachers.
                     </p>
                 </div>
 
@@ -228,43 +233,70 @@
                     <div class="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-2xl mb-4">
                         📓
                     </div>
-                    <h4 class="text-lg font-bold text-white">Full-Year Exercise Registers</h4>
+                    <h4 class="text-base font-bold text-white">Full-Year Exercise Registers</h4>
                     <p class="text-xs text-neutral-300 mt-2 leading-relaxed">
-                        Bundles of 12 heavy-duty ruled and unruled exercise registers, practical notebooks, and writing pads ensuring zero interruption in class notes.
+                        Bundles of 12 ruled exercise registers, practical drawing books, four-line notebooks for primary children, and slate packs for nursery.
                     </p>
                 </div>
 
                 <div class="p-6 rounded-2xl liquid-card">
                     <div class="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-2xl mb-4">
-                        📐
+                        👕
                     </div>
-                    <h4 class="text-lg font-bold text-white">Geometry, Drafting &amp; Exam Kits</h4>
+                    <h4 class="text-base font-bold text-white">School Clothes &amp; Winter Wear</h4>
                     <p class="text-xs text-neutral-300 mt-2 leading-relaxed">
-                        Mathematical compass sets, scientific calculators for senior secondary, drawing art colors, blue/black ball pens pack, and durable school bags.
+                        School uniforms, warm winter sweaters, raincoats, and footwear so children can attend school every day with physical warmth and dignity.
+                    </p>
+                </div>
+
+                <div class="p-6 rounded-2xl liquid-card">
+                    <div class="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-2xl mb-4">
+                        🎒
+                    </div>
+                    <h4 class="text-base font-bold text-white">School Bags &amp; Exam Kits</h4>
+                    <p class="text-xs text-neutral-300 mt-2 leading-relaxed">
+                        Durable waterproof school backpacks, geometry drafting sets, art color pencils, writing boards, and exam stationery packs.
                     </p>
                 </div>
             </div>
         </section>
 
-        <!-- Verification Protocol (How to avoid scams) -->
-        <section id="verify" class="max-w-5xl mx-auto px-4 sm:px-6 py-12">
+        <!-- Verification Protocol -->
+        <section id="verify" class="max-w-5xl mx-auto px-4 sm:px-6 py-10">
             <div class="p-8 sm:p-10 rounded-3xl liquid-card border border-white/10 space-y-6">
                 <div class="border-b border-white/10 pb-4">
                     <span class="text-xs font-mono uppercase tracking-widest text-emerald-400 font-bold">ANTI-SCAM VERIFICATION PROTOCOL</span>
-                    <h3 class="text-2xl font-cinzel font-bold text-white mt-1">Why We Require Headmaster Certification</h3>
+                    <h3 class="text-2xl font-cinzel font-bold text-white mt-1">Teacher Recommendation &amp; School Seal Guarantee</h3>
+                </div>
+
+                <!-- Teacher Salute & Moral Appeal Banner -->
+                <div class="p-6 rounded-2xl bg-gradient-to-r from-emerald-950/60 via-black to-emerald-950/40 border border-emerald-500/40 space-y-3">
+                    <div class="flex items-center gap-2 text-emerald-400 text-sm font-bold">
+                        <span>🙏</span>
+                        <span class="uppercase tracking-wider font-mono">A Sincere Bow &amp; Appeal to Respected Teachers &amp; Headmasters</span>
+                    </div>
+                    <p class="text-xs sm:text-sm text-neutral-200 leading-relaxed">
+                        Teachers are the true architects of our nation. We salute your selfless dedication, love, and tireless commitment in shaping the character and future of our children.
+                    </p>
+                    <p class="text-xs sm:text-sm text-neutral-300 leading-relaxed">
+                        Because this Foundation is <strong>100% privately self-funded from personal savings and creative work</strong> with zero public donations, every rupee is hard-earned and precious. We humbly urge all educators: <em>Please certify and recommend ONLY those students who come from genuinely economically disadvantaged homes and cannot afford syllabus books, notebooks, or basic school clothing.</em>
+                    </p>
+                    <p class="text-xs text-emerald-300/90 font-mono">
+                        By reserving our assistance strictly for genuinely needy children, together we ensure that no deserving student drops out of school due to financial helplessness.
+                    </p>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8 text-sm">
                     <div class="space-y-4 text-neutral-300">
                         <p>
-                            To prevent commercial abuse and ensure that study materials reach genuinely deserving students, the <strong>Chiranjit Kar Foundation</strong> enforces an uncompromising verification standard:
+                            To protect philanthropic resources from misuse and ensure study supplies reach genuinely needy children, the Foundation enforces a strict protocol:
                         </p>
                         <div class="p-4 rounded-xl bg-emerald-950/30 border border-emerald-800/30">
                             <h5 class="font-bold text-emerald-300 flex items-center gap-2">
-                                <span>📜</span> Required Requisition Document:
+                                <span>📜</span> Mandatory Requisition Document:
                             </h5>
                             <p class="text-xs text-neutral-300 mt-1">
-                                An official letter on school letterhead (or clean paper) signed by the <strong>Headmaster</strong> or <strong>Subject Teacher In-Charge</strong> with the <strong>Official School Rubber Stamp</strong> stating that the student is enrolled and in genuine need of study materials.
+                                An official letter on school letterhead (or clean white paper) bearing the <strong>Official School Rubber Stamp</strong> and the <strong>signature of the Headmaster or Subject Teacher In-Charge</strong>, certifying the student’s enrollment and genuine need.
                             </p>
                         </div>
                     </div>
@@ -272,18 +304,18 @@
                     <div class="space-y-4 text-neutral-300">
                         <div class="p-4 rounded-xl bg-black/40 border border-white/5 space-y-2">
                             <h5 class="font-bold text-white flex items-center gap-2">
-                                <span>🔒</span> 1 Application Per Student Monthly:
+                                <span>🔒</span> 1 Application Per Campaign Drive:
                             </h5>
                             <p class="text-xs text-neutral-400">
-                                The student’s 12-digit Aadhaar number is verified at submission. No duplicate requests are permitted for the same student within a single calendar month.
+                                Once registered, each student is eligible to apply <strong>only ONCE per campaign drive</strong>. Duplicate submissions under the same student identity are automatically blocked.
                             </p>
                         </div>
                         <div class="p-4 rounded-xl bg-black/40 border border-white/5 space-y-2">
                             <h5 class="font-bold text-white flex items-center gap-2">
-                                <span>📞</span> Verification Call:
+                                <span>📞</span> Teacher &amp; Headmaster Intimation:
                             </h5>
                             <p class="text-xs text-neutral-400">
-                                Our desk may place a short WhatsApp or voice call to the recommending teacher's mobile number prior to parcel dispatch.
+                                Upon approval, our desk posts an official intimation letter to the Headmaster and delivers the study package directly to the school for in-person student handover.
                             </p>
                         </div>
                     </div>
@@ -291,215 +323,416 @@
             </div>
         </section>
 
-        <!-- Application Form Section -->
-        <section id="apply" class="max-w-4xl mx-auto px-4 sm:px-6 py-14">
+        <!-- STUDENT PORTAL (REGISTRATION / LOGIN & TRACKING) -->
+        <section id="portal" class="max-w-4xl mx-auto px-4 sm:px-6 py-14">
             <div class="p-8 sm:p-12 rounded-3xl liquid-card border-2 border-emerald-500/20 shadow-2xl relative">
                 
-                <div class="text-center max-w-xl mx-auto mb-10">
-                    <span class="text-xs font-mono uppercase tracking-widest text-emerald-400 font-bold">DIRECT ASSISTANCE APPLICATION</span>
-                    <h2 class="text-2xl sm:text-3xl font-cinzel font-bold text-white mt-1">Request Study Materials</h2>
-                    <p class="text-xs sm:text-sm text-neutral-400 mt-2">
-                        Designed for easy completion by school teachers, headmasters, senior educators, or students.
-                    </p>
+                <!-- Tab Controls -->
+                <div class="flex items-center justify-center p-1.5 rounded-2xl bg-black/50 border border-white/10 max-w-md mx-auto mb-10">
+                    <button id="tab-btn-register" onclick="switchPortalTab('register')" class="tab-btn active flex-1 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition text-center">
+                        1. Register Student Account
+                    </button>
+                    <button id="tab-btn-login" onclick="switchPortalTab('login')" class="tab-btn flex-1 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition text-center text-neutral-400 hover:text-white">
+                        2. Login &amp; Track Parcels
+                    </button>
                 </div>
 
-                <form id="fnd-apply-form" onsubmit="handleApplySubmit(event)" class="space-y-8">
-                    
-                    <!-- Section 1: Student Information -->
-                    <div class="space-y-4">
-                        <div class="flex items-center gap-2 pb-2 border-b border-white/10">
-                            <span class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-bold flex items-center justify-center font-mono">1</span>
-                            <h4 class="font-cinzel text-base font-bold text-white">Student Details</h4>
-                        </div>
-
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-xs font-mono text-neutral-300 uppercase mb-1">Student Full Name *</label>
-                                <input type="text" id="student_name" required placeholder="e.g. Priya Debbarma" class="w-full px-4 py-3 rounded-xl text-sm">
-                            </div>
-
-                            <div>
-                                <label class="block text-xs font-mono text-neutral-300 uppercase mb-1">Class / Grade *</label>
-                                <select id="class_grade" required class="w-full px-4 py-3 rounded-xl text-sm">
-                                    <option value="">Select Grade / Class</option>
-                                    <option value="Class 5">Class 5</option>
-                                    <option value="Class 6">Class 6</option>
-                                    <option value="Class 7">Class 7</option>
-                                    <option value="Class 8">Class 8</option>
-                                    <option value="Class 9 (Pre-Board)">Class 9</option>
-                                    <option value="Class 10 (Madhyamik / Board)">Class 10 (Secondary Board)</option>
-                                    <option value="Class 11 (Arts / Science / Comm)">Class 11</option>
-                                    <option value="Class 12 (Higher Secondary)">Class 12 (Higher Secondary Board)</option>
-                                    <option value="Vocational / Diploma">Vocational / Diploma</option>
-                                </select>
-                            </div>
-
-                            <div>
-                                <label class="block text-xs font-mono text-neutral-300 uppercase mb-1">
-                                    Date of Birth (DD/MM/YYYY) *
-                                    <span class="text-emerald-400 lowercase">(used as tracking password)</span>
-                                </label>
-                                <input type="text" id="student_dob" required placeholder="DD/MM/YYYY (e.g. 15/08/2010)" class="w-full px-4 py-3 rounded-xl text-sm font-mono">
-                            </div>
-
-                            <div>
-                                <label class="block text-xs font-mono text-neutral-300 uppercase mb-1">
-                                    Student 12-Digit Aadhaar Number *
-                                    <span class="text-emerald-400 lowercase">(1 per month rule)</span>
-                                </label>
-                                <input type="text" id="student_aadhaar" maxlength="14" required placeholder="XXXX XXXX XXXX" class="w-full px-4 py-3 rounded-xl text-sm font-mono tracking-wider" oninput="formatAadhaar(this)">
-                            </div>
-                        </div>
+                <!-- VIEW 1: ONE-TIME STUDENT REGISTRATION FORM -->
+                <div id="view-register">
+                    <div class="text-center max-w-xl mx-auto mb-8">
+                        <span class="text-xs font-mono uppercase tracking-widest text-emerald-400 font-bold">STEP 1: PERMANENT STUDENT PROFILE</span>
+                        <h2 class="text-2xl sm:text-3xl font-cinzel font-bold text-white mt-1">One-Time Student Registration</h2>
+                        <p class="text-xs sm:text-sm text-neutral-400 mt-2">
+                            Enter proper student details once. Full Legal Name and Aadhaar will be permanently locked to prevent scams. You will never need to fill personal details again.
+                        </p>
                     </div>
 
-                    <!-- Section 2: School & Institution Details -->
-                    <div class="space-y-4">
-                        <div class="flex items-center gap-2 pb-2 border-b border-white/10">
-                            <span class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-bold flex items-center justify-center font-mono">2</span>
-                            <h4 class="font-cinzel text-base font-bold text-white">School &amp; Location Details</h4>
-                        </div>
-
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div class="sm:col-span-2">
-                                <label class="block text-xs font-mono text-neutral-300 uppercase mb-1">Official School Name *</label>
-                                <input type="text" id="school_name" required placeholder="e.g. Khowai Government Higher Secondary School" class="w-full px-4 py-3 rounded-xl text-sm">
-                            </div>
-
-                            <div class="sm:col-span-2">
-                                <label class="block text-xs font-mono text-neutral-300 uppercase mb-1">School Complete Postal Address * (For parcel delivery)</label>
-                                <textarea id="school_address" rows="2" required placeholder="Village / Para, Post Office, Police Station, Sub-division, PIN Code" class="w-full px-4 py-3 rounded-xl text-sm"></textarea>
-                            </div>
-
-                            <div>
-                                <label class="block text-xs font-mono text-neutral-300 uppercase mb-1">District *</label>
-                                <input type="text" id="school_district" required value="West Tripura" class="w-full px-4 py-3 rounded-xl text-sm">
-                            </div>
-
-                            <div>
-                                <label class="block text-xs font-mono text-neutral-300 uppercase mb-1">State *</label>
-                                <input type="text" id="school_state" required value="Tripura" class="w-full px-4 py-3 rounded-xl text-sm">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Section 3: Recommending Headmaster / Teacher -->
-                    <div class="space-y-4">
-                        <div class="flex items-center gap-2 pb-2 border-b border-white/10">
-                            <span class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-bold flex items-center justify-center font-mono">3</span>
-                            <h4 class="font-cinzel text-base font-bold text-white">Recommending Teacher / Headmaster Details</h4>
-                        </div>
-
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-xs font-mono text-neutral-300 uppercase mb-1">Teacher / Headmaster Name *</label>
-                                <input type="text" id="teacher_name" required placeholder="e.g. Shri Bikram Sarkar" class="w-full px-4 py-3 rounded-xl text-sm">
-                            </div>
-
-                            <div>
-                                <label class="block text-xs font-mono text-neutral-300 uppercase mb-1">Designation *</label>
-                                <input type="text" id="teacher_designation" required placeholder="e.g. Headmaster / Senior Science Teacher" class="w-full px-4 py-3 rounded-xl text-sm">
-                            </div>
-
-                            <div>
-                                <label class="block text-xs font-mono text-neutral-300 uppercase mb-1">Teacher WhatsApp / Mobile (10 Digits) *</label>
-                                <input type="tel" id="teacher_phone" maxlength="10" required placeholder="9876543210" class="w-full px-4 py-3 rounded-xl text-sm font-mono">
-                            </div>
-
-                            <div>
-                                <label class="block text-xs font-mono text-neutral-300 uppercase mb-1">Teacher Email (Optional)</label>
-                                <input type="email" id="teacher_email" placeholder="teacher@gmail.com" class="w-full px-4 py-3 rounded-xl text-sm font-mono">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Section 4: Specific Needs Required -->
-                    <div class="space-y-4">
-                        <div class="flex items-center gap-2 pb-2 border-b border-white/10">
-                            <span class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-bold flex items-center justify-center font-mono">4</span>
-                            <h4 class="font-cinzel text-base font-bold text-white">Required Educational Materials</h4>
-                        </div>
-
-                        <div>
-                            <label class="block text-xs font-mono text-neutral-300 uppercase mb-1">Assistance Category *</label>
-                            <select id="assistance_type" required class="w-full px-4 py-3 rounded-xl text-sm">
-                                <option value="study_materials">Complete Study Materials &amp; Stationery Bundle</option>
-                                <option value="textbooks">Prescribed Syllabus Books &amp; Exam Question Banks</option>
-                                <option value="notebooks_only">Full Pack Writing Registers &amp; Practical Pads</option>
-                                <option value="uniform_bag">School Bag, Geometry Set &amp; Exam Essentials</option>
-                                <option value="composite">Urgent Comprehensive Aid</option>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label class="block text-xs font-mono text-neutral-300 uppercase mb-1">Specific Books / Materials List *</label>
-                            <textarea id="specific_needs" rows="3" required placeholder="e.g. Class 10 NCERT Science Guide, Mathematics Solved Papers, 12 Exercise Ruled Registers, and 1 Geometry Box." class="w-full px-4 py-3 rounded-xl text-sm"></textarea>
-                        </div>
-                    </div>
-
-                    <!-- Section 5: Official Requisition Document Upload -->
-                    <div class="space-y-4">
-                        <div class="flex items-center gap-2 pb-2 border-b border-white/10">
-                            <span class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-bold flex items-center justify-center font-mono">5</span>
-                            <h4 class="font-cinzel text-base font-bold text-white">School Seal &amp; Signature Certificate</h4>
-                        </div>
-
-                        <div class="p-6 rounded-2xl border-2 border-dashed border-emerald-500/30 bg-emerald-950/20 text-center">
-                            <div class="text-3xl mb-2">📎</div>
-                            <h5 class="text-sm font-bold text-white">Upload Recommendation Letter (PDF or Clear Photo)</h5>
-                            <p class="text-xs text-neutral-400 mt-1 max-w-md mx-auto">
-                                Must bear the <strong>official School Rubber Stamp</strong> and the <strong>signature of the Headmaster or Teacher In-Charge</strong>.
-                            </p>
+                    <form id="student-reg-form" onsubmit="handleStudentRegister(event)" class="space-y-6">
+                        
+                        <div class="p-5 rounded-2xl bg-black/40 border border-white/5 space-y-4">
+                            <span class="text-xs font-mono text-emerald-400 uppercase font-bold">Personal Identity (Locked Permanently)</span>
                             
-                            <input type="file" id="document_file" accept=".pdf,image/*" required class="hidden" onchange="handleFileSelect(this)">
-                            <button type="button" onclick="document.getElementById('document_file').click()" class="mt-4 px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-emerald-300 text-xs font-mono font-semibold border border-white/10 transition">
-                                📂 Choose File / Photo
-                            </button>
-                            <div id="file-name-display" class="mt-2 text-xs font-mono text-emerald-400 hidden"></div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div class="sm:col-span-2">
+                                    <label class="block text-xs font-mono text-neutral-300 uppercase mb-1">
+                                        Student Full Legal Name * <span class="text-amber-400 lowercase">(as per Aadhaar / School Records)</span>
+                                    </label>
+                                    <input type="text" id="reg_legal_name" required placeholder="e.g. Debolina Chakraborty" class="w-full px-4 py-3 rounded-xl text-sm">
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-mono text-neutral-300 uppercase mb-1">
+                                        12-Digit Student Aadhaar Number * <span class="text-amber-400 lowercase">(Cannot be changed)</span>
+                                    </label>
+                                    <input type="text" id="reg_aadhaar" maxlength="14" required placeholder="XXXX XXXX XXXX" class="w-full px-4 py-3 rounded-xl text-sm font-mono tracking-wider" oninput="formatAadhaar(this)">
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-mono text-neutral-300 uppercase mb-1">
+                                        Date of Birth (DD/MM/YYYY) * <span class="text-emerald-400 lowercase">(Your login password)</span>
+                                    </label>
+                                    <input type="text" id="reg_dob" required placeholder="DD/MM/YYYY (e.g. 12/04/2012)" class="w-full px-4 py-3 rounded-xl text-sm font-mono">
+                                </div>
+                            </div>
                         </div>
+
+                        <div class="p-5 rounded-2xl bg-black/40 border border-white/5 space-y-4">
+                            <span class="text-xs font-mono text-emerald-400 uppercase font-bold">Family &amp; Contact Details</span>
+                            
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-mono text-neutral-300 uppercase mb-1">Father / Mother / Guardian Name *</label>
+                                    <input type="text" id="reg_guardian_name" required placeholder="e.g. Shri Subrata Chakraborty" class="w-full px-4 py-3 rounded-xl text-sm">
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-mono text-neutral-300 uppercase mb-1">Guardian Mobile / WhatsApp Number (10 Digits) *</label>
+                                    <input type="tel" id="reg_guardian_phone" maxlength="10" required placeholder="9876543210" class="w-full px-4 py-3 rounded-xl text-sm font-mono">
+                                </div>
+
+                                <div class="sm:col-span-2">
+                                    <label class="block text-xs font-mono text-neutral-300 uppercase mb-1">Permanent Residential Address * (For parcel delivery)</label>
+                                    <textarea id="reg_address" rows="2" required placeholder="House / Village, Post Office, Police Station, Sub-division" class="w-full px-4 py-3 rounded-xl text-sm"></textarea>
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-mono text-neutral-300 uppercase mb-1">District *</label>
+                                    <input type="text" id="reg_district" required value="West Tripura" class="w-full px-4 py-3 rounded-xl text-sm">
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-mono text-neutral-300 uppercase mb-1">Postal PIN Code * (6 Digits)</label>
+                                    <input type="text" id="reg_pincode" maxlength="6" required placeholder="799001" class="w-full px-4 py-3 rounded-xl text-sm font-mono">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="p-5 rounded-2xl bg-black/40 border border-white/5 space-y-4">
+                            <span class="text-xs font-mono text-emerald-400 uppercase font-bold">School &amp; Academic Enrollment (Nursery to Class 10)</span>
+                            
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div class="sm:col-span-2">
+                                    <label class="block text-xs font-mono text-neutral-300 uppercase mb-1">School Currently Enrolled In *</label>
+                                    <input type="text" id="reg_school_name" required placeholder="e.g. Radhamadhav Vidyamandir" class="w-full px-4 py-3 rounded-xl text-sm">
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-mono text-neutral-300 uppercase mb-1">Current Class / Grade *</label>
+                                    <select id="reg_class" required class="w-full px-4 py-3 rounded-xl text-sm">
+                                        <option value="">Select Grade</option>
+                                        <option value="Nursery / Pre-KG">Nursery / Pre-KG</option>
+                                        <option value="LKG">LKG</option>
+                                        <option value="UKG / Kindergarten">UKG</option>
+                                        <option value="Class 1">Class 1</option>
+                                        <option value="Class 2">Class 2</option>
+                                        <option value="Class 3">Class 3</option>
+                                        <option value="Class 4">Class 4</option>
+                                        <option value="Class 5">Class 5</option>
+                                        <option value="Class 6">Class 6</option>
+                                        <option value="Class 7">Class 7</option>
+                                        <option value="Class 8">Class 8</option>
+                                        <option value="Class 9 (Pre-Board)">Class 9 (Pre-Board)</option>
+                                        <option value="Class 10 (Madhyamik / Secondary Board)">Class 10 (Secondary Board)</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-mono text-neutral-300 uppercase mb-1">Annual Family Income / Financial Status</label>
+                                    <select id="reg_income" class="w-full px-4 py-3 rounded-xl text-sm">
+                                        <option value="Below Poverty Line (BPL / Antyodaya)">Below Poverty Line (BPL / Antyodaya)</option>
+                                        <option value="Under ₹50,000 / year">Under ₹50,000 / year</option>
+                                        <option value="₹50,000 - ₹1,00,000 / year">₹50,000 - ₹1,00,000 / year</option>
+                                        <option value="Single Parent / Orphaned Child">Single Parent / Orphaned Child</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Mandatory Student Aadhaar Card Upload -->
+                        <div class="p-5 rounded-2xl bg-black/40 border border-emerald-500/30 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-mono text-emerald-400 uppercase font-bold">Mandatory Student Aadhaar Card Upload *</span>
+                                <span class="text-[10px] font-mono text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded border border-amber-400/30 font-bold">MANUAL DESK VERIFICATION</span>
+                            </div>
+                            <p class="text-xs text-neutral-300 leading-relaxed">
+                                Please upload a clear photo or PDF scan of the student's original Aadhaar Card. Our Foundation Desk manually inspects every card to verify the student's legal name and date of birth before granting study aid.
+                            </p>
+                            <div class="p-4 rounded-xl border-2 border-dashed border-emerald-500/40 bg-emerald-950/20 text-center">
+                                <input type="file" id="reg_aadhaar_file" accept=".pdf,image/*" required class="hidden" onchange="handleRegAadhaarFileSelect(this)">
+                                <button type="button" onclick="document.getElementById('reg_aadhaar_file').click()" class="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-emerald-300 text-xs font-mono font-semibold border border-white/10 transition">
+                                    📂 Choose Aadhaar Card Photo / PDF Scan *
+                                </button>
+                                <div id="reg-aadhaar-file-display" class="mt-2 text-xs font-mono text-emerald-400 hidden"></div>
+                                <p class="text-[11px] text-neutral-500 mt-1">Accepted: JPG, PNG, PDF (Max 8MB). Encrypted &amp; confidential.</p>
+                            </div>
+                        </div>
+
+                        <div id="reg-error" class="hidden p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs"></div>
+                        <div id="reg-success" class="hidden p-6 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-200 text-sm space-y-3"></div>
+
+                        <button type="submit" id="reg-submit-btn" class="w-full py-4 rounded-xl font-bold bg-emerald-500 hover:bg-emerald-400 text-black text-base shadow-xl shadow-emerald-500/25 transition">
+                            Create Permanent Student Account
+                        </button>
+                    </form>
+                </div>
+
+                <!-- VIEW 2: STUDENT LOGIN & DASHBOARD -->
+                <div id="view-login" class="hidden">
+                    <div id="login-screen">
+                        <div class="text-center max-w-xl mx-auto mb-8">
+                            <span class="text-xs font-mono uppercase tracking-widest text-emerald-400 font-bold">STUDENT &amp; SCHOOL LOGIN</span>
+                            <h2 class="text-2xl sm:text-3xl font-cinzel font-bold text-white mt-1">Access Student Dashboard</h2>
+                            <p class="text-xs sm:text-sm text-neutral-400 mt-2">
+                                Login using your 12-digit Aadhaar Number and Date of Birth (DD/MM/YYYY).
+                            </p>
+                        </div>
+
+                        <form id="student-login-form" onsubmit="handleStudentLogin(event)" class="max-w-md mx-auto space-y-4">
+                            <div>
+                                <label class="block text-xs font-mono text-neutral-300 uppercase mb-1">Student 12-Digit Aadhaar Number</label>
+                                <input type="text" id="login_aadhaar" required placeholder="XXXX XXXX XXXX" maxlength="14" class="w-full px-4 py-3 rounded-xl text-sm font-mono tracking-wider" oninput="formatAadhaar(this)">
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-mono text-neutral-300 uppercase mb-1">Date of Birth (DD/MM/YYYY)</label>
+                                <input type="text" id="login_dob" required placeholder="DD/MM/YYYY (e.g. 12/04/2012)" class="w-full px-4 py-3 rounded-xl text-sm font-mono">
+                            </div>
+
+                            <div id="login-error" class="hidden p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs"></div>
+
+                            <button type="submit" id="login-submit-btn" class="w-full py-3.5 rounded-xl font-bold bg-emerald-500 hover:bg-emerald-400 text-black text-sm transition">
+                                Authenticate &amp; Open Portal
+                            </button>
+                        </form>
                     </div>
 
-                    <div id="apply-error" class="hidden p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs leading-relaxed"></div>
-                    <div id="apply-success" class="hidden p-6 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-200 text-sm space-y-3"></div>
+                    <!-- LOGGED IN STUDENT DASHBOARD -->
+                    <div id="student-dashboard" class="hidden space-y-8">
+                        <!-- Student Profile Strip -->
+                        <div class="p-6 rounded-2xl bg-emerald-950/40 border border-emerald-800/40 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                            <div>
+                                <div class="flex items-center gap-2 flex-wrap mb-1">
+                                    <span class="text-xs font-mono text-emerald-400 font-bold uppercase tracking-widest">STUDENT PROFILE</span>
+                                    <span id="dash-verif-badge" class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">PENDING VERIFICATION</span>
+                                    <span id="dash-acad-badge" class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">ACADEMIC STANDING: ACTIVE</span>
+                                </div>
+                                <h3 class="text-2xl font-bold text-white mt-0.5" id="dash-student-name">Student Name</h3>
+                                <p class="text-xs text-neutral-300 mt-1">
+                                    <span id="dash-school-class">Class 10 &bull; School Name</span> &bull; <span id="dash-address">Address, District</span>
+                                </p>
+                                <p class="text-xs text-neutral-400 mt-0.5">
+                                    Guardian: <strong id="dash-guardian-name" class="text-white">Father</strong> (<span id="dash-guardian-phone" class="font-mono">Phone</span>)
+                                </p>
+                            </div>
+                            <div class="text-left sm:text-right font-mono text-xs text-emerald-300 bg-black/40 p-3 rounded-xl border border-white/5">
+                                Aadhaar: <strong id="dash-aadhaar">XXXX-XXXX-0000</strong><br>
+                                DOB: <strong id="dash-dob">00/00/0000</strong><br>
+                                <button onclick="logoutStudent()" class="mt-2 text-rose-400 hover:underline text-[11px]">Sign Out</button>
+                            </div>
+                        </div>
 
-                    <button type="submit" id="apply-submit-btn" class="w-full py-4 rounded-xl font-bold bg-emerald-500 hover:bg-emerald-400 text-black text-base shadow-xl shadow-emerald-500/25 transition">
-                        Submit Educational Aid Application
-                    </button>
-                </form>
+                        <!-- 1. AVAILABLE CAMPAIGNS (1-Click Application) -->
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between pb-2 border-b border-white/10">
+                                <h4 class="font-cinzel text-lg font-bold text-white flex items-center gap-2">
+                                    <span>🌱</span> Active Foundation Aid Drives
+                                </h4>
+                                <span class="text-xs text-neutral-400">1 Application Per Campaign Drive</span>
+                            </div>
+
+                            <div id="dash-campaigns-list" class="space-y-4"></div>
+                        </div>
+
+                        <!-- 2. APPLICATION HISTORY & PARCEL TRACKING -->
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between pb-2 border-b border-white/10">
+                                <h4 class="font-cinzel text-lg font-bold text-white flex items-center gap-2">
+                                    <span>📦</span> Your Applications &amp; Postal Consignment Tracking
+                                </h4>
+                            </div>
+
+                            <div id="dash-applications-list" class="space-y-4"></div>
+                        </div>
+
+                        <!-- 3. ACADEMIC PERFORMANCE & MARKSSHEET TRACKING -->
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between pb-2 border-b border-white/10">
+                                <div>
+                                    <h4 class="font-cinzel text-lg font-bold text-white flex items-center gap-2">
+                                        <span>📚</span> Academic Performance &amp; Progress Card
+                                    </h4>
+                                    <p class="text-xs text-neutral-400 mt-0.5">Continuous effort and good examination results keep your Foundation assistance active.</p>
+                                </div>
+                                <button onclick="openAcadModal()" class="px-3.5 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-xs font-mono font-bold transition">
+                                    ＋ Submit Term Marksheet
+                                </button>
+                            </div>
+
+                            <div class="p-5 rounded-2xl bg-black/40 border border-white/5 space-y-4">
+                                <div class="p-3.5 rounded-xl bg-emerald-950/30 border border-emerald-800/30 text-xs text-neutral-300 leading-relaxed">
+                                    <strong>Foundation Academic Responsibility Charter:</strong> We stand beside you with study guides, notebooks, and clothing. In return, every student must attend classes faithfully and give their best effort in examinations. Poor terminal results or repeated unexcused absence may restrict eligibility for future campaign aid drives.
+                                </div>
+                                <div id="dash-acad-records-list" class="space-y-2"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </section>
 
-        <!-- Student & Teacher Tracking Modal -->
-        <div id="track-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
-            <div class="w-full max-w-xl p-6 sm:p-8 rounded-3xl liquid-card border border-white/20 shadow-2xl relative">
-                <button onclick="closeTrackModal()" class="absolute top-5 right-5 text-neutral-400 hover:text-white text-xl">✕</button>
+        <!-- APPLY FOR CAMPAIGN MODAL (With School Seal Upload) -->
+        <div id="campaign-apply-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+            <div class="w-full max-w-xl p-6 sm:p-8 rounded-3xl liquid-card border border-white/20 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+                <button onclick="closeCampaignModal()" class="absolute top-5 right-5 text-neutral-400 hover:text-white text-xl">✕</button>
 
                 <div class="text-center mb-6">
-                    <span class="text-xs font-mono uppercase tracking-widest text-emerald-400 font-bold">STUDENT &amp; SCHOOL PORTAL</span>
-                    <h3 class="text-2xl font-cinzel font-bold text-white mt-1">Track Application &amp; Post Delivery</h3>
-                    <p class="text-xs text-neutral-400 mt-1">Enter your 12-digit Aadhaar Number and Date of Birth.</p>
+                    <span class="text-xs font-mono uppercase tracking-widest text-emerald-400 font-bold">FOUNDATION AID APPLICATION</span>
+                    <h3 class="text-xl sm:text-2xl font-cinzel font-bold text-white mt-1" id="modal-camp-title">Campaign Title</h3>
+                    <p class="text-xs text-neutral-400 mt-1">Your personal details are already verified and attached from your student account.</p>
                 </div>
 
-                <!-- Login Form -->
-                <form id="track-login-form" onsubmit="handleTrackLogin(event)" class="space-y-4">
+                <!-- Teacher Salute & Appeal Inside Modal -->
+                <div class="p-4 rounded-2xl bg-gradient-to-r from-emerald-950/70 via-black to-emerald-950/50 border border-emerald-500/40 text-left space-y-2 mb-5">
+                    <div class="flex items-center gap-2 text-emerald-400 font-bold text-xs">
+                        <span>🙏</span>
+                        <span class="font-mono uppercase tracking-wider">A Respectful Salute &amp; Appeal to Respected Teachers</span>
+                    </div>
+                    <p class="text-[11px] text-neutral-200 leading-relaxed">
+                        We salute our revered educators for guiding our youth. Because this initiative is <strong>100% self-funded from private savings</strong> with zero public funds, please recommend <strong>ONLY genuinely economically disadvantaged children</strong> who cannot afford books or uniforms.
+                    </p>
+                    <div class="text-[11px] text-emerald-300 font-mono flex items-center gap-1.5 pt-1 border-t border-white/5">
+                        <span>📦</span> Upon approval, an official intimation letter will be posted to the Headmaster and the package delivered directly to school.
+                    </div>
+                </div>
+
+                <form id="campaign-apply-form" onsubmit="handleCampaignApplySubmit(event)" class="space-y-4">
+                    <input type="hidden" id="modal-camp-id">
+
                     <div>
-                        <label class="block text-xs font-mono text-neutral-300 uppercase mb-1">Student 12-Digit Aadhaar Number</label>
-                        <input type="text" id="track_aadhaar" required placeholder="XXXX XXXX XXXX" maxlength="14" class="w-full px-4 py-3 rounded-xl text-sm font-mono tracking-wider" oninput="formatAadhaar(this)">
+                        <label class="block text-xs font-mono text-neutral-300 uppercase mb-1">What Assistance Does the Child Need Most? *</label>
+                        <select id="modal_assistance_type" required class="w-full px-4 py-3 rounded-xl text-sm">
+                            <option value="study_materials">Prescribed Textbooks, Solved Guides &amp; Teacher Notes</option>
+                            <option value="notebooks_only">Full-Year Exercise Registers &amp; Drawing Book Pack</option>
+                            <option value="clothes_uniform">School Uniform, Winter Sweater &amp; Footwear</option>
+                            <option value="bags_geometry">Waterproof Backpack, Geometry Box &amp; Exam Kit</option>
+                            <option value="early_childhood">Nursery / KG Picture Books, Slate &amp; Art Kit</option>
+                            <option value="composite">Comprehensive Child Educational &amp; Welfare Package</option>
+                        </select>
                     </div>
 
                     <div>
-                        <label class="block text-xs font-mono text-neutral-300 uppercase mb-1">Date of Birth (DD/MM/YYYY)</label>
-                        <input type="text" id="track_dob" required placeholder="DD/MM/YYYY (e.g. 15/08/2010)" class="w-full px-4 py-3 rounded-xl text-sm font-mono">
+                        <label class="block text-xs font-mono text-neutral-300 uppercase mb-1">Specific Items / Subjects / Clothing Sizes Needed *</label>
+                        <textarea id="modal_specific_needs" rows="3" required placeholder="e.g. Class 10 NCERT Science Guide, Math Solved Question Bank, 12 Exercise Ruled Registers, and 1 Warm Winter Sweater (Size: 32)." class="w-full px-4 py-3 rounded-xl text-sm"></textarea>
                     </div>
 
-                    <div id="track-error" class="hidden p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs"></div>
+                    <div class="p-4 rounded-xl bg-black/40 border border-white/5 space-y-3">
+                        <span class="text-xs font-mono text-emerald-400 uppercase font-bold">Recommending Teacher or Headmaster</span>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-[11px] font-mono text-neutral-400 uppercase mb-0.5">Teacher Name *</label>
+                                <input type="text" id="modal_teacher_name" required placeholder="e.g. Shri Bikram Sarkar" class="w-full px-3 py-2 rounded-lg text-xs">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-mono text-neutral-400 uppercase mb-0.5">Designation *</label>
+                                <input type="text" id="modal_teacher_desig" required placeholder="e.g. Headmaster / Class Teacher" class="w-full px-3 py-2 rounded-lg text-xs">
+                            </div>
+                            <div class="sm:col-span-2">
+                                <label class="block text-[11px] font-mono text-neutral-400 uppercase mb-0.5">Teacher WhatsApp / Mobile (10 Digits) *</label>
+                                <input type="tel" id="modal_teacher_phone" maxlength="10" required placeholder="9876543210" class="w-full px-3 py-2 rounded-lg text-xs font-mono">
+                            </div>
+                        </div>
+                    </div>
 
-                    <button type="submit" id="track-btn" class="w-full py-3.5 rounded-xl font-bold bg-emerald-500 hover:bg-emerald-400 text-black text-sm transition">
-                        Check Status &amp; Parcel Waybill
+                    <!-- School Seal Upload -->
+                    <div class="p-5 rounded-2xl border-2 border-dashed border-emerald-500/30 bg-emerald-950/20 text-center">
+                        <div class="text-2xl mb-1">📎</div>
+                        <h5 class="text-xs font-bold text-white">Upload School Seal &amp; Teacher Signature Document</h5>
+                        <p class="text-[11px] text-neutral-400 mt-0.5">Must bear official School Rubber Stamp and Headmaster / Teacher signature.</p>
+                        
+                        <input type="file" id="modal_file" accept=".pdf,image/*" required class="hidden" onchange="handleModalFileSelect(this)">
+                        <button type="button" onclick="document.getElementById('modal_file').click()" class="mt-3 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-emerald-300 text-xs font-mono font-semibold border border-white/10 transition">
+                            📂 Choose Recommendation Certificate / Photo
+                        </button>
+                        <div id="modal-file-display" class="mt-2 text-xs font-mono text-emerald-400 hidden"></div>
+                    </div>
+
+                    <!-- Solemn Educator Declaration Checkbox -->
+                    <div class="p-3.5 rounded-xl bg-emerald-950/40 border border-emerald-500/30 text-left">
+                        <label class="flex items-start gap-2.5 cursor-pointer text-xs text-neutral-200">
+                            <input type="checkbox" id="modal_teacher_declare" required class="mt-0.5 rounded border-white/20 text-emerald-500 focus:ring-emerald-500">
+                            <span><strong>Solemn Educator Certification:</strong> As a responsible educator / teacher, I solemnly certify that this student genuinely belongs to an economically disadvantaged family and urgently requires this educational assistance to continue schooling with dignity.</span>
+                        </label>
+                    </div>
+
+                    <div id="modal-apply-error" class="hidden p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs"></div>
+
+                    <button type="submit" id="modal-apply-btn" class="w-full py-3.5 rounded-xl font-bold bg-emerald-500 hover:bg-emerald-400 text-black text-sm shadow-xl shadow-emerald-500/25 transition">
+                        Submit Application for this Campaign Drive
                     </button>
                 </form>
+            </div>
+        </div>
 
-                <!-- Status Result Container (Loaded after login) -->
-                <div id="track-results" class="hidden mt-6 space-y-6 max-h-[70vh] overflow-y-auto pr-1"></div>
+        <!-- SUBMIT ACADEMIC PROGRESS / MARKSHEET MODAL -->
+        <div id="acad-record-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+            <div class="w-full max-w-lg p-6 sm:p-8 rounded-3xl liquid-card border border-white/20 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+                <button onclick="closeAcadModal()" class="absolute top-5 right-5 text-neutral-400 hover:text-white text-xl">✕</button>
+
+                <div class="text-center mb-6">
+                    <span class="text-xs font-mono uppercase tracking-widest text-emerald-400 font-bold">FOUNDATION SCHOLARSHIP ACADEMIC PROGRESS</span>
+                    <h3 class="text-xl sm:text-2xl font-cinzel font-bold text-white mt-1">Submit Terminal Exam Report Card</h3>
+                    <p class="text-xs text-neutral-400 mt-1">Upload your term marksheet to keep your educational aid active for future drives.</p>
+                </div>
+
+                <form id="acad-record-form" onsubmit="handleAcadRecordSubmit(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-mono text-neutral-300 uppercase mb-1">Examination Term *</label>
+                        <select id="acad_exam_term" required class="w-full px-4 py-3 rounded-xl text-sm">
+                            <option value="">Select Examination Term</option>
+                            <option value="1st Unit Test / Periodic Assessment">1st Unit Test / Periodic Assessment</option>
+                            <option value="Half-Yearly / Mid-Term Examination">Half-Yearly / Mid-Term Examination</option>
+                            <option value="2nd Unit Test / Pre-Board">2nd Unit Test / Pre-Board</option>
+                            <option value="Annual / Final School Examination">Annual / Final School Examination</option>
+                            <option value="Secondary Board Madhyamik Exam">Secondary Board Madhyamik Exam</option>
+                        </select>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-mono text-neutral-300 uppercase mb-1">Percentage / Marks % *</label>
+                            <input type="number" id="acad_percentage" step="0.1" min="0" max="100" required placeholder="e.g. 72.5" class="w-full px-4 py-3 rounded-xl text-sm font-mono">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-mono text-neutral-300 uppercase mb-1">Grade / Division</label>
+                            <input type="text" id="acad_grade" placeholder="e.g. A, 1st Div" class="w-full px-4 py-3 rounded-xl text-sm">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-mono text-neutral-300 uppercase mb-1">Teacher / Headmaster Remarks</label>
+                        <textarea id="acad_remarks" rows="2" placeholder="e.g. Regular attendance, shown good improvement in Mathematics." class="w-full px-4 py-3 rounded-xl text-sm"></textarea>
+                    </div>
+
+                    <!-- Marksheet Upload -->
+                    <div class="p-5 rounded-2xl border-2 border-dashed border-emerald-500/30 bg-emerald-950/20 text-center">
+                        <div class="text-2xl mb-1">📑</div>
+                        <h5 class="text-xs font-bold text-white">Upload Marksheet / Report Card Scan *</h5>
+                        <p class="text-[11px] text-neutral-400 mt-0.5">Photo of official report card signed by Class Teacher / Principal.</p>
+                        
+                        <input type="file" id="acad_file" accept=".pdf,image/*" required class="hidden" onchange="handleAcadFileSelect(this)">
+                        <button type="button" onclick="document.getElementById('acad_file').click()" class="mt-3 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-emerald-300 text-xs font-mono font-semibold border border-white/10 transition">
+                            📂 Choose Marksheet Photo / PDF
+                        </button>
+                        <div id="acad-file-display" class="mt-2 text-xs font-mono text-emerald-400 hidden"></div>
+                    </div>
+
+                    <div id="acad-error" class="hidden p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs"></div>
+
+                    <button type="submit" id="acad-submit-btn" class="w-full py-3.5 rounded-xl font-bold bg-emerald-500 hover:bg-emerald-400 text-black text-sm shadow-xl shadow-emerald-500/25 transition">
+                        Submit Academic Progress Record
+                    </button>
+                </form>
             </div>
         </div>
 
@@ -509,7 +742,7 @@
     <footer class="bg-black border-t border-white/10 py-10 px-4 sm:px-8 text-neutral-400 text-xs text-center space-y-3">
         <div class="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
             <span class="font-cinzel text-white text-sm">CHIRANJIT KAR FOUNDATION</span>
-            <span>A 100% Private, Direct Educational Outreach Initiative</span>
+            <span>A 100% Private, Direct Child Education &amp; Welfare Initiative (Nursery to Class 10)</span>
             <a href="https://wa.me/919402369889" target="_blank" class="text-emerald-400 hover:underline">WhatsApp Foundation Desk (+91 9402369889)</a>
         </div>
         <p class="text-[11px] text-neutral-500 pt-4 border-t border-white/5">
@@ -517,12 +750,36 @@
         </p>
     </footer>
 
-    <!-- Frontend Interactive Logic -->
+    <!-- Interactive Client Logic -->
     <script>
-        let currentDocumentB64 = '';
-        let currentDocumentName = '';
+        let currentAuthSession = null;
+        let regAadhaarB64 = '';
+        let regAadhaarName = '';
+        let modalDocumentB64 = '';
+        let modalDocumentName = '';
+        let acadFileB64 = '';
+        let acadFileName = '';
 
-        // Auto format Aadhaar with spaces (XXXX XXXX XXXX)
+        function switchPortalTab(tab) {
+            const regView = document.getElementById('view-register');
+            const loginView = document.getElementById('view-login');
+            const btnReg = document.getElementById('tab-btn-register');
+            const btnLogin = document.getElementById('tab-btn-login');
+
+            if (tab === 'register') {
+                regView.classList.remove('hidden');
+                loginView.classList.add('hidden');
+                btnReg.classList.add('active');
+                btnLogin.classList.remove('active');
+            } else {
+                regView.classList.add('hidden');
+                loginView.classList.remove('hidden');
+                btnLogin.classList.add('active');
+                btnReg.classList.remove('active');
+            }
+            document.getElementById('portal').scrollIntoView({ behavior: 'smooth' });
+        }
+
         function formatAadhaar(input) {
             let val = input.value.replace(/\D/g, '').substring(0, 12);
             let parts = [];
@@ -532,91 +789,68 @@
             input.value = parts.join(' ');
         }
 
-        // File Handler
-        function handleFileSelect(input) {
+        function handleRegAadhaarFileSelect(input) {
             const file = input.files[0];
             if (!file) return;
             if (file.size > 8 * 1024 * 1024) {
-                alert('File size must be under 8MB.');
+                alert('Aadhaar document size must be under 8MB.');
                 return;
             }
-            currentDocumentName = file.name;
+            regAadhaarName = file.name;
             const reader = new FileReader();
             reader.onload = function(e) {
-                currentDocumentB64 = e.target.result;
-                const disp = document.getElementById('file-name-display');
+                regAadhaarB64 = e.target.result;
+                const disp = document.getElementById('reg-aadhaar-file-display');
                 disp.innerText = `✓ Selected: ${file.name} (${Math.round(file.size/1024)} KB)`;
                 disp.classList.remove('hidden');
             };
             reader.readAsDataURL(file);
         }
 
-        // Fetch Public Foundation Info & Campaigns
-        async function loadPublicData() {
-            try {
-                const res = await fetch('/api/foundation/public');
-                const data = await res.json();
-                if (data.ok && data.activeCampaigns?.length > 0) {
-                    const c = data.activeCampaigns[0];
-                    document.getElementById('camp-title').innerText = c.title;
-                    document.getElementById('camp-desc').innerText = c.description;
-                    document.getElementById('camp-kit').innerHTML = `<strong>📦 Kit Contents:</strong> ${c.kit_summary}`;
-                    document.getElementById('camp-target').innerText = c.target_audience;
-                    document.getElementById('camp-code').innerText = c.campaign_code;
-                }
-            } catch (e) {
-                console.warn('API notice:', e);
-            }
-        }
-        loadPublicData();
-
-        // Application Submit Handler
-        async function handleApplySubmit(e) {
+        // 1. One-time Student Registration
+        async function handleStudentRegister(e) {
             e.preventDefault();
-            const errDiv = document.getElementById('apply-error');
-            const succDiv = document.getElementById('apply-success');
-            const btn = document.getElementById('apply-submit-btn');
+            const errDiv = document.getElementById('reg-error');
+            const succDiv = document.getElementById('reg-success');
+            const btn = document.getElementById('reg-submit-btn');
 
             errDiv.classList.add('hidden');
             succDiv.classList.add('hidden');
 
-            const rawAadhaar = document.getElementById('student_aadhaar').value.replace(/\D/g, '');
+            const rawAadhaar = document.getElementById('reg_aadhaar').value.replace(/\D/g, '');
             if (rawAadhaar.length !== 12) {
                 errDiv.innerText = 'Please enter a valid 12-digit Student Aadhaar Number.';
                 errDiv.classList.remove('hidden');
                 return;
             }
 
-            if (!currentDocumentB64) {
-                errDiv.innerText = 'Please attach the official Requisition Document with the School Rubber Stamp and Teacher / Headmaster signature.';
+            if (!regAadhaarB64) {
+                errDiv.innerText = 'Please upload a clear photograph or PDF scan of the Student’s Aadhaar Card for manual desk verification.';
                 errDiv.classList.remove('hidden');
                 return;
             }
 
             btn.disabled = true;
-            btn.innerText = 'Submitting & Registering Student Account...';
+            btn.innerText = 'Creating Permanent Account & Submitting Identity...';
 
             const payload = {
-                student_name: document.getElementById('student_name').value.trim(),
-                class_grade: document.getElementById('class_grade').value,
-                student_dob: document.getElementById('student_dob').value.trim(),
-                student_aadhaar: rawAadhaar,
-                school_name: document.getElementById('school_name').value.trim(),
-                school_address: document.getElementById('school_address').value.trim(),
-                school_district: document.getElementById('school_district').value.trim(),
-                school_state: document.getElementById('school_state').value.trim(),
-                teacher_name: document.getElementById('teacher_name').value.trim(),
-                teacher_designation: document.getElementById('teacher_designation').value.trim(),
-                teacher_phone: document.getElementById('teacher_phone').value.trim(),
-                teacher_email: document.getElementById('teacher_email').value.trim(),
-                assistance_type: document.getElementById('assistance_type').value,
-                specific_needs: document.getElementById('specific_needs').value.trim(),
-                document_url: currentDocumentB64,
-                document_name: currentDocumentName
+                aadhaar: rawAadhaar,
+                legal_name: document.getElementById('reg_legal_name').value.trim(),
+                dob: document.getElementById('reg_dob').value.trim(),
+                father_guardian_name: document.getElementById('reg_guardian_name').value.trim(),
+                guardian_phone: document.getElementById('reg_guardian_phone').value.trim(),
+                residential_address: document.getElementById('reg_address').value.trim(),
+                district: document.getElementById('reg_district').value.trim(),
+                pincode: document.getElementById('reg_pincode').value.trim(),
+                current_school_name: document.getElementById('reg_school_name').value.trim(),
+                current_class: document.getElementById('reg_class').value,
+                annual_family_income: document.getElementById('reg_income').value,
+                aadhaar_image_url: regAadhaarB64,
+                aadhaar_image_name: regAadhaarName
             };
 
             try {
-                const res = await fetch('/api/foundation/apply', {
+                const res = await fetch('/api/foundation/student/register', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
@@ -624,59 +858,53 @@
                 const data = await res.json();
 
                 if (!res.ok || !data.ok) {
-                    throw new Error(data.error || 'Failed to submit application.');
+                    throw new Error(data.error || 'Failed to create student profile.');
                 }
-
-                document.getElementById('fnd-apply-form').reset();
-                currentDocumentB64 = '';
-                document.getElementById('file-name-display').classList.add('hidden');
 
                 succDiv.innerHTML = `
                     <div class="text-emerald-400 font-bold text-lg flex items-center gap-2">
-                        <span>✓</span> Application Successfully Registered!
+                        <span>✓</span> Student Profile Successfully Created!
                     </div>
                     <div class="font-mono text-xs text-white bg-black/40 p-3 rounded-xl border border-white/10">
-                        <strong>Application Reference:</strong> ${data.application_code}<br>
-                        <strong>Tracking Account ID:</strong> Aadhaar Ending in ${data.student_aadhaar_last4}<br>
-                        <strong>Password:</strong> Your Date of Birth (${payload.student_dob})
+                        <strong>Student Legal Name:</strong> ${data.legal_name} (Permanently Locked)<br>
+                        <strong>Account ID:</strong> Aadhaar Ending in ${data.aadhaar_last4}<br>
+                        <strong>Login Password:</strong> Date of Birth (${payload.dob})<br>
+                        <strong>Verification:</strong> <span class="text-amber-300">Pending Manual Desk Check of Uploaded Aadhaar</span>
                     </div>
                     <p class="text-xs text-neutral-300">
-                        The Foundation Desk will examine the school seal and verify details with your Headmaster. You can log in anytime to track parcel dispatch via India Post.
+                        Your permanent profile is created. Our desk will verify your Aadhaar card photo against records. You can now log into your Student Dashboard.
                     </p>
-                    <button type="button" onclick="openTrackModal()" class="mt-2 px-4 py-2 rounded-xl bg-emerald-500 text-black font-bold text-xs">
-                        Open Tracking Portal
+                    <button type="button" onclick="autoLoginAfterRegister('${rawAadhaar}', '${payload.dob}')" class="mt-2 px-4 py-2 rounded-xl bg-emerald-500 text-black font-bold text-xs">
+                        Enter Student Dashboard Now →
                     </button>
                 `;
                 succDiv.classList.remove('hidden');
-                succDiv.scrollIntoView({ behavior: 'smooth' });
 
             } catch (err) {
                 errDiv.innerText = err.message;
                 errDiv.classList.remove('hidden');
             } finally {
                 btn.disabled = false;
-                btn.innerText = 'Submit Educational Aid Application';
+                btn.innerText = 'Create Permanent Student Account';
             }
         }
 
-        // Modal Controls
-        function openTrackModal() {
-            document.getElementById('track-modal').classList.remove('hidden');
-        }
-        function closeTrackModal() {
-            document.getElementById('track-modal').classList.add('hidden');
+        function autoLoginAfterRegister(aadhaar, dob) {
+            document.getElementById('login_aadhaar').value = aadhaar;
+            document.getElementById('login_dob').value = dob;
+            switchPortalTab('login');
+            document.getElementById('student-login-form').dispatchEvent(new Event('submit'));
         }
 
-        // Student Tracking Login
-        async function handleTrackLogin(e) {
+        // 2. Student Login & Dashboard
+        async function handleStudentLogin(e) {
             e.preventDefault();
-            const errDiv = document.getElementById('track-error');
-            const resDiv = document.getElementById('track-results');
-            const btn = document.getElementById('track-btn');
+            const errDiv = document.getElementById('login-error');
+            const btn = document.getElementById('login-submit-btn');
             errDiv.classList.add('hidden');
 
-            const aadhaar = document.getElementById('track_aadhaar').value.replace(/\D/g, '');
-            const dob = document.getElementById('track_dob').value.trim();
+            const aadhaar = document.getElementById('login_aadhaar').value.replace(/\D/g, '');
+            const dob = document.getElementById('login_dob').value.trim();
 
             btn.disabled = true;
             btn.innerText = 'Verifying Credentials...';
@@ -693,96 +921,378 @@
                     throw new Error(data.error || 'Authentication failed.');
                 }
 
-                document.getElementById('track-login-form').classList.add('hidden');
+                currentAuthSession = { aadhaar, dob, student: data.student };
 
-                let html = `
-                    <div class="p-4 rounded-2xl bg-emerald-950/40 border border-emerald-800/40 flex items-center justify-between">
-                        <div>
-                            <span class="text-xs font-mono text-neutral-400">STUDENT PROFILE</span>
-                            <h4 class="font-bold text-white text-base">${data.student.name}</h4>
-                            <p class="text-xs text-neutral-300">${data.student.school_name} &bull; ${data.student.district}</p>
-                        </div>
-                        <div class="text-right font-mono text-xs text-emerald-400">
-                            Aadhaar: XXXX-XXXX-${data.student.aadhaar_last4}<br>
-                            DOB: ${data.student.dob}
-                        </div>
-                    </div>
-                `;
+                // Populate Student Header
+                document.getElementById('dash-student-name').innerText = data.student.legal_name;
+                document.getElementById('dash-school-class').innerText = `${data.student.current_class} • ${data.student.current_school_name}`;
+                document.getElementById('dash-address').innerText = `${data.student.residential_address}, ${data.student.district}`;
+                document.getElementById('dash-guardian-name').innerText = data.student.father_guardian_name;
+                document.getElementById('dash-guardian-phone').innerText = `+91 ${data.student.guardian_phone}`;
+                document.getElementById('dash-aadhaar').innerText = `XXXX-XXXX-${data.student.aadhaar_last4}`;
+                document.getElementById('dash-dob').innerText = data.student.dob;
 
-                data.applications.forEach(a => {
-                    const statusColors = {
-                        'pending_review': 'bg-amber-500/20 text-amber-300 border-amber-500/30',
-                        'verified': 'bg-blue-500/20 text-blue-300 border-blue-500/30',
-                        'approved': 'bg-purple-500/20 text-purple-300 border-purple-500/30',
-                        'dispatched': 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
-                        'delivered': 'bg-emerald-500/30 text-emerald-200 border-emerald-500/50',
-                        'rejected': 'bg-rose-500/20 text-rose-300 border-rose-500/30'
-                    };
+                // Verification Badge
+                const vb = document.getElementById('dash-verif-badge');
+                if (data.student.verification_status === 'verified') {
+                    vb.className = 'px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
+                    vb.innerText = 'AADHAAR VERIFIED ✓';
+                } else if (data.student.verification_status === 'rejected') {
+                    vb.className = 'px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30';
+                    vb.innerText = 'VERIFICATION REJECTED';
+                } else {
+                    vb.className = 'px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30';
+                    vb.innerText = 'PENDING DESK VERIFICATION';
+                }
 
-                    const statusLabels = {
-                        'pending_review': '1. Application Submitted (Under Desk Review)',
-                        'verified': '2. School Seal & Teacher Verified ✓',
-                        'approved': '3. Approved by Foundation Desk ✓',
-                        'dispatched': '4. Dispatched via India Post Speed Post 🚚',
-                        'delivered': '5. Parcel Delivered to School / Student 🎉',
-                        'rejected': 'Application Not Eligible'
-                    };
+                // Academic Badge
+                const ab = document.getElementById('dash-acad-badge');
+                if (data.student.academic_standing === 'ineligible_poor_performance') {
+                    ab.className = 'px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30';
+                    ab.innerText = 'ACADEMIC REVIEW REQUIRED';
+                } else if (data.student.academic_standing === 'probation') {
+                    ab.className = 'px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30';
+                    ab.innerText = 'ACADEMIC STANDING: PROBATION';
+                } else {
+                    ab.className = 'px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
+                    ab.innerText = 'ACADEMIC STANDING: ACTIVE';
+                }
 
-                    html += `
-                        <div class="p-5 rounded-2xl liquid-card border border-white/10 space-y-4">
-                            <div class="flex items-center justify-between">
-                                <span class="font-mono text-xs font-bold text-emerald-400">${a.application_code}</span>
-                                <span class="px-2.5 py-1 rounded-md text-[11px] font-mono border ${statusColors[a.status] || 'text-white'}">
-                                    ${statusLabels[a.status] || a.status}
-                                </span>
-                            </div>
+                renderActiveCampaigns(data.active_campaigns || []);
+                renderApplicationsHistory(data.applications || []);
+                renderAcademicRecords(data.academic_records || []);
 
-                            <div>
-                                <h5 class="text-sm font-bold text-white">${a.campaign_title}</h5>
-                                <p class="text-xs text-neutral-300 mt-1">${a.specific_needs}</p>
-                            </div>
-
-                            ${a.tracking_number ? `
-                                <div class="p-3.5 rounded-xl bg-black/60 border border-emerald-500/30 space-y-2">
-                                    <div class="flex items-center justify-between text-xs">
-                                        <span class="font-mono text-neutral-400">Carrier: <strong>${a.shipping_carrier}</strong></span>
-                                        <span class="font-mono text-emerald-300 font-bold">Consignment #${a.tracking_number}</span>
-                                    </div>
-                                    <a href="https://www.indiapost.gov.in/_layouts/15/dpt.cpt.application.ui/trackconsignment.aspx" target="_blank" class="block w-full text-center py-2 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-xs font-mono font-semibold border border-emerald-500/40 transition">
-                                        Open Official India Post Consignment Tracker ↗
-                                    </a>
-                                </div>
-                            ` : `
-                                <div class="p-3 rounded-xl bg-white/5 text-[11px] text-neutral-400">
-                                    ⏳ Materials are currently being sourced. India Post tracking consignment number will appear here once booked at the post office.
-                                </div>
-                            `}
-
-                            <div class="text-[11px] text-neutral-500 font-mono flex items-center justify-between pt-2 border-t border-white/5">
-                                <span>Recommending Faculty: ${a.teacher_name}</span>
-                                <span>Submitted: ${new Date(a.created_at).toLocaleDateString()}</span>
-                            </div>
-                        </div>
-                    `;
-                });
-
-                html += `
-                    <button type="button" onclick="document.getElementById('track-login-form').classList.remove('hidden'); document.getElementById('track-results').classList.add('hidden');" class="w-full py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-neutral-300 text-xs font-mono transition">
-                        ← Sign Out / Check Another Student
-                    </button>
-                `;
-
-                resDiv.innerHTML = html;
-                resDiv.classList.remove('hidden');
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('student-dashboard').classList.remove('hidden');
 
             } catch (err) {
                 errDiv.innerText = err.message;
                 errDiv.classList.remove('hidden');
             } finally {
                 btn.disabled = false;
-                btn.innerText = 'Check Status & Parcel Waybill';
+                btn.innerText = 'Authenticate & Open Portal';
             }
         }
+
+        function logoutStudent() {
+            currentAuthSession = null;
+            document.getElementById('student-dashboard').classList.add('hidden');
+            document.getElementById('login-screen').classList.remove('hidden');
+            document.getElementById('student-login-form').reset();
+        }
+
+        // Render Active Campaigns with 1-Per-Campaign Enforcement
+        function renderActiveCampaigns(campaigns) {
+            const container = document.getElementById('dash-campaigns-list');
+            if (!campaigns.length) {
+                container.innerHTML = `<div class="p-5 rounded-2xl bg-white/5 text-xs text-neutral-400">All current aid campaigns are fully allocated. Next distribution cycle launching soon.</div>`;
+                return;
+            }
+
+            container.innerHTML = campaigns.map(c => `
+                <div class="p-5 rounded-2xl liquid-card border ${c.already_applied ? 'border-emerald-500/30 bg-emerald-950/20' : 'border-white/10'} flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-mono font-bold text-emerald-400">${c.campaign_code}</span>
+                            <span class="text-[11px] font-mono text-neutral-400">&bull; Target: ${c.target_audience}</span>
+                        </div>
+                        <h5 class="text-base font-bold text-white mt-1">${c.title}</h5>
+                        <p class="text-xs text-neutral-300 mt-1">${c.description}</p>
+                        <div class="mt-2 text-xs font-mono text-emerald-300">📦 Kit: ${c.kit_summary}</div>
+                    </div>
+
+                    <div class="min-w-[180px] text-right">
+                        ${c.already_applied ? `
+                            <span class="inline-block px-3 py-1.5 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-mono font-bold">
+                                ✓ Already Applied
+                            </span>
+                            <small class="block text-[11px] text-neutral-400 mt-1">Ref: ${c.user_application?.application_code || ''}</small>
+                        ` : `
+                            <button onclick="openCampaignModal('${c.id}', '${c.title.replace(/'/g, "\\'")}')" class="w-full py-2.5 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs transition shadow-md">
+                                Apply for this Drive →
+                            </button>
+                        `}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Render Applications History & Speed Post Tracking
+        function renderApplicationsHistory(apps) {
+            const container = document.getElementById('dash-applications-list');
+            if (!apps.length) {
+                container.innerHTML = `<div class="p-5 rounded-2xl bg-white/5 text-xs text-neutral-400">No aid applications submitted yet. Click "Apply for this Drive" above to request study materials.</div>`;
+                return;
+            }
+
+            const statusBadges = {
+                'pending_review': '<span class="px-2.5 py-1 rounded-md text-[11px] font-mono bg-amber-500/20 text-amber-300 border border-amber-500/30">1. Under Desk Review</span>',
+                'verified': '<span class="px-2.5 py-1 rounded-md text-[11px] font-mono bg-blue-500/20 text-blue-300 border border-blue-500/30">2. School Seal Verified ✓</span>',
+                'approved': '<span class="px-2.5 py-1 rounded-md text-[11px] font-mono bg-purple-500/20 text-purple-300 border border-purple-500/30">3. Foundation Approved ✓</span>',
+                'dispatched': '<span class="px-2.5 py-1 rounded-md text-[11px] font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">4. Dispatched via Speed Post 🚚</span>',
+                'delivered': '<span class="px-2.5 py-1 rounded-md text-[11px] font-mono bg-emerald-500/30 text-emerald-200 border border-emerald-500/50">5. Parcel Delivered 🎉</span>',
+                'rejected': '<span class="px-2.5 py-1 rounded-md text-[11px] font-mono bg-rose-500/20 text-rose-300 border border-rose-500/30">Criteria Not Met</span>'
+            };
+
+            container.innerHTML = apps.map(a => `
+                <div class="p-5 rounded-2xl liquid-card border border-white/10 space-y-4">
+                    <div class="flex items-center justify-between">
+                        <span class="font-mono text-xs font-bold text-emerald-400">${a.application_code}</span>
+                        <div>${statusBadges[a.status] || a.status}</div>
+                    </div>
+
+                    <div>
+                        <h5 class="text-sm font-bold text-white">${a.campaign_title || 'Educational Assistance Drive'}</h5>
+                        <p class="text-xs text-neutral-300 mt-1">${a.specific_needs}</p>
+                    </div>
+
+                    ${['approved', 'dispatched', 'delivered'].includes(a.status) ? `
+                        <div class="p-3.5 rounded-xl bg-emerald-950/20 border border-emerald-500/20 text-xs text-neutral-300 space-y-1.5">
+                            <div class="font-bold text-emerald-300 flex items-center gap-1.5">
+                                <span>📜</span> Official Letter of Intimation to Headmaster:
+                            </div>
+                            <p class="text-[11px] text-neutral-300 leading-relaxed">
+                                An official letter has been posted to the Headmaster / Teacher In-Charge at <strong>${a.school_name}</strong> informing them that your scholarship aid is approved. The materials will be delivered to the school for in-person handover.
+                            </p>
+                            <div class="text-[11px] text-emerald-400/90 font-mono pt-1 border-t border-white/5 flex items-center gap-1">
+                                <span>👨‍👩‍👧</span> Parent Alert: Guardian will receive a notification when the parcel reaches school.
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    ${a.tracking_number ? `
+                        <div class="p-4 rounded-xl bg-black/60 border border-emerald-500/30 space-y-2">
+                            <div class="flex items-center justify-between text-xs font-mono">
+                                <span class="text-neutral-400">Carrier: <strong>${a.shipping_carrier || 'India Post Speed Post'}</strong></span>
+                                <span class="text-emerald-300 font-bold">Consignment #${a.tracking_number}</span>
+                            </div>
+                            <a href="https://www.indiapost.gov.in/_layouts/15/dpt.cpt.application.ui/trackconsignment.aspx" target="_blank" class="block w-full text-center py-2 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-xs font-mono font-semibold border border-emerald-500/40 transition">
+                                Open Official India Post Consignment Tracker ↗
+                            </a>
+                        </div>
+                    ` : `
+                        <div class="p-3 rounded-xl bg-white/5 text-[11px] text-neutral-400 font-mono">
+                            ⏳ Status: Materials being packaged. India Post Speed Post consignment number will be posted here upon dispatch.
+                        </div>
+                    `}
+
+                    <div class="text-[11px] text-neutral-500 font-mono flex items-center justify-between pt-2 border-t border-white/5">
+                        <span>Recommending Teacher: ${a.teacher_name}</span>
+                        <span>Date: ${new Date(a.created_at).toLocaleDateString()}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Render Academic Records List
+        function renderAcademicRecords(records) {
+            const container = document.getElementById('dash-acad-records-list');
+            if (!records.length) {
+                container.innerHTML = `
+                    <div class="p-4 rounded-xl bg-white/5 text-xs text-neutral-400 text-center">
+                        No term marksheet submitted yet. Click "＋ Submit Term Marksheet" above to upload your latest school exam progress card.
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = records.map(r => `
+                <div class="p-3.5 rounded-xl bg-black/50 border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                    <div>
+                        <strong class="text-white">${r.exam_term}</strong>
+                        <span class="text-neutral-400 font-mono"> (${r.academic_year})</span>
+                        ${r.teacher_remarks ? `<p class="text-[11px] text-neutral-300 mt-0.5">Remark: "${r.teacher_remarks}"</p>` : ''}
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="font-mono text-emerald-300 font-bold text-sm">${r.percentage}% ${r.grade ? `(${r.grade})` : ''}</span>
+                        <span class="px-2 py-0.5 rounded text-[10px] font-mono ${r.performance_rating === 'poor' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'}">
+                            ${r.performance_rating.toUpperCase()}
+                        </span>
+                        ${r.marksheet_url ? `<a href="${r.marksheet_url}" target="_blank" class="text-emerald-400 underline font-mono text-[11px]">View Card ↗</a>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 3. Campaign Application Modal Logic
+        function openCampaignModal(campId, campTitle) {
+            document.getElementById('modal-camp-id').value = campId;
+            document.getElementById('modal-camp-title').innerText = campTitle;
+            document.getElementById('campaign-apply-modal').classList.remove('hidden');
+        }
+        function closeCampaignModal() {
+            document.getElementById('campaign-apply-modal').classList.add('hidden');
+        }
+
+        function handleModalFileSelect(input) {
+            const file = input.files[0];
+            if (!file) return;
+            if (file.size > 8 * 1024 * 1024) {
+                alert('File size must be under 8MB.');
+                return;
+            }
+            modalDocumentName = file.name;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                modalDocumentB64 = e.target.result;
+                const disp = document.getElementById('modal-file-display');
+                disp.innerText = `✓ Selected: ${file.name} (${Math.round(file.size/1024)} KB)`;
+                disp.classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function handleCampaignApplySubmit(e) {
+            e.preventDefault();
+            const errDiv = document.getElementById('modal-apply-error');
+            const btn = document.getElementById('modal-apply-btn');
+            errDiv.classList.add('hidden');
+
+            const declareCheck = document.getElementById('modal_teacher_declare');
+            if (declareCheck && !declareCheck.checked) {
+                errDiv.innerText = 'Please check the Solemn Educator Certification declaring that the student genuinely requires economic support.';
+                errDiv.classList.remove('hidden');
+                return;
+            }
+
+            if (!modalDocumentB64) {
+                errDiv.innerText = 'Please attach the official Requisition Document with the School Rubber Stamp and Teacher / Headmaster signature.';
+                errDiv.classList.remove('hidden');
+                return;
+            }
+
+            if (!currentAuthSession) {
+                alert('Session expired. Please log in again.');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerText = 'Submitting Application...';
+
+            const payload = {
+                aadhaar: currentAuthSession.aadhaar,
+                dob: currentAuthSession.dob,
+                campaign_id: document.getElementById('modal-camp-id').value,
+                assistance_type: document.getElementById('modal_assistance_type').value,
+                specific_needs: document.getElementById('modal_specific_needs').value.trim(),
+                teacher_name: document.getElementById('modal_teacher_name').value.trim(),
+                teacher_designation: document.getElementById('modal_teacher_desig').value.trim(),
+                teacher_phone: document.getElementById('modal_teacher_phone').value.trim(),
+                document_url: modalDocumentB64,
+                document_name: modalDocumentName
+            };
+
+            try {
+                const res = await fetch('/api/foundation/student/apply-campaign', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+
+                if (!res.ok || !data.ok) {
+                    throw new Error(data.error || 'Failed to submit campaign application.');
+                }
+
+                alert(data.message);
+                closeCampaignModal();
+                // Refresh dashboard
+                document.getElementById('student-login-form').dispatchEvent(new Event('submit'));
+
+            } catch (err) {
+                errDiv.innerText = err.message;
+                errDiv.classList.remove('hidden');
+            } finally {
+                btn.disabled = false;
+                btn.innerText = 'Submit Application for this Campaign Drive';
+            }
+        }
+
+        // 4. Academic Progress / Marksheet Modal Logic
+        function openAcadModal() {
+            document.getElementById('acad-record-modal').classList.remove('hidden');
+        }
+        function closeAcadModal() {
+            document.getElementById('acad-record-modal').classList.add('hidden');
+        }
+
+        function handleAcadFileSelect(input) {
+            const file = input.files[0];
+            if (!file) return;
+            if (file.size > 8 * 1024 * 1024) {
+                alert('Marksheet file size must be under 8MB.');
+                return;
+            }
+            acadFileName = file.name;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                acadFileB64 = e.target.result;
+                const disp = document.getElementById('acad-file-display');
+                disp.innerText = `✓ Selected: ${file.name} (${Math.round(file.size/1024)} KB)`;
+                disp.classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function handleAcadRecordSubmit(e) {
+            e.preventDefault();
+            const errDiv = document.getElementById('acad-error');
+            const btn = document.getElementById('acad-submit-btn');
+            errDiv.classList.add('hidden');
+
+            if (!acadFileB64) {
+                errDiv.innerText = 'Please upload a photo or scan of your terminal exam report card / marksheet.';
+                errDiv.classList.remove('hidden');
+                return;
+            }
+
+            if (!currentAuthSession) {
+                alert('Session expired. Please log in again.');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerText = 'Uploading Marksheet & Progress Record...';
+
+            const payload = {
+                aadhaar: currentAuthSession.aadhaar,
+                dob: currentAuthSession.dob,
+                exam_term: document.getElementById('acad_exam_term').value,
+                percentage: document.getElementById('acad_percentage').value,
+                grade: document.getElementById('acad_grade').value.trim(),
+                teacher_remarks: document.getElementById('acad_remarks').value.trim(),
+                marksheet_url: acadFileB64,
+                marksheet_name: acadFileName
+            };
+
+            try {
+                const res = await fetch('/api/foundation/student/academic-record', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+
+                if (!res.ok || !data.ok) {
+                    throw new Error(data.error || 'Failed to submit marksheet.');
+                }
+
+                alert(data.message);
+                closeAcadModal();
+                // Refresh dashboard
+                document.getElementById('student-login-form').dispatchEvent(new Event('submit'));
+
+            } catch (err) {
+                errDiv.innerText = err.message;
+                errDiv.classList.remove('hidden');
+            } finally {
+                btn.disabled = false;
+                btn.innerText = 'Submit Academic Progress Record';
+            }
+        }
+    </script>
+</body>
+</html>
     </script>
 </body>
 </html>

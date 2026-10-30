@@ -183,6 +183,114 @@
       }
     });
 
+    $('#fnd-aadh-approve-btn')?.addEventListener('click', async () => {
+      if (!window._curFndStudent) return;
+      const notes = $('#fnd-aadh-notes').value;
+      const standing = $('#fnd-aadh-standing').value;
+      try {
+        await api(`foundation/admin/students/${window._curFndStudent.id}/verify`, {
+          method: 'POST',
+          body: JSON.stringify({ status: 'verified', notes })
+        });
+        if (standing !== window._curFndStudent.academic_standing) {
+          await api(`foundation/admin/students/${window._curFndStudent.id}/academic-standing`, {
+            method: 'POST',
+            body: JSON.stringify({ academic_standing: standing, notes })
+          });
+        }
+        $('#fnd-aadhaar-dialog').close();
+        toast('Student identity verified & approved!');
+        await loadFoundation();
+      } catch (err) {
+        toast(err.message);
+      }
+    });
+
+    $('#fnd-aadh-reject-btn')?.addEventListener('click', async () => {
+      if (!window._curFndStudent) return;
+      const notes = $('#fnd-aadh-notes').value || 'Aadhaar document does not match student records.';
+      try {
+        await api(`foundation/admin/students/${window._curFndStudent.id}/verify`, {
+          method: 'POST',
+          body: JSON.stringify({ status: 'rejected', notes })
+        });
+        $('#fnd-aadhaar-dialog').close();
+        toast('Student account marked as rejected.');
+        await loadFoundation();
+      } catch (err) {
+        toast(err.message);
+      }
+    });
+
+    $('#fnd-dlg-letter-btn')?.addEventListener('click', async () => {
+      if (!window._curFndApp) return;
+      try {
+        const res = await api(`foundation/admin/applications/${window._curFndApp.id}/generate-letter`, {
+          method: 'POST'
+        });
+        if (!res.ok) throw new Error(res.error || 'Failed to generate letter');
+        window._curFndLetter = res.letter;
+        $('#fnd-ltr-title').textContent = `Official Letter to ${res.letter.school_name}`;
+        $('#fnd-ltr-code').textContent = res.letter.letter_code;
+        $('#fnd-ltr-content').textContent = res.letter.letter_content;
+        $('#fnd-letter-dialog').showModal();
+      } catch (err) {
+        toast(err.message);
+      }
+    });
+
+    $('#fnd-dlg-parent-btn')?.addEventListener('click', async () => {
+      if (!window._curFndApp) return;
+      const app = window._curFndApp;
+      const phone = app.guardian_phone || '';
+      const text = `নমস্কার / Greetings from Chiranjit Kar Foundation!\n\nWe are pleased to inform you that the educational aid application for ${app.student_name} (${app.class_grade}, ${app.school_name}) has been APPROVED.\n\nAll syllabus study materials, registers, and kits are being packaged and will be delivered directly to ${app.school_name} via India Post Speed Post.\n\nThe Headmaster / Teacher In-Charge will formally hand over the items to your child upon arrival.\n\nPlease encourage ${app.student_name} to study diligently. Satisfactory school exam performance maintains scholarship assistance for future academic drives.\n\nChiranjit Kar Foundation Desk: +91 9402369889 | Agartala, Tripura`;
+
+      window.open(`https://wa.me/91${phone.replace(/\\D/g, '').slice(-10)}?text=${encodeURIComponent(text)}`, '_blank');
+
+      try {
+        await api(`foundation/admin/applications/${app.id}/notify-parent`, { method: 'POST' });
+        toast('Parent WhatsApp alert opened and logged.');
+      } catch (err) {
+        console.error(err);
+      }
+    });
+
+    $('#fnd-ltr-copy-btn')?.addEventListener('click', () => {
+      if (!window._curFndLetter) return;
+      navigator.clipboard.writeText(window._curFndLetter.letter_content);
+      toast('Official letter copied to clipboard.');
+    });
+
+    $('#fnd-ltr-print-btn')?.addEventListener('click', () => {
+      if (!window._curFndLetter) return;
+      const printWin = window.open('', '_blank');
+      printWin.document.write(`
+        <html>
+        <head>
+          <title>${window._curFndLetter.letter_code} - Foundation Intimation Letter</title>
+          <style>
+            body { font-family: 'Times New Roman', serif; padding: 40px; line-height: 1.6; color: #000; font-size: 14px; }
+            pre { white-space: pre-wrap; font-family: inherit; }
+            .header { border-bottom: 2px solid #000; padding-bottom: 12px; margin-bottom: 24px; text-align: center; }
+            h1 { margin: 0; font-size: 20px; text-transform: uppercase; letter-spacing: 1px; }
+            .sub { font-size: 12px; color: #444; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>CHIRANJIT KAR FOUNDATION</h1>
+            <div class="sub">Direct Child Education &amp; Philanthropic Stewardship &bull; 100% Private Philanthropy</div>
+            <div class="sub">Agartala, Tripura West - 799001 | Desk: +91 9402369889 | foundation@chiranjitkar.com</div>
+          </div>
+          <pre>${window._curFndLetter.letter_content}</pre>
+        </body>
+        </html>
+      `);
+      printWin.document.close();
+      printWin.focus();
+      setTimeout(() => printWin.print(), 300);
+    });
+
     $$('[data-close-dialog]').forEach(button => button.addEventListener('click', () => button.closest('dialog').close()));
     $$('.nav-item').forEach(button => button.addEventListener('click', () => setView(button.dataset.view)));
     $$('[data-open-view]').forEach(button => button.addEventListener('click', () => setView(button.dataset.openView)));
@@ -643,9 +751,11 @@
       const res = await api('foundation/admin/overview');
       if (!res.ok) return;
       fndData.applications = res.applications || [];
+      fndData.students = res.students || [];
       fndData.disbursements = res.disbursements || [];
       fndData.campaigns = res.campaigns || [];
       fndData.budget = res.budget || {};
+      fndData.academic_records = res.academic_records || [];
 
       // 1. Fiscal & KPI cards
       const annBudget = Number(fndData.budget.annual_budget || 500000);
@@ -660,6 +770,7 @@
       $('#fnd-stat-remaining').textContent = money(remaining);
       $('#fnd-stat-beneficiaries').textContent = beneficiaries;
       $('#fnd-stat-pending').textContent = `${pendingCnt} Pending Review`;
+      if ($('#fnd-students-cnt-badge')) $('#fnd-students-cnt-badge').textContent = `${fndData.students.length} Registered`;
 
       // 2. Campaign Engine
       const activeCamp = fndData.campaigns[0] || null;
@@ -687,10 +798,65 @@
       $('#fnd-cnt-rejected').textContent = fndData.applications.filter(a => a.status === 'rejected').length;
 
       renderFoundationApplications();
+      renderFoundationStudents();
       renderFoundationDisbursements();
     } catch (err) {
       toast(err.message || 'Failed to load foundation overview.');
     }
+  }
+
+  function renderFoundationStudents() {
+    const tbody = $('#fnd-students-tbody');
+    if (!tbody) return;
+    if (!fndData.students.length) {
+      tbody.innerHTML = `<tr><td colspan="9" class="muted" style="text-align:center; padding:20px;">No registered student profiles yet.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = fndData.students.map(s => {
+      const verifMap = {
+        pending_verification: '<span class="status lead" style="font-size:10px;">Pending Check</span>',
+        verified: '<span class="status confirmed" style="font-size:10px;">Aadhaar Verified</span>',
+        rejected: '<span class="status archived" style="font-size:10px;">Rejected</span>'
+      };
+
+      const acadMap = {
+        eligible: '<span class="status scheduled" style="font-size:10px; background:rgba(52,211,153,0.15); color:var(--green);">Eligible</span>',
+        probation: '<span class="status lead" style="font-size:10px; background:rgba(245,158,11,0.15); color:var(--amber);">Probation</span>',
+        ineligible_poor_performance: '<span class="status archived" style="font-size:10px; background:rgba(248,113,113,0.15); color:var(--red);">Ineligible (Poor Exam)</span>'
+      };
+
+      return `
+        <tr>
+          <td><strong style="color:var(--text);">${escapeHtml(s.legal_name)}</strong></td>
+          <td><span style="font-family:var(--font-mono); font-size:11px;">${escapeHtml(s.aadhaar_number || 'XXXX-XXXX-' + s.aadhaar_last4)}</span></td>
+          <td><span>${escapeHtml(s.dob)}</span></td>
+          <td>
+            <strong>${escapeHtml(s.current_class)}</strong>
+            <small class="muted" style="display:block;">${escapeHtml(s.current_school_name)}</small>
+          </td>
+          <td>
+            <span>${escapeHtml(s.father_guardian_name)}</span>
+            <small class="muted" style="display:block;">+91 ${escapeHtml(s.guardian_phone)}</small>
+          </td>
+          <td>
+            ${s.aadhaar_image_url ? `
+              <button class="small-button" onclick="window.fndOpenAadhaarModal('${s.id}')" style="font-size:10px;">
+                🔍 View Card
+              </button>
+            ` : '<span class="muted">No upload</span>'}
+          </td>
+          <td>${verifMap[s.verification_status] || s.verification_status}</td>
+          <td>${acadMap[s.academic_standing || 'eligible']}</td>
+          <td>
+            <div style="display:flex; gap:4px;">
+              <button class="small-button" onclick="window.fndOpenAadhaarModal('${s.id}')">Inspect</button>
+              ${s.verification_status === 'pending_verification' ? `<button class="small-button gold" onclick="window.fndQuickVerifyStudent('${s.id}')">✓ Approve</button>` : ''}
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
   }
 
   function renderFoundationApplications() {
@@ -817,6 +983,46 @@
     $('#fnd-disp-school').textContent = app.school_name;
     $('#fnd-disp-tracking').value = app.tracking_number || '';
     $('#fnd-dispatch-dialog').showModal();
+  };
+
+  window.fndOpenAadhaarModal = function(id) {
+    const s = fndData.students.find(x => x.id === id);
+    if (!s) return;
+    window._curFndStudent = s;
+
+    $('#fnd-aadh-student-name').textContent = s.legal_name;
+    $('#fnd-aadh-student-sub').textContent = `${s.current_class} • ${s.current_school_name}`;
+    $('#fnd-aadh-num').textContent = s.aadhaar_number || `XXXX XXXX ${s.aadhaar_last4}`;
+    $('#fnd-aadh-dob').textContent = s.dob;
+    $('#fnd-aadh-guardian').textContent = s.father_guardian_name;
+    $('#fnd-aadh-phone').textContent = `+91 ${s.guardian_phone}`;
+    $('#fnd-aadh-phone').href = `https://wa.me/91${s.guardian_phone}`;
+    $('#fnd-aadh-addr').textContent = `${s.residential_address}, ${s.district}, ${s.state} - ${s.pincode}`;
+    $('#fnd-aadh-notes').value = s.verification_notes || '';
+    $('#fnd-aadh-standing').value = s.academic_standing || 'eligible';
+
+    if (s.aadhaar_image_url) {
+      $('#fnd-aadh-img').src = s.aadhaar_image_url;
+      $('#fnd-aadh-full-link').href = s.aadhaar_image_url;
+      $('#fnd-aadh-img-container').hidden = false;
+    } else {
+      $('#fnd-aadh-img-container').hidden = true;
+    }
+
+    $('#fnd-aadhaar-dialog').showModal();
+  };
+
+  window.fndQuickVerifyStudent = async function(id) {
+    try {
+      await api(`foundation/admin/students/${id}/verify`, {
+        method: 'POST',
+        body: JSON.stringify({ status: 'verified', notes: 'Quick verified by administrator.' })
+      });
+      toast('Student account manually verified & approved!');
+      await loadFoundation();
+    } catch (err) {
+      toast(err.message);
+    }
   };
 
   function setView(view) {

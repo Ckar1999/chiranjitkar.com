@@ -278,6 +278,36 @@
             </table>
           </div>
 
+          <!-- Registered Student Accounts & Aadhaar Identity Verification -->
+          <div class="section-heading" style="margin-bottom:12px; margin-top:32px;">
+            <div>
+              <h3>Registered Student Profiles &amp; Aadhaar Card Verification</h3>
+              <p class="muted">Inspect student identity documents, cross-check legal name &amp; DOB, verify genuine need, and track academic standing.</p>
+            </div>
+            <span class="status lead" id="fnd-students-cnt-badge" style="font-size:11px; padding:3px 10px;">0 Registered</span>
+          </div>
+
+          <div class="table-shell" style="margin-bottom:28px;">
+            <table class="data-table" style="font-size:12px;">
+              <thead>
+                <tr>
+                  <th>Student Legal Name</th>
+                  <th>Aadhaar Number</th>
+                  <th>DOB / Age</th>
+                  <th>Grade &amp; School</th>
+                  <th>Guardian &amp; Phone</th>
+                  <th>Aadhaar Document</th>
+                  <th>Account Status</th>
+                  <th>Academic Standing</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="fnd-students-tbody">
+                <tr><td colspan="9" class="muted" style="text-align:center; padding:20px;">No registered student profiles yet.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
           <!-- Internal Billing & Disbursement Ledger -->
           <div class="section-heading" style="margin-bottom:12px; margin-top:32px;">
             <div>
@@ -769,11 +799,93 @@
         </label>
       </div>
 
-      <div class="dialog-actions" style="margin-top:16px;">
-        <button type="button" id="fnd-dlg-reject-btn" class="button" style="background:rgba(248,113,113,0.15); color:var(--red); border:1px solid rgba(248,113,113,0.3); font-size:11px;">Reject Application</button>
+      <div class="dialog-actions" style="margin-top:16px; flex-wrap:wrap;">
+        <button type="button" id="fnd-dlg-letter-btn" class="button" style="background:rgba(52,211,153,0.15); color:var(--green); border:1px solid rgba(52,211,153,0.3); font-size:11px;">📜 Letter to Headmaster</button>
+        <button type="button" id="fnd-dlg-parent-btn" class="button" style="background:rgba(245,158,11,0.15); color:var(--amber); border:1px solid rgba(245,158,11,0.3); font-size:11px;">📱 WhatsApp Parent</button>
+        <div style="flex:1;"></div>
+        <button type="button" id="fnd-dlg-reject-btn" class="button" style="background:rgba(248,113,113,0.15); color:var(--red); border:1px solid rgba(248,113,113,0.3); font-size:11px;">Reject</button>
         <button type="button" class="button quiet" data-close-dialog>Close</button>
         <button type="button" id="fnd-dlg-verify-btn" class="button" style="background:rgba(96,165,250,0.2); color:#93c5fd; border:1px solid rgba(96,165,250,0.4); font-size:11px;">Mark Seal Verified</button>
         <button type="button" id="fnd-dlg-approve-btn" class="button gold" style="font-size:11px;">Approve for Aid</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Foundation: Student Aadhaar Card Inspection & Verification Dialog -->
+  <dialog id="fnd-aadhaar-dialog" class="dialog">
+    <div class="dialog-card" style="max-width:540px;">
+      <div class="dialog-head">
+        <div>
+          <span class="eyebrow" style="color:var(--green);">STUDENT IDENTITY VERIFICATION</span>
+          <h2 id="fnd-aadh-student-name">Student Name</h2>
+          <p class="muted" id="fnd-aadh-student-sub">Class 10 &bull; School</p>
+        </div>
+        <button type="button" class="icon-button" data-close-dialog aria-label="Close">×</button>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:12px 0; font-size:11.5px; background:rgba(0,0,0,0.3); padding:10px; border-radius:6px; border:1px solid var(--line);">
+        <div><span class="muted">Aadhaar (Full): </span><strong id="fnd-aadh-num" style="font-family:var(--font-mono);">0000 0000 0000</strong></div>
+        <div><span class="muted">Date of Birth: </span><strong id="fnd-aadh-dob">—</strong></div>
+        <div><span class="muted">Guardian: </span><span id="fnd-aadh-guardian" class="muted">—</span></div>
+        <div><span class="muted">Contact Phone: </span><a id="fnd-aadh-phone" href="#" target="_blank" style="color:var(--green); text-decoration:underline;">—</a></div>
+        <div style="grid-column:span 2;"><span class="muted">Address: </span><span id="fnd-aadh-addr" class="muted">—</span></div>
+      </div>
+
+      <!-- Aadhaar Image / Document Preview -->
+      <div style="margin:12px 0; padding:12px; border-radius:8px; background:rgba(0,0,0,0.4); border:1px solid rgba(52,211,153,0.3); text-align:center;">
+        <span class="muted" style="font-size:11px; display:block; margin-bottom:8px;">STUDENT AADHAAR CARD DOCUMENT:</span>
+        <div id="fnd-aadh-img-container" style="max-height:260px; overflow:auto; border-radius:6px; background:#000;">
+          <img id="fnd-aadh-img" src="" alt="Aadhaar Card" style="max-width:100%; border-radius:4px; display:inline-block;">
+        </div>
+        <a id="fnd-aadh-full-link" href="#" target="_blank" class="button quiet" style="font-size:11px; margin-top:8px; display:inline-block; text-decoration:none;">
+          🔍 Open Original Document in Full Screen ↗
+        </a>
+      </div>
+
+      <div style="margin-top:12px;">
+        <label>Admin Verification Notes
+          <textarea id="fnd-aadh-notes" rows="2" placeholder="e.g. Legal name matches Aadhaar card. DOB 12/04/2012 verified."></textarea>
+        </label>
+      </div>
+
+      <div style="margin-top:12px;">
+        <label>Academic Standing
+          <select id="fnd-aadh-standing">
+            <option value="eligible">Eligible &bull; In Good Standing (Scholarship Active)</option>
+            <option value="probation">Probation &bull; Academic Review Pending</option>
+            <option value="ineligible_poor_performance">Ineligible &bull; Poor Performance (Campaigns Blocked)</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="dialog-actions" style="margin-top:16px;">
+        <button type="button" id="fnd-aadh-reject-btn" class="button" style="background:rgba(248,113,113,0.15); color:var(--red); border:1px solid rgba(248,113,113,0.3); font-size:11px;">Reject Identity</button>
+        <button type="button" class="button quiet" data-close-dialog>Close</button>
+        <button type="button" id="fnd-aadh-approve-btn" class="button gold" style="font-size:11px;">✓ Verify &amp; Approve Account</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Foundation: Official Headmaster Intimation Letter Dialog -->
+  <dialog id="fnd-letter-dialog" class="dialog">
+    <div class="dialog-card" style="max-width:640px;">
+      <div class="dialog-head">
+        <div>
+          <span class="eyebrow" style="color:var(--green);">OFFICIAL FOUNDATION INTIMATION LETTER</span>
+          <h2 id="fnd-ltr-title">Letter to Headmaster</h2>
+          <p class="muted" id="fnd-ltr-code">CKF-LTR-0000</p>
+        </div>
+        <button type="button" class="icon-button" data-close-dialog aria-label="Close">×</button>
+      </div>
+
+      <div style="margin:14px 0; background:#06120e; border:1px solid rgba(52,211,153,0.3); border-radius:8px; padding:16px; font-family:monospace; font-size:11.5px; white-space:pre-wrap; line-height:1.6; max-height:360px; overflow-y:auto; color:var(--text);" id="fnd-ltr-content">
+        Letter text...
+      </div>
+
+      <div class="dialog-actions" style="margin-top:14px;">
+        <button type="button" class="button quiet" data-close-dialog>Close</button>
+        <button type="button" id="fnd-ltr-copy-btn" class="button quiet">📋 Copy Letter Text</button>
+        <button type="button" id="fnd-ltr-print-btn" class="button gold">🖨️ Print Official Letter</button>
       </div>
     </div>
   </dialog>
