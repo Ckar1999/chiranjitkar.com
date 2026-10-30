@@ -169,7 +169,7 @@ async function dispatchLeegalityAgreement(env, project, agreementType = 'master_
   const token = cfg.leegality_auth_token || env.LEEGALITY_AUTH_TOKEN || '';
   const isSandbox = cfg.leegality_sandbox === '1' || env.LEEGALITY_SANDBOX === '1';
   const baseUrl = isSandbox ? 'https://sandbox.leegality.com' : 'https://app1.leegality.com';
-  const profileId = (agreementType === 'master_collab' ? cfg.leegality_profile_id_collab : cfg.leegality_profile_id_paid) || 'dhZSbBk';
+  const profileId = (agreementType === 'master_collab' ? cfg.leegality_profile_id_collab : cfg.leegality_profile_id_paid) || 'Sbyx9po';
   const estampNumber = cfg.leegality_estamp_number || 'IN-DL22366535014840X';
   const contractCode = agreementType === 'master_collab' ? `CKP-TFP-${project.project_code}` : `CKP-AGR-${project.project_code}`;
 
