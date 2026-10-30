@@ -21,12 +21,11 @@ This document details the legal agreements, contractual highlights, and operatin
 * **Release of Liability:** Releases photographer from claims relating to lighting, posing, or artistic depiction.
 
 ### C. Client Photography Service Agreement
-* **Advance & Booking:** Shoots are scheduled upon payment of advance deposit.
-* **Delivery Schedule:** Final retouched images delivered within **1 to 2 months** following client image selection and full payment.
+* **Advance & Booking:** A 30% deposit is due when the booking is confirmed. The remaining 70% is due after the session.
+* **Delivery Schedule:** Final retouched images are delivered within **1 to 2 months** following client image selection and full payment. Final image links in the client portal stay hidden until all invoices and dues are cleared.
 * **Cancellation & Rescheduling Policy:**
-  * Cancellations require reasonable prior notice.
-  * Cancellations made within **48 hours of the shoot** are non-refundable.
-  * The advance payment is non-refundable; however, the client may **reschedule the shoot for an alternate available date using the same advance deposit**.
+  * Cancellations made **more than 48 hours before the shoot** qualify for a refund of the deposit actually paid.
+  * Cancellations made **within 48 hours of the shoot** are non-refundable.
 * **Liability Cap:** In the unforeseen event of equipment failure or photographer emergency, liability is limited strictly to a full refund or complimentary reshoot.
 * **Governing Law:** All contracts are governed under the laws of India.
 

@@ -6,7 +6,7 @@
   <meta name="robots" content="noindex,nofollow">
   <meta name="theme-color" content="#100f0e">
   <title>Fashion Collaboration Proposal | Chiranjit Kar Photography</title>
-  <link rel="stylesheet" href="/studio.css">
+  <link rel="stylesheet" href="/studio.css?v=availability-v1">
 </head>
 <body>
   <main class="booking-shell">
@@ -25,7 +25,8 @@
         <label class="booking-wide">Portfolio, agency, brand, or social profile<input id="model-portfolio" type="url" required maxlength="500" placeholder="https://…"></label>
         <label class="booking-wide"><span id="moodboard-label">Preferred high-fashion moodboard link</span><input id="model-moodboard" type="url" maxlength="500" placeholder="Pinterest, Milanote, Google Drive, or another viewable link"><small id="moodboard-help" class="field-help">Models and talent must share an exceptional, publicly viewable moodboard.</small></label>
         <label class="booking-wide"><span id="concept-label">Your editorial concept</span><textarea id="collab-brief" rows="5" maxlength="3500" required placeholder="Describe the visual story, references, styling, location, lighting, and what makes this concept original and portfolio-worthy."></textarea></label>
-        <label>Ideal timing<input id="collab-timing" maxlength="120" placeholder="A date, month, or flexible"></label>
+        <div class="booking-wide"><label for="collab-date">Preferred shoot date (optional)</label><input type="hidden" name="preferred_date" id="collab-date"><div class="availability-calendar" data-availability-calendar data-input="#collab-date" data-status="#collab-date-status"></div><p id="collab-date-status" class="field-help" role="status">Open dates are selectable. A proposal does not reserve a date.</p></div>
+        <label>Ideal timing<input id="collab-timing" maxlength="120" placeholder="A month, season, or flexible"></label>
         <label>Anything else we should know?<input id="collab-notes" maxlength="500" placeholder="Availability, team, or production details"></label>
       </div>
       <p class="booking-notice">Submitting a proposal does not guarantee acceptance or confirm a shoot. We review fashion relevance, creative merit, portfolio value, and feasibility. If selected, we’ll agree the shoot plan and applicable terms in writing before scheduling.</p>
@@ -33,6 +34,7 @@
       <p id="collab-message" class="notice" role="status"></p>
     </form>
   </main>
+  <script src="/availability-calendar.js?v=1"></script>
   <script>
     const form=document.querySelector('#collaboration-form');
     const applicant=document.querySelector('#applicant-kind');

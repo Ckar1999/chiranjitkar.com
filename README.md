@@ -28,7 +28,9 @@ This folder contains the complete, structured content, FAQs, services, pricing, 
 
 ## Studio Operations Workspace
 
-The public booking request is hosted at `book.chiranjitkar.com`, the signed-in client portal at `client.chiranjitkar.com`, and the internal team workspace at `chiranjitkar.com/studio`. All three are served by the same Cloudflare Pages project and share the same D1 database. Website inquiries are stored in D1 and appear in the Sales inbox. A team member can convert an inquiry into a project, set its booked session length and overtime rate, assign staff, create production tasks, record charges and payments, and publish review or delivery links to the client portal.
+The public booking request is hosted at `book.chiranjitkar.com`, fashion collaboration proposals at `book.chiranjitkar.com/collaborate`, the signed-in client portal at `client.chiranjitkar.com`, and the internal team workspace at `chiranjitkar.com/studio`. All are served by the same Cloudflare Pages project and share the same D1 database. Models/talent, agencies, brands, and fashion creatives can submit proposals. Model shoots are unpaid and require a portfolio plus a high-fashion moodboard; partner proposals are reviewed separately with terms agreed in writing. Studio users explicitly accept or decline collaborations and can turn accepted proposals into projects.
+
+The booking portal displays the full production, solo look, and paid portfolio package catalog with a shared studio availability calendar. Collaboration proposals may also select an open date; proposals and order requests do not reserve it. Studio project scheduling rejects conflicts and allows at most one active shoot per day. Once Sales creates the approved project, the deposit invoice is created and shown in the client dashboard; no outbound email provider is connected. Bookings use a 30% deposit invoice and a separate 70% balance invoice due after the session. Clients can upgrade to a higher fixed package before a session begins. Cancelling more than 48 hours before the shoot marks the paid deposit as refundable; cancellations within 48 hours mark it non-refundable. Refunds are recorded in Studio for manual processing by the payment provider.
 
 ### Workflow
 
@@ -37,7 +39,7 @@ The public booking request is hosted at `book.chiranjitkar.com`, the signed-in c
 3. Sales shares the generated private client link using the agreed contact channel. The client link is a bearer link; regenerate it from the project if it is lost or exposed. Regeneration revokes the old link.
 4. At shoot time, the client opens the private link and generates a one-time start code. The photographer enters that code in the staff workspace to record the server-side start time.
 5. The timer shows the booked time, then the 30-minute grace period, then accumulating overtime. After the client generates a finish code, the photographer enters it to record the end time. The server rounds any chargeable overtime up to 30-minute blocks and creates an overtime invoice at the rate stored on that booking.
-6. The team uses tasks and project stages for editing, client review, and delivery. Sales records payments and can attach a payment URL. Editors or filmmakers can publish HTTPS review and delivery links to the client portal.
+6. The team uses tasks and project stages for editing, client review, and delivery. Sales records payments and can attach a payment URL. Editors or filmmakers can publish HTTPS review and delivery links to the client portal; the portal only returns final delivery links after every non-void invoice is paid.
 
 ### Staff roles
 

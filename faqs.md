@@ -17,10 +17,10 @@
 **A:** He trained at the renowned Praveen Bhat Academy in Delhi under acclaimed fashion photographer Praveen Bhat and creative mentor Krishan Thapa.
 
 ### Q5: What payment options are available for booking a photoshoot?
-**A:** We accept domestic UPI (Google Pay, PhonePe, Paytm), Net Banking, Debit/Credit Cards, and major mobile wallet options.
+**A:** A 30% deposit is due when the studio confirms a booking. The remaining 70% is due after the session. The studio will provide payment instructions for the confirmed order.
 
 ### Q6: When do clients receive their final edited photographs after making the payment?
-**A:** Final retouched photographs are typically delivered within 1 to 2 months following image selection and complete payment.
+**A:** Final retouched photographs are typically delivered within 1 to 2 months following image selection and complete payment. Final image links in the client portal unlock only after all invoices and dues are paid.
 
 ### Q7: How can clients track their order and download the final photographs?
 **A:** Clients can track the live progress of retouching and download full-resolution files directly through the dedicated **Track Order / Download** page on `chiranjitkar.com`.

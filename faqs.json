@@ -37,7 +37,7 @@
     "category": "general",
     "categoryName": "General & Photography Practice",
     "question": "What payment options are available for booking a photoshoot?",
-    "answer": "We accept domestic UPI (Google Pay, PhonePe, Paytm), Net Banking, Debit/Credit Cards, and major mobile wallet options."
+    "answer": "A 30% deposit is due when the studio confirms a booking. The remaining 70% is due after the session. The studio will provide payment instructions for the confirmed order."
   },
   {
     "id": 6,
@@ -45,7 +45,7 @@
     "category": "general",
     "categoryName": "General & Photography Practice",
     "question": "When do clients receive their final edited photographs after making the payment?",
-    "answer": "Final retouched photographs are typically delivered within 1 to 2 months following image selection and complete payment."
+    "answer": "Final retouched photographs are typically delivered within 1 to 2 months following image selection and complete payment. Final image links in the client portal unlock only after all invoices and dues are paid."
   },
   {
     "id": 7,

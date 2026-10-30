@@ -6,7 +6,7 @@
   <meta name="robots" content="noindex,nofollow">
   <meta name="theme-color" content="#070709">
   <title>Packages &amp; Order | Chiranjit Kar Photography</title>
-  <link rel="stylesheet" href="/studio.css?v=package-order-v1">
+  <link rel="stylesheet" href="/studio.css?v=availability-v1">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 </head>
@@ -23,7 +23,7 @@
     <section class="booking-intro">
       <span class="eyebrow">PACKAGES &amp; ORDERING</span>
       <h1>Choose your photoshoot package.</h1>
-      <p>Compare all available packages, select one, then send your order request. The studio will confirm availability and send payment instructions before your booking is confirmed.</p>
+      <p>Choose a package and an available shoot date, then send your request. The studio will confirm your booking and share the next steps.</p>
     </section>
 
     <section class="package-catalog" aria-labelledby="package-catalog-title">
@@ -47,16 +47,17 @@
         <label>Phone / WhatsApp<input name="phone" type="tel" autocomplete="tel" required maxlength="40" placeholder="+91 98765 43210"></label>
         <label>Production city / base<select name="city" required><option value="">Select city or territory</option><option value="Delhi NCR">Delhi NCR</option><option value="Mumbai">Mumbai</option><option value="Agartala">Agartala</option><option value="Destination / Other">Destination / Other</option></select></label>
         <label>Creative service<select name="service" required><option value="">Choose a package above</option><option value="Photography">Photography</option><option value="Model portfolio">Model portfolio</option><option value="Commercial campaign">Commercial campaign</option></select></label>
-        <label>Preferred production date<input name="preferred_date" type="date"></label>
+        <div class="booking-wide"><label for="booking-date">Preferred shoot date</label><input type="hidden" name="preferred_date" id="booking-date"><div class="availability-calendar" data-availability-calendar data-input="#booking-date" data-status="#booking-date-status"></div><p id="booking-date-status" class="field-help" role="status">Open dates are selectable; unavailable dates are marked in the calendar.</p></div>
         <label class="booking-wide">Creative brief or notes<textarea name="brief" rows="5" maxlength="4000" placeholder="Share the concept, location, references, or anything the production team should know."></textarea></label>
       </div>
 
-      <p class="booking-notice"><strong>Order process</strong><br>This submits an order request, not an instant payment or confirmed booking. The team will confirm availability and send the invoice or payment instructions. Custom packages can be created by the studio team after reviewing your brief.</p>
+      <p class="booking-notice">Choose a package and available date to send your booking request. Your date is reserved only after the studio confirms your booking and the 30% deposit is paid. The invoice will appear in your client dashboard after team approval. Custom packages are prepared by the studio team after reviewing your brief.</p>
       <button class="button gold" id="place-order-button" type="submit" disabled>Place order</button>
       <p id="booking-message" class="notice" role="status"></p>
     </form>
   </main>
 
+  <script src="/availability-calendar.js?v=1"></script>
   <script>
     const form=document.querySelector('#booking-request-form');
     const params=new URLSearchParams(location.search);
@@ -72,7 +73,8 @@
       packageGroups.querySelectorAll('[data-package-select]').forEach(control=>control.closest('.package-card').classList.remove('selected'));
       button.closest('.package-card').classList.add('selected');
       packageId.value=item.id;packageName.value=item.name;
-      selectedSummary.innerHTML=`<strong>Selected package:</strong><span>${item.name}</span><span>${priceLabel(item.price)}</span>`;
+      const deposit=Math.round(item.price*.30),balance=item.price-deposit;
+      selectedSummary.innerHTML=`<strong>Selected package:</strong><span>${item.name}</span><span>${priceLabel(item.price)}</span><small>30% booking deposit due at confirmation: ${priceLabel(deposit)} · 70% after session: ${priceLabel(balance)}</small>`;
       document.querySelector('[name="service"]').value=item.service;
       placeOrderButton.disabled=false;
       form.scrollIntoView({behavior:'smooth',block:'start'});
@@ -95,14 +97,14 @@
       const message=document.querySelector('#booking-message');
       if(!packageId.value){message.textContent='Choose one of the listed packages first.';return;}
       const data=Object.fromEntries(new FormData(form));
-      data.brief=[data.preferred_date?`Preferred production date: ${data.preferred_date}`:'',data.brief].filter(Boolean).join('\n\n');
-      delete data.preferred_date;
+      if(!data.preferred_date){message.textContent='Select an available shoot date in the calendar.';placeOrderButton.disabled=false;return;}
       placeOrderButton.disabled=true;message.textContent='Sending your order request…';
       try{
         const response=await fetch('/api/inquiries',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
         const result=await response.json();if(!response.ok)throw new Error(result.error||'Could not submit your order request.');
         message.textContent='✓ '+result.message;form.reset();
         packageId.value='';packageName.value='';
+        document.querySelector('#booking-date').value='';document.querySelector('#booking-date').dispatchEvent(new Event('change'));
         packageGroups.querySelectorAll('[data-package-card]').forEach(card=>card.classList.remove('selected'));
         selectedSummary.textContent='Choose a package above to start your order.';
       }catch(error){message.textContent=error.message||'Could not submit your order request. Please try again.';}
