@@ -373,23 +373,23 @@ function buildHtmlPdf(outputPath) {
 
     /* Operative Articles */
     .article {
-      margin-bottom: 9pt;
+      margin-bottom: 5.5pt;
       text-align: justify;
       text-justify: inter-word;
     }
 
     .article-num {
       font-family: 'Cinzel', serif;
-      font-size: 8.8pt;
+      font-size: 8.4pt;
       font-weight: 700;
       letter-spacing: 0.03em;
       color: #0c0d12;
-      margin-bottom: 2pt;
+      margin-bottom: 1.5pt;
     }
 
     .article-body {
-      font-size: 8.5pt;
-      line-height: 1.52;
+      font-size: 8.1pt;
+      line-height: 1.40;
       color: #222328;
     }
 
@@ -671,7 +671,7 @@ function buildHtmlPdf(outputPath) {
         </p>
 
         <!-- Schedule A -->
-        <div class="schedule-title">Schedule A: Engagement Specifications &amp; Parties</div>
+        <div class="schedule-title">Schedule A: Engagement, Package &amp; Commercial Specifications</div>
         <div class="schedule-box">
           <table class="schedule-table">
             <tr>
@@ -687,7 +687,7 @@ function buildHtmlPdf(outputPath) {
               <td class="field-val"><span class="field-slot"></span></td>
             </tr>
             <tr>
-              <td class="field-label">Official Studio Email:</td>
+              <td class="field-label">Studio Email:</td>
               <td class="field-val">iamchiranjitkar@hotmail.com</td>
               <td class="field-label">Client Contact:</td>
               <td class="field-val"><span class="field-slot"></span></td>
@@ -696,29 +696,38 @@ function buildHtmlPdf(outputPath) {
               <td class="field-label">Production Venue:</td>
               <td class="field-val"><span class="field-slot"></span></td>
               <td class="field-label">Classification:</td>
-              <td class="field-val" style="white-space: nowrap; font-size: 8pt;"><strong>[ &nbsp; ] Paid Commission &nbsp;&nbsp;&nbsp;&nbsp; [ &nbsp; ] Unpaid TFP</strong></td>
+              <td class="field-val" style="white-space: nowrap; font-size: 7.8pt;"><strong>[ &nbsp; ] Paid Commission &nbsp;&nbsp;&nbsp;&nbsp; [ &nbsp; ] Unpaid TFP</strong></td>
+            </tr>
+            <tr>
+              <td class="field-label">Booked Package:</td>
+              <td class="field-val"><span class="field-slot"></span></td>
+              <td class="field-label">Total Commercial Fee:</td>
+              <td class="field-val"><span class="field-slot"></span></td>
+            </tr>
+            <tr>
+              <td class="field-label">20% Advance Deposit:</td>
+              <td class="field-val"><span class="field-slot"></span></td>
+              <td class="field-label">80% Post-Shoot Balance:</td>
+              <td class="field-val"><span class="field-slot"></span></td>
             </tr>
             <tr>
               <td class="field-label">Deliverable Scope:</td>
-              <td class="field-val" colspan="3"><span class="field-slot" style="min-height:16pt;"></span></td>
+              <td class="field-val" colspan="3"><span class="field-slot" style="min-height: 18pt;"></span></td>
             </tr>
           </table>
         </div>
 
         <!-- Schedule B -->
-        <div class="schedule-title">Schedule B: Consideration, Financial Terms &amp; Deliverables</div>
+        <div class="schedule-title">Schedule B: Commercial Terms, Overtime &amp; Deliverables</div>
         <div class="schedule-box">
           <div class="sched-b-sec">B.1 PAID COMMERCIAL COMMISSION TERMS</div>
           <div class="sched-b-text">
-            • Professional Commission: As invoiced in Studio Suite | Strict 20% Non-refundable Advance Deposit.<br>
-            • Strict 80% Post-Shoot Balance: Strictly due upon shoot conclusion prior to master file release.<br>
-            • Commercial Turnaround: Proofing gallery in 48–72h; master color-graded retouches per commercial queue.
+            • <strong>Payment Milestones:</strong> Strict 20% Non-refundable Advance to reserve dates | Remaining 80% Balance due upon shoot wrap prior to master file release.<br>
+            • <strong>30-Minute Grace Period &amp; Overtime:</strong> Complimentary 30-min grace period allowed for prep; overtime beyond grace period billed per booked package hourly rates (standard ₹3,500/hr or pro-rata).
           </div>
           <div class="sched-b-sec">B.2 UNPAID / TFP CREATIVE COLLABORATION TERMS</div>
           <div class="sched-b-text">
-            • Consideration: <strong>Rs. 0.00 (Zero Consideration)</strong> | Mutual creative portfolio exchange.<br>
-            • Artistic Selection &amp; Delivery: <strong>Exclusively at Photographer's sole artistic discretion</strong>. Photographer selects, retouches, and publishes best frames per studio workflow. No delivery timeline or fixed turnaround deadline applies.<br>
-            • Social Attribution: Collaborator may repost finished selects for personal portfolio provided Photographer is prominently tagged: <strong>@iamchiranjitkar</strong>.
+            • <strong>Package &amp; Dues:</strong> <strong>NIL (Rs. 0.00)</strong> | Mutual portfolio exchange. Curated selects edited exclusively per Photographer's artistic discretion. Mandatory tag: <strong>@iamchiranjitkar</strong>.
           </div>
         </div>
       </div>
@@ -752,16 +761,16 @@ function buildHtmlPdf(outputPath) {
         </div>
 
         <div class="article">
-          <div class="article-num">2. Project Scope &amp; Sole Creative Authority</div>
+          <div class="article-num">2. Project Scope, Creative Authority, 30-Min Grace Period &amp; Overtime</div>
           <div class="article-body">
-            2.1 Shoot concept, mood, theme, location, and tentative deliverables shall be agreed prior to the shoot. 2.2 Final Creative Control: Absolute artistic control over lighting, camera angles, poses, styling, grading, and final selection rests solely with the Photographer.
+            2.1 Shoot concept, mood, theme, location, and tentative deliverables shall be agreed prior to the shoot. 2.2 Final Creative Control: Absolute artistic control over lighting, camera angles, poses, styling, grading, and final selection rests solely with the Photographer. 2.3 <strong>Punctuality, 30-Minute Grace Period &amp; Overtime:</strong> Production commences strictly at the scheduled call time. A complimentary <strong>30-minute grace period</strong> is provided for preparation, wardrobe changes, or brief overrun. Any shoot extension exceeding 30 minutes beyond booked package duration incurs extra charges based on package hourly rates (standard ₹3,500/hour or pro-rata per package tier), billable to final balance before master release. Client tardiness does not automatically extend the booked session window.
           </div>
         </div>
 
         <div class="article">
-          <div class="article-num">3. Financial Claims &amp; Strict Payment Framework</div>
+          <div class="article-num">3. Package Payments, 20% Advance, Remaining Balance &amp; TFP NIL Terms</div>
           <div class="article-body">
-            3.1 For Unpaid Collaborations, Collaborator irrevocably agrees not to demand payment, royalty, revenue share, or compensation now or in the future; portfolio images constitute complete and final consideration. Any future commercial licensing by external brands shall be negotiated exclusively through the Photographer. 3.2 For Paid Commissions, retouching begins only after 100% full balance clearance.
+            3.1 <strong>Paid Commercial Commission Terms:</strong> Invoiced package fees require a strict <strong>20% Non-refundable Advance Booking Deposit</strong> to confirm studio booking, reserve production dates, and mobilize studio crew. The remaining <strong>80% post-shoot balance</strong> is strictly due upon shoot wrap on the execution date. Proofs and color-graded master retouches are released strictly after 100% full balance clearance. 3.2 <strong>Unpaid / TFP Terms:</strong> For unpaid creative collaborations, all package details, monetary fees, deposits, and balances are strictly <strong>NIL (Rs. 0.00)</strong>. Mutual artistic exposure and portfolio licensing constitute complete and valuable consideration under Section 2(d) &amp; 25 of the Indian Contract Act 1872; Collaborator irrevocably agrees not to demand payment, royalty, or compensation now or in the future.
           </div>
         </div>
 
@@ -773,9 +782,9 @@ function buildHtmlPdf(outputPath) {
         </div>
 
         <div class="article">
-          <div class="article-num">5. Ownership, Statutory Copyright &amp; Rights</div>
+          <div class="article-num">5. Ownership, Statutory Copyright &amp; Irrevocable Model Release</div>
           <div class="article-body">
-            5.1 Under Section 17 of the Indian Copyright Act 1957, all photographs and videos remain the exclusive intellectual property of Chiranjit Kar. 5.2 Collaborator grants Photographer perpetual, irrevocable, worldwide rights to use, publish, exhibit, modify, and license images in any medium. 5.3 Collaborator may use delivered images solely for personal portfolio and social media, and shall not sell, license, or commercially exploit images.
+            5.1 <strong>Statutory Copyright:</strong> Under Section 17 &amp; 19 of the Indian Copyright Act 1957, Chiranjit Kar is the exclusive author and sole copyright proprietor of all photographs, raw negatives, and video recordings. No transfer or assignment of copyright occurs under this deed. 5.2 <strong>Perpetual Model Release:</strong> Collaborator/Client irrevocably grants Photographer the perpetual, worldwide, royalty-free license to use, display, publish, exhibit, and promote their likeness, portrait, and artistic performance across studio websites, social media, exhibitions, books, and promotional campaigns, expressly waiving moral rights, right of publicity, and any takedown claims. 5.3 Client/Collaborator receives solely a non-exclusive, personal portfolio and social media license.
           </div>
         </div>
 
@@ -846,7 +855,7 @@ function buildHtmlPdf(outputPath) {
         <div class="article">
           <div class="article-num">12. Digital Execution via Leegality &amp; IT Act 2000</div>
           <div class="article-body">
-            12.1 Execution via UIDAI Aadhaar OTP through Leegality is legally binding and admissible under Section 10A of the Information Technology Act 2000 and Indian Evidence Act. 12.2 The Rs. 99 UIDAI documentation fee is payable separately by the user before digital execution.
+            12.1 Execution via UIDAI Aadhaar OTP through Leegality is legally binding and admissible under Section 10A of the Information Technology Act 2000 and Sections 61 &amp; 63 of the Bharatiya Sakshya Adhiniyam, 2023 (BSA). 12.2 The Rs. 99 UIDAI documentation fee is payable separately by the user before digital execution.
           </div>
         </div>
 
