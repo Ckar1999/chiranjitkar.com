@@ -314,6 +314,21 @@ function buildHtmlPdf(outputPath) {
     .schedule-table .field-val {
       color: #1a1a1a;
       width: 25%;
+      border-bottom: 0.5pt solid #e0d8cc;
+      min-height: 11pt;
+    }
+
+    .field-slot {
+      display: inline-block;
+      width: 100%;
+      min-height: 11pt;
+    }
+
+    .second-party-name-slot {
+      display: inline-block;
+      min-width: 160pt;
+      min-height: 13pt;
+      border-bottom: 0.6pt solid #bbb;
     }
 
     .sched-b-sec {
@@ -577,31 +592,31 @@ function buildHtmlPdf(outputPath) {
           <table class="schedule-table">
             <tr>
               <td class="field-label">Contract Reference:</td>
-              <td class="field-val"><strong>{{Contract ID}}</strong></td>
+              <td class="field-val"><span class="field-slot"></span></td>
               <td class="field-label">Execution Date:</td>
-              <td class="field-val"><strong>{{Date}}</strong></td>
+              <td class="field-val"><span class="field-slot"></span></td>
             </tr>
             <tr>
               <td class="field-label">First Party (Studio):</td>
               <td class="field-val">Chiranjit Kar (Director)</td>
               <td class="field-label">Second Party:</td>
-              <td class="field-val"><strong>{{Collaborator Name}}</strong></td>
+              <td class="field-val"><span class="field-slot"></span></td>
             </tr>
             <tr>
               <td class="field-label">Official Studio Email:</td>
               <td class="field-val">iamchiranjitkar@hotmail.com</td>
               <td class="field-label">Client Contact:</td>
-              <td class="field-val">{{Phone Number}} | {{Email ID}}</td>
+              <td class="field-val"><span class="field-slot"></span></td>
             </tr>
             <tr>
               <td class="field-label">Production Venue:</td>
-              <td class="field-val">{{Address}}</td>
+              <td class="field-val"><span class="field-slot"></span></td>
               <td class="field-label">Classification:</td>
               <td class="field-val"><strong>[ ] Paid Commission &nbsp; [ ] Unpaid TFP</strong></td>
             </tr>
             <tr>
               <td class="field-label">Deliverable Scope:</td>
-              <td class="field-val" colspan="3">{{Scope &amp; Package Details}}</td>
+              <td class="field-val" colspan="3">Visual production services, color-graded master deliverables &amp; curated selects as confirmed on file.</td>
             </tr>
           </table>
         </div>
@@ -611,8 +626,8 @@ function buildHtmlPdf(outputPath) {
         <div class="schedule-box">
           <div class="sched-b-sec">B.1 PAID COMMERCIAL COMMISSION TERMS</div>
           <div class="sched-b-text">
-            • Total Fee: <strong>{{Total Quotation}}</strong> | Strict 20% Non-refundable Advance: <strong>{{Advance Deposit}}</strong><br>
-            • Strict 80% Post-Shoot Balance: <strong>{{Balance Due}}</strong> — Strictly payable upon shoot conclusion prior to delivery.
+            • Professional Commission: As invoiced in Studio Suite | Strict 20% Non-refundable Advance Deposit.<br>
+            • Strict 80% Post-Shoot Balance: Strictly due upon shoot conclusion prior to master file release.
           </div>
           <div class="sched-b-sec">B.2 UNPAID / TFP CREATIVE COLLABORATION TERMS</div>
           <div class="sched-b-text">
@@ -785,13 +800,13 @@ function buildHtmlPdf(outputPath) {
             <!-- Second Party Column -->
             <div>
               <div class="exec-col-title">Second Party (Client / Collaborator)</div>
-              <div class="exec-name">{{Collaborator Name}}</div>
+              <div class="exec-name"><span class="second-party-name-slot"></span></div>
               <div class="exec-sub">Execution: UIDAI Aadhaar OTP Digital eSign via Leegality</div>
               <div class="exec-sub" style="color:#9e6b12; font-weight:600;">Admissible under Section 10A Information Technology Act 2000</div>
 
               <div class="sign-line"></div>
               <div class="sign-prompt">Second Party Signature / Aadhaar OTP Stamp Placement</div>
-              <div class="exec-sub" style="margin-top:4pt;">Date: <strong>{{Date}}</strong> | Place: <strong>{{Place}}</strong></div>
+              <div class="exec-sub" style="margin-top:6pt;">Date: &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; | Place: </div>
             </div>
           </div>
         </div>
