@@ -44,17 +44,16 @@ async function createDemoAgreement() {
         { id: '1769351065891', name: 'Contract ID', value: contractCode, type: 'text' },
         { id: '1769351096036', name: 'Date', value: todayUS, type: 'date', format: 'mm/dd/yyyy' },
         { id: '1769351924210', name: 'Collaborator Name', value: signerName, type: 'text' },
-        { id: '1769352237988', name: 'Address', value: 'Studio Set, Hauz Khas, New Delhi', type: 'text' },
         { id: '1769352288464', name: 'Phone Number', value: signerPhone, type: 'text' },
         { id: '1769352332429', name: 'Email ID', value: signerEmail, type: 'text' },
-        { id: '1769351978909', name: 'Collaborator Name', value: signerName, type: 'text' },
-        { id: '1769351126190', name: 'Date', value: todayUS, type: 'date', format: 'mm/dd/yyyy' },
-        { id: '1769351129812', name: 'Date', value: todayUS, type: 'date', format: 'mm/dd/yyyy' },
+        { id: '1769352237988', name: 'Address', value: 'Studio Set, Hauz Khas, New Delhi', type: 'text' },
+        { id: '1769359000001', name: 'Paid Commission', value: 'false', type: 'checkbox' },
+        { id: '1769359000002', name: 'Unpaid TFP', value: 'true', type: 'checkbox' },
+        { id: '1769359000004', name: 'Deliverable Scope', value: "Curated selects chosen exclusively at Photographer's sole artistic discretion (color-graded). No fixed delivery timeline or deadline applies; edited & published per studio workflow. Collaborator permitted to repost personal selects with mandatory tag (@iamchiranjitkar).", type: 'textarea' },
+        { id: '1769356992373', name: 'Signer Name', value: signerName, type: 'text' },
+        { id: '1769351126190', name: 'Execution Date', value: todayUS, type: 'date', format: 'mm/dd/yyyy' },
         { id: '1769352371986', name: 'City Name', value: 'New Delhi', type: 'text' },
-        { name: 'City Name', value: 'New Delhi', type: 'text' },
-        { name: 'Place', value: 'New Delhi', type: 'text' },
-        { name: 'City', value: 'New Delhi', type: 'text' },
-        { id: '1769356992373', name: 'Collaborator Name', value: signerName, type: 'text' }
+        { name: 'Place', value: 'New Delhi', type: 'text' }
       ]
     },
     invitees: [

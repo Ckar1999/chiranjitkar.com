@@ -32,8 +32,8 @@ function buildHtmlPdf(outputPath) {
       font-family: 'Lora', 'Georgia', serif;
       color: #1a1b1f;
       background: #ffffff;
-      font-size: 9.6pt;
-      line-height: 1.58;
+      font-size: 9.5pt;
+      line-height: 1.56;
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
     }
@@ -41,8 +41,10 @@ function buildHtmlPdf(outputPath) {
     .page {
       page-break-after: always;
       break-after: page;
-      height: 272mm;
-      max-height: 272mm;
+      height: 270mm;
+      max-height: 270mm;
+      overflow: hidden;
+      position: relative;
     }
 
     .page:last-child {
@@ -50,119 +52,125 @@ function buildHtmlPdf(outputPath) {
       break-after: avoid !important;
     }
 
-    /* Iconic Double Luxury Gold Border from Live P1 */
+    /* Double Luxury Gold Border */
     .border-frame {
       border: 1.2pt solid #1a1b1f;
       outline: 0.6pt solid #c9a44e;
       outline-offset: -3.5pt;
-      padding: 14pt 18pt;
+      padding: 16pt 20pt;
       height: 100%;
+      min-height: 268mm;
+      max-height: 268mm;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
+      overflow: hidden;
     }
 
-    /* Running Header (Top of Pages 2 & 3) */
+    /* Running Header */
     .running-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding-bottom: 6pt;
-      margin-bottom: 12pt;
       border-bottom: 0.8pt solid #c9a44e;
-      font-family: 'Montserrat', sans-serif;
-      font-size: 7.2pt;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      white-space: nowrap;
+      padding-bottom: 5pt;
+      margin-bottom: 11pt;
     }
 
     .running-header-left {
       display: flex;
       align-items: center;
       gap: 7pt;
+      font-family: 'Cinzel', serif;
+      font-size: 8pt;
       font-weight: 700;
-      color: #111;
-      white-space: nowrap;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #0c0d12;
     }
 
     .running-header-left img {
-      height: 13pt;
-      width: auto;
+      width: 14pt;
+      height: 14pt;
+      object-fit: contain;
     }
 
     .running-header-right {
-      color: #9e6b12;
-      font-weight: 700;
-      white-space: nowrap;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 7.2pt;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      color: #8c733e;
     }
 
     /* Running Footer */
     .running-footer {
+      border-top: 0.8pt solid #c9a44e;
+      padding-top: 5pt;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding-top: 6pt;
-      margin-top: 10pt;
-      border-top: 0.6pt solid #dcd7ce;
       font-family: 'Montserrat', sans-serif;
       font-size: 6.8pt;
-      color: #666;
+      color: #666666;
+      margin-top: 6pt;
     }
 
     .running-footer strong {
-      color: #111;
+      color: #0c0d12;
+      font-weight: 600;
     }
 
-    /* Studio Brand Header */
+    /* Studio Header - Page 1 */
     .studio-header {
       text-align: center;
-      margin-bottom: 10pt;
+      margin-bottom: 6pt;
     }
 
     .studio-logo {
+      width: 36pt;
       height: 36pt;
-      width: auto;
-      margin-bottom: 4pt;
+      object-fit: contain;
+      margin-bottom: 3pt;
     }
 
     .studio-title {
       font-family: 'Cinzel', serif;
-      font-size: 15.5pt;
+      font-size: 13.5pt;
       font-weight: 700;
-      letter-spacing: 0.12em;
-      color: #0c0d12;
+      letter-spacing: 0.14em;
       text-transform: uppercase;
+      color: #0c0d12;
     }
 
     .studio-sub {
       font-family: 'Montserrat', sans-serif;
-      font-size: 7.2pt;
-      letter-spacing: 0.16em;
+      font-size: 7pt;
+      letter-spacing: 0.15em;
       text-transform: uppercase;
-      color: #666;
+      color: #555;
       margin-top: 2pt;
     }
 
     .gold-divider {
       height: 1pt;
       background: linear-gradient(90deg, transparent, #c9a44e, #c9a44e, transparent);
-      margin: 8pt auto 10pt;
+      margin: 6pt auto 8pt;
       width: 75%;
     }
 
     /* Official e-Stamp Certificate Box */
     .estamp-card {
       background: #faf8f4;
-      border: 1.1pt solid #c9a44e;
-      border-radius: 4pt;
-      padding: 6pt 10pt 5pt;
-      margin-bottom: 9pt;
+      border: 1pt solid #c9a44e;
+      border-radius: 3.5pt;
+      padding: 5pt 9pt 4pt;
+      margin-bottom: 8pt;
       text-align: center;
     }
 
     .estamp-flourish {
-      width: 250px;
+      width: 240px;
       height: auto;
       margin: 0 auto;
       display: block;
@@ -171,7 +179,7 @@ function buildHtmlPdf(outputPath) {
 
     .estamp-title-center {
       font-family: 'Cinzel', serif;
-      font-size: 8.8pt;
+      font-size: 8.6pt;
       font-weight: 700;
       letter-spacing: 0.05em;
       color: #0c0d12;
@@ -180,26 +188,26 @@ function buildHtmlPdf(outputPath) {
 
     .estamp-subtitle-center {
       font-family: 'Montserrat', sans-serif;
-      font-size: 7.2pt;
+      font-size: 7pt;
       font-weight: 700;
       letter-spacing: 0.08em;
       text-transform: uppercase;
       color: #9e6b12;
-      margin-bottom: 3pt;
+      margin-bottom: 2pt;
     }
 
     .estamp-table {
       width: 100%;
       border-collapse: collapse;
       font-family: 'Montserrat', sans-serif;
-      font-size: 6.7pt;
-      line-height: 1.4;
+      font-size: 6.6pt;
+      line-height: 1.38;
       text-align: left;
       margin: 1pt 0;
     }
 
     .estamp-table td {
-      padding: 1.2pt 2pt;
+      padding: 1pt 2pt;
       vertical-align: top;
     }
 
@@ -228,23 +236,23 @@ function buildHtmlPdf(outputPath) {
 
     .estamp-footer-notice {
       font-family: 'Montserrat', sans-serif;
-      font-size: 6.2pt;
+      font-size: 6pt;
       color: #666;
       letter-spacing: 0.02em;
-      margin-top: 2.5pt;
+      margin-top: 2pt;
       border-top: 0.5pt solid #eae3d2;
-      padding-top: 2.5pt;
+      padding-top: 2pt;
     }
 
     /* Deed Heading */
     .deed-title-block {
       text-align: center;
-      margin-bottom: 9pt;
+      margin-bottom: 7pt;
     }
 
     .deed-title {
       font-family: 'Cinzel', serif;
-      font-size: 12.5pt;
+      font-size: 12pt;
       font-weight: 700;
       letter-spacing: 0.06em;
       color: #0c0d12;
@@ -254,56 +262,56 @@ function buildHtmlPdf(outputPath) {
     .deed-badge {
       display: inline-block;
       font-family: 'Montserrat', sans-serif;
-      font-size: 6.8pt;
+      font-size: 6.6pt;
       font-weight: 700;
-      letter-spacing: 0.08em;
+      letter-spacing: 0.07em;
       text-transform: uppercase;
       color: #9e6b12;
       background: #fcf6ea;
-      border: 0.7pt solid #e5c368;
-      padding: 2.2pt 9pt;
-      border-radius: 12pt;
-      margin-top: 3pt;
+      border: 0.6pt solid #e5c368;
+      padding: 2pt 8pt;
+      border-radius: 10pt;
+      margin-top: 2.5pt;
     }
 
     .preamble {
-      font-size: 9pt;
-      line-height: 1.55;
+      font-size: 8.8pt;
+      line-height: 1.52;
       text-align: justify;
       color: #24252a;
-      margin-bottom: 10pt;
+      margin-bottom: 8pt;
     }
 
     /* Schedules */
     .schedule-title {
       font-family: 'Cinzel', serif;
-      font-size: 9.2pt;
+      font-size: 8.8pt;
       font-weight: 700;
-      letter-spacing: 0.06em;
+      letter-spacing: 0.05em;
       text-transform: uppercase;
       color: #0c0d12;
-      margin-bottom: 4pt;
+      margin-bottom: 3.5pt;
     }
 
     .schedule-box {
       border: 0.8pt solid #d6cfc2;
       border-radius: 3.5pt;
       background: #ffffff;
-      padding: 8pt 10pt;
-      margin-bottom: 10pt;
+      padding: 6pt 9pt;
+      margin-bottom: 7pt;
     }
 
     .schedule-table {
       width: 100%;
       border-collapse: collapse;
       font-family: 'Montserrat', sans-serif;
-      font-size: 7.4pt;
-      line-height: 1.5;
+      font-size: 7.2pt;
+      line-height: 1.48;
     }
 
     .schedule-table td {
-      padding: 2.5pt 5pt;
-      vertical-align: top;
+      padding: 2.2pt 4pt;
+      vertical-align: middle;
     }
 
     .schedule-table .field-label {
@@ -315,13 +323,13 @@ function buildHtmlPdf(outputPath) {
       color: #1a1a1a;
       width: 25%;
       border-bottom: 0.5pt solid #e0d8cc;
-      min-height: 11pt;
+      min-height: 12pt;
     }
 
     .field-slot {
       display: inline-block;
       width: 100%;
-      min-height: 11pt;
+      min-height: 12pt;
     }
 
     .second-party-name-slot {
@@ -333,102 +341,89 @@ function buildHtmlPdf(outputPath) {
 
     .sched-b-sec {
       font-family: 'Montserrat', sans-serif;
-      font-size: 7.6pt;
+      font-size: 7.4pt;
       font-weight: 700;
       color: #0c0d12;
       margin-top: 2pt;
-      margin-bottom: 2pt;
-      letter-spacing: 0.04em;
+      margin-bottom: 1.5pt;
+      letter-spacing: 0.03em;
     }
 
     .sched-b-text {
       font-family: 'Lora', serif;
-      font-size: 8pt;
-      line-height: 1.5;
+      font-size: 7.8pt;
+      line-height: 1.45;
       color: #2b2b2b;
-      margin-left: 8pt;
-      margin-bottom: 4pt;
+      margin-left: 7pt;
+      margin-bottom: 3pt;
     }
 
     /* Section Banner */
     .section-banner {
-      font-family: 'Cinzel', serif;
-      font-size: 10.5pt;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: #0c0d12;
-      border-bottom: 1.2pt solid #c9a44e;
-      padding-bottom: 4pt;
-      margin-bottom: 13pt;
-    }
-
-    /* Operative Articles */
-    .article {
-      margin-bottom: 11pt;
-      text-align: justify;
-      text-justify: inter-word;
-    }
-
-    .article-num {
-      font-family: 'Cinzel', serif;
-      font-size: 9.2pt;
-      font-weight: 700;
-      letter-spacing: 0.03em;
-      color: #0c0d12;
-      margin-bottom: 3pt;
-    }
-
-    .article-body {
-      font-size: 8.8pt;
-      line-height: 1.55;
-      color: #222328;
-    }
-
-    .bullet-list {
-      margin-left: 18pt;
-      margin-top: 4pt;
-      margin-bottom: 4pt;
-      font-size: 8.8pt;
-      line-height: 1.55;
-      color: #222328;
-    }
-
-    .bullet-list li {
-      margin-bottom: 2pt;
-    }
-
-    /* Execution & Signature Section */
-    .exec-box {
-      border: 1.2pt solid #c9a44e;
-      border-radius: 4pt;
-      background: #faf8f5;
-      padding: 12pt 14pt;
-      margin-top: 10pt;
-    }
-
-    .exec-title {
       font-family: 'Cinzel', serif;
       font-size: 10pt;
       font-weight: 700;
       letter-spacing: 0.08em;
       text-transform: uppercase;
       color: #0c0d12;
-      margin-bottom: 8pt;
+      border-bottom: 1.1pt solid #c9a44e;
+      padding-bottom: 4pt;
+      margin-bottom: 10pt;
+    }
+
+    /* Operative Articles */
+    .article {
+      margin-bottom: 9pt;
+      text-align: justify;
+      text-justify: inter-word;
+    }
+
+    .article-num {
+      font-family: 'Cinzel', serif;
+      font-size: 8.8pt;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      color: #0c0d12;
+      margin-bottom: 2pt;
+    }
+
+    .article-body {
+      font-size: 8.5pt;
+      line-height: 1.52;
+      color: #222328;
+    }
+
+    /* Execution & Signature Section */
+    .exec-box {
+      border: 1.1pt solid #c9a44e;
+      border-radius: 4pt;
+      background: #faf8f5;
+      padding: 10pt 13pt;
+      margin-top: 6pt;
+    }
+
+    .exec-title {
+      font-family: 'Cinzel', serif;
+      font-size: 9.5pt;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #0c0d12;
+      margin-bottom: 7pt;
       text-align: center;
     }
 
     .exec-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 18pt;
+      gap: 16pt;
       border-top: 0.8pt solid #dfd8cb;
-      padding-top: 10pt;
+      padding-top: 8pt;
     }
 
     .exec-col-title {
       font-family: 'Montserrat', sans-serif;
-      font-size: 7.6pt;
+      font-size: 7.4pt;
       font-weight: 700;
       letter-spacing: 0.06em;
       text-transform: uppercase;
@@ -438,7 +433,7 @@ function buildHtmlPdf(outputPath) {
 
     .exec-name {
       font-family: 'Lora', serif;
-      font-size: 11pt;
+      font-size: 10.5pt;
       font-weight: 700;
       color: #0c0d12;
       margin-bottom: 2pt;
@@ -446,55 +441,144 @@ function buildHtmlPdf(outputPath) {
 
     .exec-sub {
       font-family: 'Montserrat', sans-serif;
-      font-size: 7pt;
+      font-size: 6.8pt;
       color: #555;
-      margin-bottom: 6pt;
+      line-height: 1.4;
     }
 
     .sig-seal-wrap {
       display: flex;
       align-items: center;
       gap: 12pt;
-      margin-top: 6pt;
-      margin-bottom: 8pt;
+      margin-top: 5pt;
+      margin-bottom: 3pt;
     }
 
     .sig-img {
-      height: 44pt;
+      height: 38pt;
       width: auto;
+      object-fit: contain;
     }
 
     .seal-img {
-      height: 48pt;
+      height: 44pt;
       width: auto;
+      object-fit: contain;
     }
 
     .sig-status {
       font-family: 'Montserrat', sans-serif;
-      font-size: 7pt;
-      color: #1e7039;
-      font-weight: 700;
+      font-size: 6.8pt;
+      font-weight: 600;
+      color: #1b6838;
+      margin-top: 3pt;
     }
 
     .sig-status-sub {
       font-family: 'Montserrat', sans-serif;
-      font-size: 6.5pt;
-      color: #666;
-      margin-top: 1pt;
+      font-size: 6pt;
+      color: #777;
     }
 
     .sign-line {
-      border-bottom: 1pt dashed #777;
-      height: 34pt;
-      margin-top: 12pt;
+      border-bottom: 0.8pt dashed #9e6b12;
+      height: 38pt;
+      margin-top: 4pt;
       margin-bottom: 4pt;
     }
 
     .sign-prompt {
       font-family: 'Montserrat', sans-serif;
-      font-size: 6.8pt;
+      font-size: 6.6pt;
+      color: #888;
+      text-align: center;
       font-style: italic;
+    }
+
+    /* Annexure Page 4 Styling */
+    .annexure-guidance {
+      background: #faf8f4;
+      border: 0.8pt solid #d6cfc2;
+      border-radius: 4pt;
+      padding: 10pt 14pt;
+      margin-bottom: 14pt;
+      font-size: 8.6pt;
+      line-height: 1.55;
+      color: #2b2b2b;
+    }
+
+    .annexure-guidance-title {
+      font-family: 'Cinzel', serif;
+      font-size: 9.2pt;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: #0c0d12;
+      margin-bottom: 5pt;
+    }
+
+    .annexure-guidance ul {
+      margin-left: 16pt;
+      margin-top: 4pt;
+    }
+
+    .annexure-guidance li {
+      margin-bottom: 3pt;
+    }
+
+    .attachment-card-box {
+      border: 1.5pt dashed #c9a44e;
+      background: #fdfcf9;
+      border-radius: 6pt;
+      height: 350pt;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 20pt;
+      margin-top: 6pt;
+      position: relative;
+    }
+
+    .attachment-card-icon {
+      width: 44pt;
+      height: 44pt;
+      margin-bottom: 12pt;
+      opacity: 0.45;
+    }
+
+    .attachment-card-prompt {
+      font-family: 'Cinzel', serif;
+      font-size: 11pt;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      color: #8c733e;
+      text-transform: uppercase;
+      margin-bottom: 6pt;
+    }
+
+    .attachment-card-sub {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 8pt;
       color: #777;
+      max-width: 320pt;
+      line-height: 1.5;
+    }
+
+    .attachment-card-badge {
+      display: inline-block;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 7.2pt;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #555;
+      background: #f3efe6;
+      border: 0.6pt solid #d6cfc2;
+      padding: 3pt 10pt;
+      border-radius: 12pt;
+      margin-top: 10pt;
     }
   </style>
 </head>
@@ -612,11 +696,11 @@ function buildHtmlPdf(outputPath) {
               <td class="field-label">Production Venue:</td>
               <td class="field-val"><span class="field-slot"></span></td>
               <td class="field-label">Classification:</td>
-              <td class="field-val"><strong>[ ] Paid Commission &nbsp; [ ] Unpaid TFP</strong></td>
+              <td class="field-val" style="white-space: nowrap; font-size: 8pt;"><strong>[ &nbsp; ] Paid Commission &nbsp;&nbsp;&nbsp;&nbsp; [ &nbsp; ] Unpaid TFP</strong></td>
             </tr>
             <tr>
               <td class="field-label">Deliverable Scope:</td>
-              <td class="field-val" colspan="3">Visual production services, color-graded master deliverables &amp; curated selects as confirmed on file.</td>
+              <td class="field-val" colspan="3"><span class="field-slot" style="min-height:16pt;"></span></td>
             </tr>
           </table>
         </div>
@@ -627,19 +711,21 @@ function buildHtmlPdf(outputPath) {
           <div class="sched-b-sec">B.1 PAID COMMERCIAL COMMISSION TERMS</div>
           <div class="sched-b-text">
             • Professional Commission: As invoiced in Studio Suite | Strict 20% Non-refundable Advance Deposit.<br>
-            • Strict 80% Post-Shoot Balance: Strictly due upon shoot conclusion prior to master file release.
+            • Strict 80% Post-Shoot Balance: Strictly due upon shoot conclusion prior to master file release.<br>
+            • Commercial Turnaround: Proofing gallery in 48–72h; master color-graded retouches per commercial queue.
           </div>
           <div class="sched-b-sec">B.2 UNPAID / TFP CREATIVE COLLABORATION TERMS</div>
           <div class="sched-b-text">
-            • Monetary Fee: <strong>Rs. 0.00 (Zero Consideration)</strong> | Mutual creative portfolio exchange.<br>
-            • Model Likeness Grant: Collaborator irrevocably grants Photographer perpetual worldwide likeness rights. RAW files strictly excluded.
+            • Consideration: <strong>Rs. 0.00 (Zero Consideration)</strong> | Mutual creative portfolio exchange.<br>
+            • Artistic Selection &amp; Delivery: <strong>Exclusively at Photographer's sole artistic discretion</strong>. Photographer selects, retouches, and publishes best frames per studio workflow. No delivery timeline or fixed turnaround deadline applies.<br>
+            • Social Attribution: Collaborator may repost finished selects for personal portfolio provided Photographer is prominently tagged: <strong>@iamchiranjitkar</strong>.
           </div>
         </div>
       </div>
 
       <div class="running-footer">
         <div>Confidential · Master Photography Agreement Executed under IT Act 2000</div>
-        <div>Page <strong>1 of 3</strong></div>
+        <div>Page <strong>1 of 4</strong></div>
       </div>
     </div>
   </div>
@@ -680,9 +766,9 @@ function buildHtmlPdf(outputPath) {
         </div>
 
         <div class="article">
-          <div class="article-num">4. Image Delivery &amp; Strict No-RAW Policy</div>
+          <div class="article-num">4. Image Selection, Deliverables &amp; Strict No-RAW Policy</div>
           <div class="article-body">
-            4.1 Unedited RAW camera files and digital negatives are proprietary confidential trade assets and will <strong>NEVER</strong> be released, sold, or provided under any circumstances. 4.2 Photographer delivers a curated set of finished master retouched JPEGs. Proofs are delivered within 48-72 hours; retouched deliverables require 1-2 months based on studio post-production queue.
+            4.1 <strong>Strict No-RAW Policy:</strong> Unedited RAW camera files and digital negatives are proprietary confidential trade assets and will <strong>NEVER</strong> be released, sold, or provided under any circumstances. 4.2 <strong>Unpaid TFP Selection &amp; Turnaround:</strong> For unpaid creative collaborations, image curation and selection rest exclusively with the Photographer based on artistic merit. There is no guaranteed turnaround timeline or delivery deadline. Photographer will edit and publish selects per studio schedule; Collaborator may repost with mandatory tag (@iamchiranjitkar). 4.3 <strong>Paid Commission Deliverables:</strong> For paid commercial commissions, client receives proofing selects within 48–72 hours, with final color-graded retouched deliverables released following full balance clearance.
           </div>
         </div>
 
@@ -710,7 +796,7 @@ function buildHtmlPdf(outputPath) {
 
       <div class="running-footer">
         <div>Confidential · Master Photography Agreement Executed under IT Act 2000</div>
-        <div>Page <strong>2 of 3</strong></div>
+        <div>Page <strong>2 of 4</strong></div>
       </div>
     </div>
   </div>
@@ -727,7 +813,7 @@ function buildHtmlPdf(outputPath) {
           <div class="running-header-right">Govt e-Stamp: IN-DL22366535014840X</div>
         </div>
 
-        <div class="section-banner">Communication Governance, Policies &amp; Execution</div>
+        <div class="section-banner">Communication Governance, Policies &amp; Digital Execution</div>
 
         <div class="article">
           <div class="article-num">8. Strict Written Communication Policy (Mandatory)</div>
@@ -806,7 +892,7 @@ function buildHtmlPdf(outputPath) {
 
               <div class="sign-line"></div>
               <div class="sign-prompt">Second Party Signature / Aadhaar OTP Stamp Placement</div>
-              <div class="exec-sub" style="margin-top:6pt;">Date: &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; | Place: </div>
+              <div class="exec-sub" style="margin-top:5pt;">Date: &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; | Place: </div>
             </div>
           </div>
         </div>
@@ -814,7 +900,51 @@ function buildHtmlPdf(outputPath) {
 
       <div class="running-footer">
         <div>Confidential · Master Photography Agreement Executed under IT Act 2000</div>
-        <div>Page <strong>3 of 3</strong></div>
+        <div>Page <strong>3 of 4</strong></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= PAGE 4 ================= -->
+  <div class="page">
+    <div class="border-frame">
+      <div>
+        <div class="running-header">
+          <div class="running-header-left">
+            <img src="data:image/png;base64,${logoB64}" alt="Logo">
+            <span>Chiranjit Kar Photography · Master Production Deed</span>
+          </div>
+          <div class="running-header-right">Govt e-Stamp: IN-DL22366535014840X</div>
+        </div>
+
+        <div class="section-banner">Annexure A: Identity Verification &amp; Masked Aadhaar (Optional)</div>
+
+        <div class="annexure-guidance">
+          <div class="annexure-guidance-title">KYC Verification &amp; Privacy Notice</div>
+          In compliance with UIDAI regulations, IT Act 2000, and client onboarding standards, the Client or Collaborator may optionally attach a digital image of their Masked Aadhaar Card or Government-issued Photo ID (Passport, Driving License, or Voter ID):
+          <ul>
+            <li><strong>Privacy &amp; Masking Standard:</strong> If submitting an Aadhaar card, ensure the first 8 digits are masked/redacted, displaying only the last 4 digits (e.g. <em>XXXX-XXXX-1234</em>).</li>
+            <li><strong>Non-Mandatory / Voluntary:</strong> This attachment is purely optional. Digital execution remains complete and legally binding upon Aadhaar OTP authentication.</li>
+            <li><strong>Confidentiality:</strong> Attached identification records are archived under strict studio confidentiality and will never be shared externally.</li>
+          </ul>
+        </div>
+
+        <!-- Attachment Slot Frame -->
+        <div class="attachment-card-box">
+          <svg class="attachment-card-icon" viewBox="0 0 24 24" fill="none" stroke="#9e6b12" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+            <polyline points="21 15 16 10 5 21"></polyline>
+          </svg>
+          <div class="attachment-card-prompt">[ Optional: Attach Masked Aadhaar Card / Govt Photo ID Here ]</div>
+          <div class="attachment-card-sub">Upload front view of your Masked Aadhaar or Govt Photo ID card. Ensure details are legible.</div>
+          <div class="attachment-card-badge">Optional Attachment · Supported: JPG, PNG, PDF (Max 5MB)</div>
+        </div>
+      </div>
+
+      <div class="running-footer">
+        <div>Confidential · Master Photography Agreement Executed under IT Act 2000</div>
+        <div>Page <strong>4 of 4</strong></div>
       </div>
     </div>
   </div>

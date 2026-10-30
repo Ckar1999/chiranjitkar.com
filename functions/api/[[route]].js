@@ -204,6 +204,12 @@ async function dispatchLeegalityAgreement(env, project, agreementType = 'master_
 
   if (token && profileId) {
     try {
+      const isPaid = agreementType === 'master_paid';
+      const isCollab = agreementType === 'master_collab';
+      const deliverableScopeText = isCollab
+        ? "Curated selects chosen exclusively at Photographer's sole artistic discretion (color-graded). No fixed delivery timeline or deadline applies; edited & published per studio workflow. Collaborator permitted to repost personal selects with mandatory tag (@iamchiranjitkar)."
+        : (project.deliverables || "Complete commercial deliverable scope as invoiced in Studio Suite, color-graded master deliverables with proofing gallery in 48-72h.");
+
       const payload = {
         profileId,
         file: {
@@ -216,14 +222,14 @@ async function dispatchLeegalityAgreement(env, project, agreementType = 'master_
             { id: '1769352237988', name: 'Address', value: project.location || 'Studio Set, Hauz Khas, New Delhi', type: 'text' },
             { id: '1769352288464', name: 'Phone Number', value: phone10, type: 'text' },
             { id: '1769352332429', name: 'Email ID', value: project.client_email, type: 'text' },
-            { id: '1769351978909', name: 'Collaborator Name', value: project.client_name, type: 'text' },
-            { id: '1769351126190', name: 'Date', value: todayUS, type: 'date', format: 'mm/dd/yyyy' },
-            { id: '1769351129812', name: 'Date', value: todayUS, type: 'date', format: 'mm/dd/yyyy' },
+            { id: '1769359000001', name: 'Paid Commission', value: isPaid ? 'true' : 'false', type: 'checkbox' },
+            { id: '1769359000002', name: 'Unpaid TFP', value: isCollab ? 'true' : 'false', type: 'checkbox' },
+            { id: '1769359000004', name: 'Deliverable Scope', value: deliverableScopeText, type: 'textarea' },
+            { id: '1769356992373', name: 'Signer Name', value: project.client_name, type: 'text' },
+            { id: '1769351126190', name: 'Execution Date', value: todayUS, type: 'date', format: 'mm/dd/yyyy' },
             { id: '1769352371986', name: 'City Name', value: clientCity, type: 'text' },
             { name: 'City Name', value: clientCity, type: 'text' },
-            { name: 'Place', value: clientCity, type: 'text' },
-            { name: 'City', value: clientCity, type: 'text' },
-            { id: '1769356992373', name: 'Collaborator Name', value: project.client_name, type: 'text' }
+            { name: 'Place', value: clientCity, type: 'text' }
           ]
         },
         invitees: [
