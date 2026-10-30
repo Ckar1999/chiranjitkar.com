@@ -1,5 +1,6 @@
 const CLIENT_HOST = 'client.chiranjitkar.com';
 const BOOK_HOST = 'book.chiranjitkar.com';
+const FOUNDATION_HOST = 'foundation.chiranjitkar.com';
 const MAIN_HOST = 'chiranjitkar.com';
 const WWW_MAIN_HOST = 'www.chiranjitkar.com';
 
@@ -36,8 +37,8 @@ export async function onRequest(context) {
   const path = url.pathname.toLowerCase();
 
   // 1. ISOLATION: Studio is internal-only.
-  // Never expose /studio, /studio.html, /studio.js, or /api/staff on client or booking subdomains.
-  if (host === CLIENT_HOST || host === BOOK_HOST) {
+  // Never expose /studio, /studio.html, /studio.js, or /api/staff on client, booking, or foundation subdomains.
+  if (host === CLIENT_HOST || host === BOOK_HOST || host === FOUNDATION_HOST) {
     if (
       path === '/studio' ||
       path === '/studio.html' ||
@@ -52,6 +53,12 @@ export async function onRequest(context) {
 
   // 2. MAIN WEBSITE ROUTING (chiranjitkar.com)
   if (host === MAIN_HOST || host === WWW_MAIN_HOST) {
+    if (path === '/foundation' || path === '/foundation.html') {
+      const target = new URL('https://' + FOUNDATION_HOST + '/');
+      target.search = url.search;
+      target.hash = url.hash;
+      return Response.redirect(target.toString(), 302);
+    }
     if (path === '/collaborate' || path === '/collaborate.html') {
       const target = new URL('https://' + BOOK_HOST + '/collaborate');
       target.search = url.search;
@@ -125,6 +132,35 @@ export async function onRequest(context) {
     // Serve Booking request form at root
     if (path === '/' || path === '/index.html') {
       return serveAsset(context, '/book');
+    }
+  }
+
+  // 5. FOUNDATION SUBDOMAIN ROUTING (foundation.chiranjitkar.com)
+  if (host === FOUNDATION_HOST) {
+    // Canonical redirect from /foundation or /foundation.html to root /
+    if (path === '/foundation' || path === '/foundation.html') {
+      const target = new URL('https://' + FOUNDATION_HOST + '/');
+      target.search = url.search;
+      target.hash = url.hash;
+      return Response.redirect(target.toString(), 302);
+    }
+
+    // Cross-link redirects
+    if (path === '/session' || path === '/session.html' || path === '/client') {
+      const target = new URL('https://' + CLIENT_HOST + '/');
+      target.search = url.search;
+      return Response.redirect(target.toString(), 302);
+    }
+
+    if (path === '/book' || path === '/book.html' || path === '/booking') {
+      const target = new URL('https://' + BOOK_HOST + '/');
+      target.search = url.search;
+      return Response.redirect(target.toString(), 302);
+    }
+
+    // Serve Foundation portal at root
+    if (path === '/' || path === '/index.html') {
+      return serveAsset(context, '/foundation.html');
     }
   }
 
