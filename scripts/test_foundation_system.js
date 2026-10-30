@@ -20,7 +20,7 @@ async function testFoundationV2() {
     INSERT INTO foundation_students (
       id, aadhaar_hash, aadhaar_number, aadhaar_last4, legal_name, dob, gender,
       father_guardian_name, guardian_phone, email, residential_address,
-      district, state, pincode, current_school_name, current_class,
+      district, state, pincode, current_school_name, current_class, school_type,
       annual_family_income, aadhaar_image_url, aadhaar_image_name, verification_status,
       academic_standing, created_at, updated_at
     ) VALUES (
@@ -28,7 +28,7 @@ async function testFoundationV2() {
       'Debolina Chakraborty', '${testDob}', 'Female',
       'Shri Subrata Chakraborty', '9402369889', 'subrata.c@gmail.com',
       'Village Chandrapur, Post Office Khowai, Near Kali Temple',
-      'Khowai', 'Tripura', '799201', 'Khowai Govt Girls Higher Secondary School', 'Class 8',
+      'Khowai', 'Tripura', '799201', 'Khowai Govt Girls Higher Secondary School', 'Class 8', 'govt_school',
       'Below Poverty Line (BPL)', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
       'Debolina_Aadhaar_Card.png', 'pending_verification', 'eligible', datetime('now'), datetime('now')
     );
@@ -53,16 +53,20 @@ async function testFoundationV2() {
   const appSql = `
     INSERT OR REPLACE INTO foundation_applications_v2 (
       id, application_code, student_id, campaign_id, academic_year,
-      class_grade, school_name, school_address, school_district, school_state,
+      class_grade, school_name, school_address, school_district, school_state, school_type,
       teacher_name, teacher_designation, teacher_phone,
       assistance_type, specific_needs, document_url, document_name,
+      last_year_percentage, last_year_grade, last_year_marksheet_url, last_year_marksheet_name,
+      latent_talent, talent_notes, info_accuracy_confirmed,
       status, created_at, updated_at
     ) VALUES (
       '${appId}', '${appCode}', '${studentId}', 'camp-2026-winter-exam', '2026-2027',
-      'Class 8', 'Khowai Govt Girls Higher Secondary School', 'Khowai Town, PIN 799201', 'Khowai', 'Tripura',
+      'Class 8', 'Khowai Govt Girls Higher Secondary School', 'Khowai Town, PIN 799201', 'Khowai', 'Tripura', 'govt_school',
       'Smt. Aparna Roy', 'Senior Mathematics Teacher', '9402369889',
       'study_materials_and_clothes', 'Class 8 Mathematics Guide, Science notes, 12 ruled exercise registers, and 1 winter school sweater (Size 32)',
       'https://chiranjitkar.com/assets/sample_school_seal.pdf', 'School_Seal_Recommendation_Roy.pdf',
+      58.5, 'B', 'https://chiranjitkar.com/assets/sample_marksheet.pdf', 'Debolina_Class7_Annual_Report.pdf',
+      'science_curiosity', 'Debolina has an extraordinary intuitive grasp of physical science experiments, but struggled in last annual exams due to total absence of reference textbooks at home.', 1,
       'pending_review', datetime('now'), datetime('now')
     );
   `;

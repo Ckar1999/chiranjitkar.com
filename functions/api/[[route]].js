@@ -1446,8 +1446,13 @@ async function handle(request, env, route) {
     const pincode = String(body.pincode || '').replace(/[^0-9]/g, '');
     const schoolName = String(body.current_school_name || '').trim();
     const currentClass = String(body.current_class || '').trim();
+    const schoolType = String(body.school_type || 'govt_school').trim().toLowerCase();
     const aadhaarImageUrl = String(body.aadhaar_image_url || '').trim();
     const aadhaarImageName = String(body.aadhaar_image_name || 'Student_Aadhaar_Card.jpg').trim();
+
+    if (['private', 'private_school', 'convent', 'cbse_private', 'icse_private'].includes(schoolType)) {
+      return fail('Strict Foundation Eligibility: Chiranjit Kar Foundation assistance is strictly and exclusively reserved for underprivileged children enrolled in Government or Government-Aided schools. Students in private schools are not eligible.', 403);
+    }
 
     if (!rawAadhaar || rawAadhaar.length !== 12) return fail('Please provide a valid 12-digit Student Aadhaar Number.', 422);
     if (!legalName || legalName.length < 3) return fail('Please enter the full legal name of the student as per Aadhaar/School records.', 422);
@@ -1485,20 +1490,20 @@ async function handle(request, env, route) {
       INSERT INTO foundation_students (
         id, aadhaar_hash, aadhaar_number, aadhaar_last4, legal_name, dob, gender,
         father_guardian_name, guardian_phone, email, residential_address,
-        district, state, pincode, current_school_name, current_class,
+        district, state, pincode, current_school_name, current_class, school_type,
         annual_family_income, aadhaar_image_url, aadhaar_image_name, verification_status,
         created_at, updated_at
       ) VALUES (
         ?, ?, ?, ?, ?, ?, ?,
         ?, ?, ?, ?,
-        ?, ?, ?, ?, ?,
+        ?, ?, ?, ?, ?, ?,
         ?, ?, ?, 'pending_verification',
         ?, ?
       )
     `).bind(
       studentId, aadhaarHash, formattedAadhaar, aadhaarLast4, legalName, dob, body.gender || 'Not specified',
       fatherName, phone, email || null, address,
-      district, state, pincode, schoolName, currentClass,
+      district, state, pincode, schoolName, currentClass, schoolType,
       body.annual_family_income || null, aadhaarImageUrl, aadhaarImageName,
       timestamp, timestamp
     ).run();
@@ -1678,6 +1683,18 @@ async function handle(request, env, route) {
     const teacherDesignation = String(body.teacher_designation || '').trim();
     const teacherPhone = String(body.teacher_phone || '').replace(/[^0-9]/g, '').slice(-10);
     const teacherEmail = String(body.teacher_email || '').trim();
+    const schoolType = String(body.school_type || 'govt_school').trim().toLowerCase();
+    const lastYearPercentage = parseFloat(body.last_year_percentage) || 0;
+    const lastYearGrade = String(body.last_year_grade || '').trim();
+    const lastYearMarksheetUrl = String(body.last_year_marksheet_url || '').trim();
+    const lastYearMarksheetName = String(body.last_year_marksheet_name || 'Last_Year_Final_Marksheet.jpg').trim();
+    const latentTalent = String(body.latent_talent || 'science_curiosity').trim();
+    const talentNotes = String(body.talent_notes || '').trim();
+    const infoAccuracyConfirmed = Boolean(body.info_accuracy_confirmed === true || body.info_accuracy_confirmed === 'true' || body.info_accuracy_confirmed === 1);
+
+    if (['private', 'private_school', 'convent', 'cbse_private', 'icse_private'].includes(schoolType)) {
+      return fail('Strict Foundation Policy: Chiranjit Kar Foundation assistance is strictly and exclusively reserved for underprivileged children enrolled in Government or Government-Aided schools. Students in private schools are not eligible.', 403);
+    }
 
     if (!rawAadhaar || rawAadhaar.length !== 12) return fail('Valid 12-digit Aadhaar Number is required.', 422);
     if (!rawDob) return fail('Valid Date of Birth is required.', 422);
@@ -1685,6 +1702,8 @@ async function handle(request, env, route) {
     if (!teacherName || !teacherPhone || teacherPhone.length < 10) return fail('Recommending teacher name and 10-digit mobile number are required.', 422);
     if (!specificNeeds || specificNeeds.length < 10) return fail('Please detail the specific textbooks and study materials requested.', 422);
     if (!documentUrl) return fail('Please attach the official Requisition Document bearing the School Rubber Stamp and Teacher/Headmaster signature.', 422);
+    if (!lastYearMarksheetUrl) return fail('Please upload a clear photograph or PDF scan of the student’s Last Academic Year Final Marksheet / Report Card.', 422);
+    if (!infoAccuracyConfirmed) return fail('Please check the declaration agreeing that all submitted information, details, and documents are 100% true and correct.', 422);
 
     const aadhaarHash = await digest(`fnd_aadhaar_salt:${rawAadhaar}`);
     const student = await env.DB.prepare('SELECT * FROM foundation_students WHERE aadhaar_hash=?').bind(aadhaarHash).first().catch(() => null);
@@ -1695,9 +1714,9 @@ async function handle(request, env, route) {
       return fail('Your student account is currently under manual Aadhaar document verification by the Foundation desk. The administrator will inspect your uploaded Aadhaar card to verify legal name and DOB before campaign aid can be granted. Please check back shortly.', 403);
     }
 
-    if (student.academic_standing === 'ineligible_poor_performance') {
-      return fail(`Application restricted: Student account is currently flagged under Academic Review (${student.academic_standing_notes || 'Poor terminal exam performance'}). The Foundation requires students to demonstrate active effort and academic dedication to remain eligible for subsequent aid campaigns. Please contact your Headmaster or submit your updated term marksheet in the Student Dashboard for review.`, 403);
-    }
+    // Core Foundation Philosophy: Raw Curiosity & Latent Talent over past marks.
+    // Low marks are never used to disqualify a student, because low marks in rural / underprivileged backgrounds
+    // usually reflect lack of books, coaching, or resources. Past marksheet is treated purely as a learning baseline.
 
     const campaign = await env.DB.prepare('SELECT * FROM foundation_campaigns WHERE id=?').bind(campaignId).first().catch(() => null);
     if (!campaign) return fail('Campaign drive not found.', 404);
@@ -1717,30 +1736,49 @@ async function handle(request, env, route) {
     await env.DB.prepare(`
       INSERT INTO foundation_applications_v2 (
         id, application_code, student_id, campaign_id, academic_year,
-        class_grade, school_name, school_address, school_district, school_state,
+        class_grade, school_name, school_address, school_district, school_state, school_type,
         teacher_name, teacher_designation, teacher_phone, teacher_email,
         assistance_type, specific_needs, document_url, document_name,
-        status, created_at, updated_at
+        last_year_percentage, last_year_grade, last_year_marksheet_url, last_year_marksheet_name,
+        latent_talent, talent_notes,
+        info_accuracy_confirmed, status, created_at, updated_at
       ) VALUES (
         ?, ?, ?, ?, '2026-2027',
-        ?, ?, ?, ?, ?,
+        ?, ?, ?, ?, ?, ?,
         ?, ?, ?, ?,
         ?, ?, ?, ?,
-        'pending_review', ?, ?
+        ?, ?, ?, ?,
+        ?, ?,
+        ?, 'pending_review', ?, ?
       )
     `).bind(
       appId, appCode, student.id, campaign.id,
       body.class_grade || student.current_class, body.school_name || student.current_school_name,
-      body.school_address || student.residential_address, student.district, student.state,
+      body.school_address || student.residential_address, student.district, student.state, schoolType,
       teacherName, teacherDesignation || 'Teacher In-Charge', teacherPhone, teacherEmail || null,
       assistanceType, specificNeeds, documentUrl, documentName,
-      timestamp, timestamp
+      lastYearPercentage, lastYearGrade || null, lastYearMarksheetUrl, lastYearMarksheetName,
+      latentTalent, talentNotes,
+      infoAccuracyConfirmed ? 1 : 0, timestamp, timestamp
     ).run();
+
+    // Automatically record last year's marksheet into academic records ledger
+    await env.DB.prepare(`
+      INSERT INTO foundation_academic_records (
+        id, student_id, academic_year, exam_term, percentage, grade,
+        marksheet_url, marksheet_name, performance_rating, created_at
+      ) VALUES (?, ?, 'Previous Year Final', 'Last Year Final School Examination', ?, ?, ?, ?, ?, ?)
+    `).bind(
+      id(), student.id, lastYearPercentage, lastYearGrade || null,
+      lastYearMarksheetUrl, lastYearMarksheetName,
+      lastYearPercentage >= 75 ? 'exemplary' : lastYearPercentage >= 50 ? 'good' : lastYearPercentage >= 35 ? 'satisfactory' : 'poor',
+      timestamp
+    ).run().catch(() => {});
 
     return json({
       ok: true,
       application_code: appCode,
-      message: `Your application for "${campaign.title}" has been registered successfully! The Foundation Desk will verify the school credentials and contact your teacher.`
+      message: `Your application for "${campaign.title}" has been registered successfully! The Foundation Desk will verify the government school credentials and contact your teacher.`
     });
   }
 
@@ -1765,9 +1803,11 @@ async function handle(request, env, route) {
     // Fetch applications with joined student profile details
     const applications = await env.DB.prepare(`
       SELECT 
-        a.id, a.application_code, a.campaign_id, a.class_grade, a.school_name, a.school_district, a.school_state,
+        a.id, a.application_code, a.campaign_id, a.class_grade, a.school_name, a.school_district, a.school_state, a.school_type,
         a.teacher_name, a.teacher_designation, a.teacher_phone, a.teacher_email, a.assistance_type, a.specific_needs,
         a.document_url, a.document_name, a.shipping_carrier, a.tracking_number, a.status, a.rejection_reason,
+        a.last_year_percentage, a.last_year_grade, a.last_year_marksheet_url, a.last_year_marksheet_name, a.info_accuracy_confirmed,
+        a.latent_talent, a.talent_notes,
         a.review_notes, a.created_at, a.updated_at,
         s.legal_name AS student_name, s.aadhaar_last4 AS student_aadhaar_last4, s.father_guardian_name, s.guardian_phone,
         s.residential_address, s.dob AS student_dob
@@ -1788,7 +1828,7 @@ async function handle(request, env, route) {
       SELECT 
         id, legal_name, aadhaar_number, aadhaar_last4, dob, gender,
         father_guardian_name, guardian_phone, email, residential_address,
-        district, state, pincode, current_school_name, current_class,
+        district, state, pincode, current_school_name, current_class, school_type,
         annual_family_income, aadhaar_image_url, aadhaar_image_name,
         verification_status, verified_by, verified_at, verification_notes,
         academic_standing, academic_standing_notes,

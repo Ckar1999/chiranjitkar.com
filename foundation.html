@@ -91,7 +91,7 @@
     <div class="bg-gradient-to-r from-emerald-950 via-emerald-900 to-black text-[12px] text-emerald-200 py-2 border-b border-emerald-800/40 px-4 text-center">
         <span class="inline-flex items-center gap-2">
             <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <strong>100% Private Philanthropic Initiative</strong> by Chiranjit Kar &bull; Nursery to Class 10 Children &bull; Zero Public Donations &bull; Direct Hand-to-Hand Support
+            <strong>100% Private Philanthropic Initiative</strong> by Chiranjit Kar &bull; Exclusively for Government School Students (Nursery to Class 10) &bull; Zero Public Donations
         </span>
     </div>
 
@@ -408,12 +408,21 @@
                         </div>
 
                         <div class="p-5 rounded-2xl bg-black/40 border border-white/5 space-y-4">
-                            <span class="text-xs font-mono text-emerald-400 uppercase font-bold">School &amp; Academic Enrollment (Nursery to Class 10)</span>
+                            <span class="text-xs font-mono text-emerald-400 uppercase font-bold">Government School Enrollment (Nursery to Class 10 Only)</span>
                             
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div class="sm:col-span-2">
-                                    <label class="block text-xs font-mono text-neutral-300 uppercase mb-1">School Currently Enrolled In *</label>
-                                    <input type="text" id="reg_school_name" required placeholder="e.g. Radhamadhav Vidyamandir" class="w-full px-4 py-3 rounded-xl text-sm">
+                                    <label class="block text-xs font-mono text-neutral-300 uppercase mb-1">School Type * <span class="text-amber-400 font-bold">(Government Schools Only)</span></label>
+                                    <select id="reg_school_type" required class="w-full px-4 py-3 rounded-xl text-sm font-semibold text-emerald-300 bg-black/60 border border-emerald-500/40">
+                                        <option value="govt_school">Government School (Govt Primary / High / Higher Secondary)</option>
+                                        <option value="govt_aided_school">Government-Aided School</option>
+                                    </select>
+                                    <p class="text-[11px] text-amber-300/90 font-mono mt-1">⚠️ Strict Charter Rule: Chiranjit Kar Foundation assistance is strictly restricted to students in Government / Govt-Aided schools. Private schools are ineligible.</p>
+                                </div>
+
+                                <div class="sm:col-span-2">
+                                    <label class="block text-xs font-mono text-neutral-300 uppercase mb-1">Government School Currently Enrolled In *</label>
+                                    <input type="text" id="reg_school_name" required placeholder="e.g. Khowai Govt Girls Higher Secondary School" class="w-full px-4 py-3 rounded-xl text-sm">
                                 </div>
 
                                 <div>
@@ -553,43 +562,21 @@
 
                             <div id="dash-applications-list" class="space-y-4"></div>
                         </div>
-
-                        <!-- 3. ACADEMIC PERFORMANCE & MARKSSHEET TRACKING -->
-                        <div class="space-y-4">
-                            <div class="flex items-center justify-between pb-2 border-b border-white/10">
-                                <div>
-                                    <h4 class="font-cinzel text-lg font-bold text-white flex items-center gap-2">
-                                        <span>📚</span> Academic Performance &amp; Progress Card
-                                    </h4>
-                                    <p class="text-xs text-neutral-400 mt-0.5">Continuous effort and good examination results keep your Foundation assistance active.</p>
-                                </div>
-                                <button onclick="openAcadModal()" class="px-3.5 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-xs font-mono font-bold transition">
-                                    ＋ Submit Term Marksheet
-                                </button>
-                            </div>
-
-                            <div class="p-5 rounded-2xl bg-black/40 border border-white/5 space-y-4">
-                                <div class="p-3.5 rounded-xl bg-emerald-950/30 border border-emerald-800/30 text-xs text-neutral-300 leading-relaxed">
-                                    <strong>Foundation Academic Responsibility Charter:</strong> We stand beside you with study guides, notebooks, and clothing. In return, every student must attend classes faithfully and give their best effort in examinations. Poor terminal results or repeated unexcused absence may restrict eligibility for future campaign aid drives.
-                                </div>
-                                <div id="dash-acad-records-list" class="space-y-2"></div>
-                            </div>
-                        </div>
                     </div>
                 </div>
 
             </div>
         </section>
 
-        <!-- APPLY FOR CAMPAIGN MODAL (With School Seal Upload) -->
+        <!-- APPLY FOR CAMPAIGN MODAL (With School Seal & Last Year Marksheet Upload) -->
         <div id="campaign-apply-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
             <div class="w-full max-w-xl p-6 sm:p-8 rounded-3xl liquid-card border border-white/20 shadow-2xl relative max-h-[90vh] overflow-y-auto">
                 <button onclick="closeCampaignModal()" class="absolute top-5 right-5 text-neutral-400 hover:text-white text-xl">✕</button>
 
                 <div class="text-center mb-6">
-                    <span class="text-xs font-mono uppercase tracking-widest text-emerald-400 font-bold">FOUNDATION AID APPLICATION</span>
+                    <span class="text-xs font-mono uppercase tracking-widest text-emerald-400 font-bold">GOVERNMENT SCHOOL AID APPLICATION</span>
                     <h3 class="text-xl sm:text-2xl font-cinzel font-bold text-white mt-1" id="modal-camp-title">Campaign Title</h3>
-                    <p class="text-xs text-neutral-400 mt-1">Your personal details are already verified and attached from your student account.</p>
+                    <p class="text-xs text-neutral-400 mt-1">Exclusively for students studying in Government &amp; Govt-Aided Schools.</p>
                 </div>
 
                 <!-- Teacher Salute & Appeal Inside Modal -->
@@ -599,7 +586,7 @@
                         <span class="font-mono uppercase tracking-wider">A Respectful Salute &amp; Appeal to Respected Teachers</span>
                     </div>
                     <p class="text-[11px] text-neutral-200 leading-relaxed">
-                        We salute our revered educators for guiding our youth. Because this initiative is <strong>100% self-funded from private savings</strong> with zero public funds, please recommend <strong>ONLY genuinely economically disadvantaged children</strong> who cannot afford books or uniforms.
+                        We salute our revered educators for guiding our youth. Because this initiative is <strong>100% self-funded from private savings</strong> with zero public funds, please recommend <strong>ONLY genuinely economically disadvantaged children in Government schools</strong> who cannot afford books or uniforms.
                     </p>
                     <div class="text-[11px] text-emerald-300 font-mono flex items-center gap-1.5 pt-1 border-t border-white/5">
                         <span>📦</span> Upon approval, an official intimation letter will be posted to the Headmaster and the package delivered directly to school.
@@ -626,8 +613,62 @@
                         <textarea id="modal_specific_needs" rows="3" required placeholder="e.g. Class 10 NCERT Science Guide, Math Solved Question Bank, 12 Exercise Ruled Registers, and 1 Warm Winter Sweater (Size: 32)." class="w-full px-4 py-3 rounded-xl text-sm"></textarea>
                     </div>
 
+                    <!-- Student's Last Year Final Examination Marksheet & Academic Baseline -->
+                    <div class="p-4 rounded-2xl bg-black/40 border border-emerald-500/30 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-mono text-emerald-400 uppercase font-bold">Student's Last Year Final Exam Marksheet *</span>
+                            <span class="text-[10px] font-mono text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded border border-amber-400/20 font-bold">ACADEMIC BASELINE</span>
+                        </div>
+                        <p class="text-[11px] text-neutral-300 leading-relaxed">
+                            💡 <strong>Real Talents Over Past Marks:</strong> Low marks in rural or government schools often stem from missing textbooks, lack of tuition, or domestic hardship. <em>Low marks will never disqualify a student</em>. We record last year's report card solely as an academic baseline to identify learning hurdles and supply the exact books and notes needed to help them excel.
+                        </p>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-[11px] font-mono text-neutral-400 uppercase mb-0.5">Last Year Final Marks / % *</label>
+                                <input type="number" id="modal_last_year_pct" step="0.1" min="0" max="100" required placeholder="e.g. 72.5" class="w-full px-3 py-2 rounded-lg text-xs font-mono">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-mono text-neutral-400 uppercase mb-0.5">Grade / Division</label>
+                                <input type="text" id="modal_last_year_grade" placeholder="e.g. A, 1st Div" class="w-full px-3 py-2 rounded-lg text-xs">
+                            </div>
+                        </div>
+
+                        <!-- Marksheet upload -->
+                        <div class="p-3.5 rounded-xl border border-dashed border-emerald-500/40 bg-emerald-950/20 text-center">
+                            <input type="file" id="modal_marksheet_file" accept=".pdf,image/*" required class="hidden" onchange="handleModalMarksheetSelect(this)">
+                            <button type="button" onclick="document.getElementById('modal_marksheet_file').click()" class="px-3.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 text-emerald-300 text-xs font-mono font-semibold border border-white/10 transition">
+                                📑 Choose Last Year Report Card / Marksheet *
+                            </button>
+                            <div id="modal-marksheet-file-display" class="mt-1.5 text-xs font-mono text-emerald-400 hidden"></div>
+                            <p class="text-[10.5px] text-neutral-400 mt-1">Upload clear photo or PDF scan of previous annual school marksheet.</p>
+                        </div>
+                    </div>
+
+                    <!-- Latent Talent & Raw Potential Assessment -->
+                    <div class="p-4 rounded-2xl bg-black/40 border border-emerald-500/30 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-mono text-emerald-400 uppercase font-bold">Child's Latent Talent &amp; Innate Curiosity *</span>
+                            <span class="text-[10px] font-mono text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded border border-emerald-400/20 font-bold">TALENT NURTURE</span>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-mono text-neutral-400 uppercase mb-1">Child's Core Spark / Special Latent Ability *</label>
+                            <select id="modal_latent_talent" required class="w-full px-3 py-2.5 rounded-xl text-xs bg-black/60 border border-emerald-500/30 text-emerald-300 font-semibold">
+                                <option value="science_curiosity">🔬 Scientific Curiosity &amp; Hands-on Experimentation</option>
+                                <option value="math_logic">📐 Mathematical Reasoning, Puzzles &amp; Analytical Mind</option>
+                                <option value="art_creative">🎨 Artistic Creativity, Drawing, Poetry &amp; Literature</option>
+                                <option value="reading_language">📖 Avid Reader, Language Expression &amp; Storytelling</option>
+                                <option value="determined_learner">🌟 High Determination &amp; Diligent Self-Taught Learner</option>
+                                <option value="other_spark">💡 Other Notable Raw Talent / Spark</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-mono text-neutral-400 uppercase mb-1">Teacher's Observation on the Child's Potential &amp; Missing Opportunities *</label>
+                            <textarea id="modal_talent_notes" rows="2" required placeholder="Describe the child's hidden spark, passion, and how the absence of books or family hardship held them back from scoring higher..." class="w-full px-3 py-2 rounded-xl text-xs"></textarea>
+                        </div>
+                    </div>
+
                     <div class="p-4 rounded-xl bg-black/40 border border-white/5 space-y-3">
-                        <span class="text-xs font-mono text-emerald-400 uppercase font-bold">Recommending Teacher or Headmaster</span>
+                        <span class="text-xs font-mono text-emerald-400 uppercase font-bold">Recommending Teacher or Headmaster (Govt School)</span>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
                                 <label class="block text-[11px] font-mono text-neutral-400 uppercase mb-0.5">Teacher Name *</label>
@@ -648,7 +689,7 @@
                     <div class="p-5 rounded-2xl border-2 border-dashed border-emerald-500/30 bg-emerald-950/20 text-center">
                         <div class="text-2xl mb-1">📎</div>
                         <h5 class="text-xs font-bold text-white">Upload School Seal &amp; Teacher Signature Document</h5>
-                        <p class="text-[11px] text-neutral-400 mt-0.5">Must bear official School Rubber Stamp and Headmaster / Teacher signature.</p>
+                        <p class="text-[11px] text-neutral-400 mt-0.5">Must bear official Government School Rubber Stamp and Headmaster / Teacher signature.</p>
                         
                         <input type="file" id="modal_file" accept=".pdf,image/*" required class="hidden" onchange="handleModalFileSelect(this)">
                         <button type="button" onclick="document.getElementById('modal_file').click()" class="mt-3 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-emerald-300 text-xs font-mono font-semibold border border-white/10 transition">
@@ -657,11 +698,16 @@
                         <div id="modal-file-display" class="mt-2 text-xs font-mono text-emerald-400 hidden"></div>
                     </div>
 
-                    <!-- Solemn Educator Declaration Checkbox -->
-                    <div class="p-3.5 rounded-xl bg-emerald-950/40 border border-emerald-500/30 text-left">
+                    <!-- Both Declaration Checkboxes -->
+                    <div class="p-3.5 rounded-xl bg-emerald-950/40 border border-emerald-500/30 text-left space-y-3">
                         <label class="flex items-start gap-2.5 cursor-pointer text-xs text-neutral-200">
                             <input type="checkbox" id="modal_teacher_declare" required class="mt-0.5 rounded border-white/20 text-emerald-500 focus:ring-emerald-500">
-                            <span><strong>Solemn Educator Certification:</strong> As a responsible educator / teacher, I solemnly certify that this student genuinely belongs to an economically disadvantaged family and urgently requires this educational assistance to continue schooling with dignity.</span>
+                            <span><strong>Solemn Educator Certification:</strong> As a responsible educator / teacher, I certify that this student genuinely belongs to an economically disadvantaged family, is actively studying in a Government school, and urgently requires this assistance to continue schooling with dignity.</span>
+                        </label>
+
+                        <label class="flex items-start gap-2.5 cursor-pointer text-xs text-neutral-200 pt-2.5 border-t border-white/10">
+                            <input type="checkbox" id="modal_info_accuracy" required class="mt-0.5 rounded border-white/20 text-emerald-500 focus:ring-emerald-500">
+                            <span><strong>100% Truthfulness Guarantee:</strong> I solemnly declare and agree that all information, marks, documents, and statements submitted in this application are 100% true and correct. I understand that submitting false or misleading information will permanently disqualify the application.</span>
                         </label>
                     </div>
 
@@ -669,68 +715,6 @@
 
                     <button type="submit" id="modal-apply-btn" class="w-full py-3.5 rounded-xl font-bold bg-emerald-500 hover:bg-emerald-400 text-black text-sm shadow-xl shadow-emerald-500/25 transition">
                         Submit Application for this Campaign Drive
-                    </button>
-                </form>
-            </div>
-        </div>
-
-        <!-- SUBMIT ACADEMIC PROGRESS / MARKSHEET MODAL -->
-        <div id="acad-record-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
-            <div class="w-full max-w-lg p-6 sm:p-8 rounded-3xl liquid-card border border-white/20 shadow-2xl relative max-h-[90vh] overflow-y-auto">
-                <button onclick="closeAcadModal()" class="absolute top-5 right-5 text-neutral-400 hover:text-white text-xl">✕</button>
-
-                <div class="text-center mb-6">
-                    <span class="text-xs font-mono uppercase tracking-widest text-emerald-400 font-bold">FOUNDATION SCHOLARSHIP ACADEMIC PROGRESS</span>
-                    <h3 class="text-xl sm:text-2xl font-cinzel font-bold text-white mt-1">Submit Terminal Exam Report Card</h3>
-                    <p class="text-xs text-neutral-400 mt-1">Upload your term marksheet to keep your educational aid active for future drives.</p>
-                </div>
-
-                <form id="acad-record-form" onsubmit="handleAcadRecordSubmit(event)" class="space-y-4">
-                    <div>
-                        <label class="block text-xs font-mono text-neutral-300 uppercase mb-1">Examination Term *</label>
-                        <select id="acad_exam_term" required class="w-full px-4 py-3 rounded-xl text-sm">
-                            <option value="">Select Examination Term</option>
-                            <option value="1st Unit Test / Periodic Assessment">1st Unit Test / Periodic Assessment</option>
-                            <option value="Half-Yearly / Mid-Term Examination">Half-Yearly / Mid-Term Examination</option>
-                            <option value="2nd Unit Test / Pre-Board">2nd Unit Test / Pre-Board</option>
-                            <option value="Annual / Final School Examination">Annual / Final School Examination</option>
-                            <option value="Secondary Board Madhyamik Exam">Secondary Board Madhyamik Exam</option>
-                        </select>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-mono text-neutral-300 uppercase mb-1">Percentage / Marks % *</label>
-                            <input type="number" id="acad_percentage" step="0.1" min="0" max="100" required placeholder="e.g. 72.5" class="w-full px-4 py-3 rounded-xl text-sm font-mono">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-mono text-neutral-300 uppercase mb-1">Grade / Division</label>
-                            <input type="text" id="acad_grade" placeholder="e.g. A, 1st Div" class="w-full px-4 py-3 rounded-xl text-sm">
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-mono text-neutral-300 uppercase mb-1">Teacher / Headmaster Remarks</label>
-                        <textarea id="acad_remarks" rows="2" placeholder="e.g. Regular attendance, shown good improvement in Mathematics." class="w-full px-4 py-3 rounded-xl text-sm"></textarea>
-                    </div>
-
-                    <!-- Marksheet Upload -->
-                    <div class="p-5 rounded-2xl border-2 border-dashed border-emerald-500/30 bg-emerald-950/20 text-center">
-                        <div class="text-2xl mb-1">📑</div>
-                        <h5 class="text-xs font-bold text-white">Upload Marksheet / Report Card Scan *</h5>
-                        <p class="text-[11px] text-neutral-400 mt-0.5">Photo of official report card signed by Class Teacher / Principal.</p>
-                        
-                        <input type="file" id="acad_file" accept=".pdf,image/*" required class="hidden" onchange="handleAcadFileSelect(this)">
-                        <button type="button" onclick="document.getElementById('acad_file').click()" class="mt-3 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-emerald-300 text-xs font-mono font-semibold border border-white/10 transition">
-                            📂 Choose Marksheet Photo / PDF
-                        </button>
-                        <div id="acad-file-display" class="mt-2 text-xs font-mono text-emerald-400 hidden"></div>
-                    </div>
-
-                    <div id="acad-error" class="hidden p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs"></div>
-
-                    <button type="submit" id="acad-submit-btn" class="w-full py-3.5 rounded-xl font-bold bg-emerald-500 hover:bg-emerald-400 text-black text-sm shadow-xl shadow-emerald-500/25 transition">
-                        Submit Academic Progress Record
                     </button>
                 </form>
             </div>
@@ -757,6 +741,8 @@
         let regAadhaarName = '';
         let modalDocumentB64 = '';
         let modalDocumentName = '';
+        let modalMarksheetB64 = '';
+        let modalMarksheetName = '';
         let acadFileB64 = '';
         let acadFileName = '';
 
@@ -1142,6 +1128,24 @@
             reader.readAsDataURL(file);
         }
 
+        function handleModalMarksheetSelect(input) {
+            const file = input.files[0];
+            if (!file) return;
+            if (file.size > 8 * 1024 * 1024) {
+                alert('Marksheet file size must be under 8MB.');
+                return;
+            }
+            modalMarksheetName = file.name;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                modalMarksheetB64 = e.target.result;
+                const disp = document.getElementById('modal-marksheet-file-display');
+                disp.innerText = `✓ Selected: ${file.name} (${Math.round(file.size/1024)} KB)`;
+                disp.classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+
         async function handleCampaignApplySubmit(e) {
             e.preventDefault();
             const errDiv = document.getElementById('modal-apply-error');
@@ -1151,6 +1155,19 @@
             const declareCheck = document.getElementById('modal_teacher_declare');
             if (declareCheck && !declareCheck.checked) {
                 errDiv.innerText = 'Please check the Solemn Educator Certification declaring that the student genuinely requires economic support.';
+                errDiv.classList.remove('hidden');
+                return;
+            }
+
+            const accuracyCheck = document.getElementById('modal_info_accuracy');
+            if (accuracyCheck && !accuracyCheck.checked) {
+                errDiv.innerText = 'Please check the 100% Truthfulness Guarantee confirming all submitted details are true and correct.';
+                errDiv.classList.remove('hidden');
+                return;
+            }
+
+            if (!modalMarksheetB64) {
+                errDiv.innerText = 'Please upload a clear photograph or PDF scan of the student’s Last Academic Year Final Marksheet / Report Card.';
                 errDiv.classList.remove('hidden');
                 return;
             }
@@ -1175,11 +1192,18 @@
                 campaign_id: document.getElementById('modal-camp-id').value,
                 assistance_type: document.getElementById('modal_assistance_type').value,
                 specific_needs: document.getElementById('modal_specific_needs').value.trim(),
+                last_year_percentage: parseFloat(document.getElementById('modal_last_year_pct').value) || 0,
+                last_year_grade: document.getElementById('modal_last_year_grade').value.trim(),
+                last_year_marksheet_url: modalMarksheetB64,
+                last_year_marksheet_name: modalMarksheetName,
+                latent_talent: document.getElementById('modal_latent_talent').value,
+                talent_notes: document.getElementById('modal_talent_notes').value.trim(),
                 teacher_name: document.getElementById('modal_teacher_name').value.trim(),
                 teacher_designation: document.getElementById('modal_teacher_desig').value.trim(),
                 teacher_phone: document.getElementById('modal_teacher_phone').value.trim(),
                 document_url: modalDocumentB64,
-                document_name: modalDocumentName
+                document_name: modalDocumentName,
+                info_accuracy_confirmed: true
             };
 
             try {

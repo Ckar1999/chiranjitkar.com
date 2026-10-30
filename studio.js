@@ -956,6 +956,22 @@
     $('#fnd-dlg-phone').textContent = `+91 ${app.teacher_phone}`;
     $('#fnd-dlg-phone').href = `https://wa.me/91${app.teacher_phone}`;
     $('#fnd-dlg-needs').textContent = app.specific_needs;
+    $('#fnd-dlg-pct-badge').textContent = app.last_year_percentage ? `${app.last_year_percentage}% (${app.last_year_grade || 'No Grade'})` : 'Baseline Not Set';
+    $('#fnd-dlg-marksheet-name').textContent = app.last_year_marksheet_name || 'Last_Year_Marksheet.pdf';
+    $('#fnd-dlg-marksheet-link').href = app.last_year_marksheet_url || '#';
+    $('#fnd-dlg-marksheet-link').style.display = app.last_year_marksheet_url ? 'inline-flex' : 'none';
+
+    const talentTitles = {
+      science_curiosity: '🔬 Science Curiosity & Experimentation',
+      math_logic: '📐 Math Logic & Analytical Mind',
+      art_creative: '🎨 Art, Poetry & Creative Expression',
+      reading_language: '📖 Avid Reading & Literature',
+      determined_learner: '🌟 Dedicated Self-Learner',
+      other_spark: '💡 Unique Raw Talent'
+    };
+    $('#fnd-dlg-latent-badge').textContent = talentTitles[app.latent_talent] || app.latent_talent || 'Raw Talent';
+    $('#fnd-dlg-talent-notes').textContent = app.talent_notes ? `"${app.talent_notes}"` : 'No teacher notes recorded.';
+
     $('#fnd-dlg-doc-name').textContent = app.document_name || 'School_Requisition.pdf';
     $('#fnd-dlg-doc-link').href = app.document_url || '#';
     $('#fnd-dlg-notes').value = app.review_notes || '';
