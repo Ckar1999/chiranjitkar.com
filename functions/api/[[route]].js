@@ -206,6 +206,9 @@ async function dispatchLeegalityAgreement(env, project, agreementType = 'master_
     try {
       const isPaid = agreementType === 'master_paid';
       const isCollab = agreementType === 'master_collab';
+      const totalFee = Number(project.package_price || project.total_amount || 25000);
+      const advanceFee = Number(project.deposit_amount || project.advance_amount || Math.round(totalFee * 0.2));
+      const balanceFee = Number(project.balance_amount || (totalFee - advanceFee));
       const deliverableScopeText = isCollab
         ? "Curated selects chosen exclusively at Photographer's sole artistic discretion (color-graded). No fixed delivery timeline or deadline applies; edited & published per studio workflow. Collaborator permitted to repost personal selects with mandatory tag (@iamchiranjitkar)."
         : (project.deliverables || "Complete commercial deliverable scope as invoiced in Studio Suite, color-graded master deliverables with proofing gallery in 48-72h.");
@@ -225,9 +228,9 @@ async function dispatchLeegalityAgreement(env, project, agreementType = 'master_
             { id: '1769358000001', name: 'Paid Commission', value: isPaid ? 'true' : 'false', type: 'checkbox' },
             { id: '1769358000002', name: 'Unpaid TFP', value: isCollab ? 'true' : 'false', type: 'checkbox' },
             { id: '1769359000010', name: 'Booked Package', value: isPaid ? (project.package_name || 'Signature Commercial / Portrait Production') : 'Mutual Creative Collaboration (TFP)', type: 'text' },
-            { id: '1769359000011', name: 'Total Commercial Fee', value: isPaid ? ('₹' + (project.total_amount || 25000).toLocaleString('en-IN')) : 'NIL (Rs. 0.00 / Mutual Portfolio Exchange)', type: 'text' },
-            { id: '1769359000012', name: '20% Advance Deposit', value: isPaid ? ('₹' + (project.advance_amount || 5000).toLocaleString('en-IN') + ' (Non-refundable)') : 'NIL (Rs. 0.00)', type: 'text' },
-            { id: '1769359000013', name: '80% Post-Shoot Balance', value: isPaid ? ('₹' + (project.balance_amount || 20000).toLocaleString('en-IN') + ' (Due upon wrap)') : 'NIL (Rs. 0.00)', type: 'text' },
+            { id: '1769359000011', name: 'Total Commercial Fee', value: isPaid ? ('INR ' + totalFee.toLocaleString('en-IN')) : 'NIL (Rs. 0.00 / Mutual Portfolio Exchange)', type: 'text' },
+            { id: '1769359000012', name: '20% Advance Deposit', value: isPaid ? ('INR ' + advanceFee.toLocaleString('en-IN') + ' (Paid / Non-refundable)') : 'NIL (Rs. 0.00)', type: 'text' },
+            { id: '1769359000013', name: '80% Post-Shoot Balance', value: isPaid ? ('INR ' + balanceFee.toLocaleString('en-IN') + ' (Due upon wrap)') : 'NIL (Rs. 0.00)', type: 'text' },
             { id: '1769352220464', name: 'Deliverable Scope', value: deliverableScopeText, type: 'textarea' },
             { id: '1769356992373', name: 'Signer Name', value: project.client_name, type: 'text' },
             { id: '1769351126190', name: 'Execution Date', value: todayUS, type: 'date', format: 'mm/dd/yyyy' },
