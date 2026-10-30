@@ -41,6 +41,9 @@
         <button class="nav-item" data-view="schedule"><span>▦</span> Schedule</button>
         <button class="nav-item" data-view="tasks"><span>✓</span> Tasks <b id="nav-task-count">0</b></button>
         <button class="nav-item finance-only" data-view="billing"><span>₹</span> Billing</button>
+        <button class="nav-item admin-only" data-view="foundation">
+          <span>🌱</span> Foundation <b class="badge-pill" style="background:rgba(245,158,11,0.18);color:#fbbf24;border:1px solid rgba(245,158,11,0.35);font-size:9.5px;padding:2px 6px;border-radius:6px;font-weight:600;margin-left:auto;">Launching Soon</b>
+        </button>
         <button class="nav-item admin-only" data-view="team"><span>♙</span> Team</button>
         <button class="nav-item admin-only" data-view="settings"><span>⚙</span> Settings</button>
       </nav>
@@ -164,6 +167,144 @@
 
           <div id="bank-transaction-list" class="bank-transaction-list"></div>
           <div id="invoice-list" class="invoice-list"></div>
+        </div>
+
+        <div id="foundation-view" class="view" hidden>
+          <div class="section-heading">
+            <div>
+              <div class="eyebrow" style="color:var(--green); letter-spacing:0.12em;">PHILANTHROPIC STEWARDSHIP</div>
+              <h2>Chiranjit Kar Foundation Desk</h2>
+              <p class="muted">100% self-funded private educational aid for underprivileged school students. Verify school credentials, record purchase bills, and dispatch study material kits.</p>
+            </div>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <span class="status lead" style="font-size:10px; background:rgba(245,158,11,0.15); color:#fbbf24; border:1px solid rgba(245,158,11,0.3); padding:4px 10px; border-radius:999px; font-weight:700;">
+                LAUNCHING SOON · PILOT ACTIVE
+              </span>
+              <a href="/foundation.html" target="_blank" class="button quiet" style="font-size:11px; text-decoration:none;">
+                View Public Site ↗
+              </a>
+            </div>
+          </div>
+
+          <!-- Foundation Fiscal & Beneficiary Cards -->
+          <div class="kpi-grid" style="margin-bottom:20px;">
+            <div class="kpi-card" style="border-color:rgba(52,211,153,0.3);">
+              <span class="label">ANNUAL AID RESERVE (FY 26–27)</span>
+              <div style="display:flex; justify-content:space-between; align-items:baseline;">
+                <span class="value" id="fnd-stat-budget" style="color:var(--text);">₹5,00,000</span>
+                <button id="fnd-edit-budget-btn" class="button quiet" style="font-size:10px; padding:2px 8px;">Edit</button>
+              </div>
+              <span class="muted" style="font-size:10.5px;">100% Private Self-Funded</span>
+            </div>
+
+            <div class="kpi-card">
+              <span class="label">TOTAL AID DISBURSED</span>
+              <span class="value" id="fnd-stat-disbursed" style="color:var(--amber);">₹0</span>
+              <span class="muted" style="font-size:10.5px;" id="fnd-stat-bills-count">0 Purchase Bills Logged</span>
+            </div>
+
+            <div class="kpi-card" style="border-color:rgba(52,211,153,0.4); background:rgba(16,185,129,0.06);">
+              <span class="label" style="color:var(--green);">REMAINING AID BALANCE</span>
+              <span class="value" id="fnd-stat-remaining" style="color:var(--green);">₹5,00,000</span>
+              <span class="muted" style="font-size:10.5px;">Available for Distribution</span>
+            </div>
+
+            <div class="kpi-card">
+              <span class="label">STUDENTS ASSISTED</span>
+              <span class="value" id="fnd-stat-beneficiaries">0</span>
+              <span class="muted" style="font-size:10.5px;" id="fnd-stat-pending">0 Pending Review</span>
+            </div>
+          </div>
+
+          <!-- Campaign Control & Status Toggle -->
+          <section class="settings-card" style="margin-bottom:24px; border:1px solid rgba(52,211,153,0.25);">
+            <div class="settings-card-head" style="align-items:center;">
+              <div>
+                <span class="eyebrow" style="color:var(--green);">AID CAMPAIGN ENGINE</span>
+                <h3 id="fnd-active-camp-title">Winter 2026 Board &amp; Secondary Exam Prep Drive</h3>
+                <p class="muted" id="fnd-active-camp-desc">Providing prescribed syllabus books, exercise registers, and exam geometry kits directly to rural students.</p>
+              </div>
+              <div style="display:flex; gap:10px; align-items:center;">
+                <span id="fnd-camp-status-badge" class="status confirmed" style="font-size:11px; padding:4px 10px;">CAMPAIGN ACTIVE</span>
+                <button id="fnd-toggle-camp-btn" class="button" style="background:rgba(245,158,11,0.2); color:#fbbf24; border:1px solid rgba(245,158,11,0.4); font-size:11px;">
+                  Pause Drive
+                </button>
+                <button id="fnd-new-camp-btn" class="button gold" style="font-size:11px;">
+                  ＋ New Campaign
+                </button>
+              </div>
+            </div>
+            <div style="display:flex; gap:20px; font-size:11.5px; border-top:1px solid var(--line); padding-top:12px; margin-top:8px;">
+              <div><span class="muted">Kit Scope: </span><strong id="fnd-active-camp-kit" style="color:var(--text-dim);">Class 8-12 NCERT Guides, 12 Registers, Geometry Box</strong></div>
+              <div><span class="muted">Target: </span><strong id="fnd-active-camp-target" style="color:var(--text-dim);">Class 8-12 Underprivileged School Students</strong></div>
+              <div><span class="muted">Allocated Budget: </span><strong id="fnd-active-camp-budget" style="color:var(--gold);">₹2,50,000</strong></div>
+            </div>
+          </section>
+
+          <!-- Applications Management Queue -->
+          <div class="section-heading" style="margin-bottom:12px;">
+            <div>
+              <h3>Student Applications &amp; Teacher Verifications</h3>
+              <p class="muted">Review incoming requests certified with official school rubber stamps and teacher signatures.</p>
+            </div>
+            <div class="filter-bar" style="display:flex; gap:6px;">
+              <button class="button small active fnd-filter-btn" data-fnd-status="all">All (<span id="fnd-cnt-all">0</span>)</button>
+              <button class="button small fnd-filter-btn" data-fnd-status="pending_review">Pending (<span id="fnd-cnt-pending">0</span>)</button>
+              <button class="button small fnd-filter-btn" data-fnd-status="verified">Verified (<span id="fnd-cnt-verified">0</span>)</button>
+              <button class="button small fnd-filter-btn" data-fnd-status="approved">Approved (<span id="fnd-cnt-approved">0</span>)</button>
+              <button class="button small fnd-filter-btn" data-fnd-status="disbursed">Disbursed / Shipped (<span id="fnd-cnt-disbursed">0</span>)</button>
+              <button class="button small fnd-filter-btn" data-fnd-status="rejected">Rejected (<span id="fnd-cnt-rejected">0</span>)</button>
+            </div>
+          </div>
+
+          <div class="table-shell" style="margin-bottom:24px;">
+            <table class="data-table" style="font-size:12px;">
+              <thead>
+                <tr>
+                  <th>Code</th>
+                  <th>Student &amp; Class</th>
+                  <th>School &amp; District</th>
+                  <th>Teacher Recommender</th>
+                  <th>Student Aadhaar</th>
+                  <th>Requisition Proof</th>
+                  <th>Dispatch / Post</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="fnd-applications-tbody">
+                <tr><td colspan="9" class="muted" style="text-align:center; padding:24px;">Loading foundation applications...</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Internal Billing & Disbursement Ledger -->
+          <div class="section-heading" style="margin-bottom:12px; margin-top:32px;">
+            <div>
+              <h3>Internal Procurement Bills &amp; Invoice Ledger</h3>
+              <p class="muted">Every rupee spent on study materials is recorded against vendor bills and deducted from the Annual Reserve.</p>
+            </div>
+          </div>
+
+          <div class="table-shell">
+            <table class="data-table" style="font-size:12px;">
+              <thead>
+                <tr>
+                  <th>Bill Code</th>
+                  <th>Application Ref</th>
+                  <th>Student &amp; School</th>
+                  <th>Vendor / Book Depot</th>
+                  <th>Purchased Study Materials</th>
+                  <th>Bill Date</th>
+                  <th>Invoice Amount</th>
+                  <th>Logged By</th>
+                </tr>
+              </thead>
+              <tbody id="fnd-disbursements-tbody">
+                <tr><td colspan="8" class="muted" style="text-align:center; padding:20px;">No internal purchase bills recorded yet.</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
 
         <div id="team-view" class="view" hidden>
@@ -583,6 +724,167 @@
         <button type="submit" id="agr-dlg-submit" class="button gold">Dispatch via Leegality</button>
       </div>
       <p id="agr-dlg-message" class="notice" role="status"></p>
+    </form>
+  </dialog>
+
+  <!-- Foundation: Application Details & Verification Dialog -->
+  <dialog id="fnd-app-dialog" class="dialog">
+    <div class="dialog-card" style="max-width:580px;">
+      <div class="dialog-head">
+        <div>
+          <span class="eyebrow" style="color:var(--green);">STUDENT AID VERIFICATION</span>
+          <h2 id="fnd-dlg-student-name">Student Name</h2>
+          <p class="muted" id="fnd-dlg-code">CKF-202610-0000</p>
+        </div>
+        <button type="button" class="icon-button" data-close-dialog aria-label="Close">×</button>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:14px 0; font-size:12px; background:rgba(0,0,0,0.3); padding:12px; border-radius:8px; border:1px solid var(--line);">
+        <div><span class="muted">Class / Grade: </span><strong id="fnd-dlg-class">—</strong></div>
+        <div><span class="muted">Aadhaar (Last 4): </span><strong id="fnd-dlg-aadhaar" style="font-family:var(--font-mono);">XXXX-XXXX-0000</strong></div>
+        <div style="grid-column:span 2;"><span class="muted">School Name: </span><strong id="fnd-dlg-school">—</strong></div>
+        <div style="grid-column:span 2;"><span class="muted">School Address: </span><span id="fnd-dlg-address" class="muted">—</span></div>
+        <div><span class="muted">Teacher Recommender: </span><strong id="fnd-dlg-teacher">—</strong></div>
+        <div><span class="muted">Teacher Phone: </span><a id="fnd-dlg-phone" href="#" target="_blank" style="color:var(--green); text-decoration:underline;">—</a></div>
+      </div>
+
+      <div style="margin:12px 0;">
+        <span class="eyebrow" style="font-size:10px;">SPECIFIC STUDY MATERIALS REQUESTED:</span>
+        <div id="fnd-dlg-needs" style="background:rgba(255,255,255,0.03); padding:10px; border-radius:6px; font-size:12px; border:1px solid var(--line); margin-top:4px;"></div>
+      </div>
+
+      <div style="margin:14px 0; padding:12px; border-radius:8px; background:rgba(52,211,153,0.06); border:1px solid rgba(52,211,153,0.3);">
+        <span class="muted" style="font-size:11px;">SCHOOL RUBBER STAMP &amp; SIGNATURE ATTACHMENT:</span>
+        <div style="margin-top:6px; display:flex; justify-content:space-between; align-items:center;">
+          <span id="fnd-dlg-doc-name" style="font-size:11.5px; font-family:var(--font-mono);">Certificate.pdf</span>
+          <a id="fnd-dlg-doc-link" href="#" target="_blank" class="button quiet" style="font-size:11px; padding:4px 10px; text-decoration:none;">
+            📄 View School Seal Attachment ↗
+          </a>
+        </div>
+      </div>
+
+      <div style="margin-top:14px;">
+        <label>Verification Notes / Rejection Reason
+          <textarea id="fnd-dlg-notes" rows="2" placeholder="e.g. Spoke to Headmaster Shri Sarkar on WhatsApp. Enrolled in Class 10. Genuine need verified."></textarea>
+        </label>
+      </div>
+
+      <div class="dialog-actions" style="margin-top:16px;">
+        <button type="button" id="fnd-dlg-reject-btn" class="button" style="background:rgba(248,113,113,0.15); color:var(--red); border:1px solid rgba(248,113,113,0.3); font-size:11px;">Reject Application</button>
+        <button type="button" class="button quiet" data-close-dialog>Close</button>
+        <button type="button" id="fnd-dlg-verify-btn" class="button" style="background:rgba(96,165,250,0.2); color:#93c5fd; border:1px solid rgba(96,165,250,0.4); font-size:11px;">Mark Seal Verified</button>
+        <button type="button" id="fnd-dlg-approve-btn" class="button gold" style="font-size:11px;">Approve for Aid</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Foundation: Record Internal Purchase Invoice / Disbursement Dialog -->
+  <dialog id="fnd-bill-dialog" class="dialog">
+    <form id="fnd-bill-form" class="dialog-card" style="max-width:500px;">
+      <div class="dialog-head">
+        <div>
+          <span class="eyebrow" style="color:var(--amber);">INTERNAL FISCAL LEDGER</span>
+          <h2>Log Purchase Bill &amp; Disburse Aid</h2>
+          <p class="muted">Amount is directly deducted from the Annual Foundation Reserve.</p>
+        </div>
+        <button type="button" class="icon-button" data-close-dialog aria-label="Close">×</button>
+      </div>
+
+      <input type="hidden" id="fnd-bill-app-id">
+
+      <div style="background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.25); padding:10px; border-radius:6px; font-size:12px; margin:10px 0;">
+        Beneficiary: <strong id="fnd-bill-student-name" style="color:var(--text);">Student Name</strong> (<span id="fnd-bill-app-code" class="muted">CKF-CODE</span>)
+      </div>
+
+      <label>Vendor / Book Depot Name *
+        <input type="text" id="fnd-bill-vendor" required placeholder="e.g. Radhamadhav Book Store, Agartala">
+      </label>
+
+      <label>Purchased Study Materials Summary *
+        <textarea id="fnd-bill-items" rows="2" required placeholder="e.g. 10 NCERT Class 10 Guides &amp; 12 Heavy Ruled Registers"></textarea>
+      </label>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+        <label>Total Invoice Bill Amount (₹) *
+          <input type="number" id="fnd-bill-amount" required min="1" placeholder="2450">
+        </label>
+        <label>Invoice Date *
+          <input type="date" id="fnd-bill-date" required>
+        </label>
+      </div>
+
+      <div class="dialog-actions" style="margin-top:16px;">
+        <button type="button" class="button quiet" data-close-dialog>Cancel</button>
+        <button type="submit" class="button gold">Deduct &amp; Log Purchase Bill</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Foundation: Dispatch via Post Dialog -->
+  <dialog id="fnd-dispatch-dialog" class="dialog">
+    <form id="fnd-dispatch-form" class="dialog-card" style="max-width:480px;">
+      <div class="dialog-head">
+        <div>
+          <span class="eyebrow" style="color:var(--blue);">LOGISTICS DISPATCH</span>
+          <h2>Postal Consignment Dispatch</h2>
+          <p class="muted">Log parcel waybill so the student/teacher can track it live via Aadhaar + DOB.</p>
+        </div>
+        <button type="button" class="icon-button" data-close-dialog aria-label="Close">×</button>
+      </div>
+
+      <input type="hidden" id="fnd-disp-app-id">
+
+      <div style="background:rgba(0,0,0,0.3); border:1px solid var(--line); padding:10px; border-radius:6px; font-size:12px; margin:10px 0;">
+        Recipient: <strong id="fnd-disp-student" style="color:var(--text);">Student</strong> &bull; Destination: <span id="fnd-disp-school" class="muted">School</span>
+      </div>
+
+      <label>Shipping Postal Carrier *
+        <select id="fnd-disp-carrier">
+          <option value="India Post Speed Post">India Post Speed Post</option>
+          <option value="India Post Registered Parcel">India Post Registered Parcel</option>
+          <option value="DTDC Courier">DTDC Courier</option>
+          <option value="Direct In-Person Handover">Direct In-Person Handover at School</option>
+        </select>
+      </label>
+
+      <label>Consignment Tracking / Waybill Number *
+        <input type="text" id="fnd-disp-tracking" required placeholder="e.g. ED184920394IN" style="font-family:var(--font-mono); text-transform:uppercase;">
+      </label>
+
+      <label>Parcel Status
+        <select id="fnd-disp-status">
+          <option value="dispatched">Dispatched / In Transit 🚚</option>
+          <option value="delivered">Delivered to School / Student 🎉</option>
+        </select>
+      </label>
+
+      <div class="dialog-actions" style="margin-top:16px;">
+        <button type="button" class="button quiet" data-close-dialog>Cancel</button>
+        <button type="submit" class="button gold">Commit Dispatch Details</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Foundation: Edit Annual Budget Dialog -->
+  <dialog id="fnd-budget-dialog" class="dialog">
+    <form id="fnd-budget-form" class="dialog-card" style="max-width:420px;">
+      <div class="dialog-head">
+        <div>
+          <span class="eyebrow">FISCAL ALLOCATION</span>
+          <h2>Annual Aid Budget</h2>
+        </div>
+        <button type="button" class="icon-button" data-close-dialog aria-label="Close">×</button>
+      </div>
+
+      <label>Annual Philanthropic Reserve (₹)
+        <input type="number" id="fnd-budget-amount" required min="10000" step="5000" value="500000">
+      </label>
+      <p class="muted" style="font-size:11px;">100% self-funded private reserve committed by Chiranjit Kar.</p>
+
+      <div class="dialog-actions" style="margin-top:16px;">
+        <button type="button" class="button quiet" data-close-dialog>Cancel</button>
+        <button type="submit" class="button gold">Update Budget</button>
+      </div>
     </form>
   </dialog>
 

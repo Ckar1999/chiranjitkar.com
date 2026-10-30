@@ -46,6 +46,143 @@
     $('#inquiry-type-filter').addEventListener('change',event=>{state.inquiryFilter=event.target.value;renderInquiries();});
     $('#agreement-form')?.addEventListener('submit', handleAgreementDispatch);
     $('#leegality-settings-form')?.addEventListener('submit', saveLeegalitySettings);
+    
+    // Foundation Event Listeners
+    $$('.fnd-filter-btn').forEach(btn => btn.addEventListener('click', () => {
+      fndData.filter = btn.dataset.fndStatus;
+      $$('.fnd-filter-btn').forEach(b => b.classList.toggle('active', b === btn));
+      renderFoundationApplications();
+    }));
+
+    $('#fnd-toggle-camp-btn')?.addEventListener('click', async (e) => {
+      const campId = e.currentTarget.dataset.campId;
+      const nextStatus = e.currentTarget.dataset.nextStatus || 'paused';
+      if (!campId) return;
+      try {
+        await api(`foundation/admin/campaigns/${campId}/toggle`, {
+          method: 'POST',
+          body: JSON.stringify({ status: nextStatus })
+        });
+        toast(`Campaign status updated to ${nextStatus}.`);
+        await loadFoundation();
+      } catch (err) {
+        toast(err.message);
+      }
+    });
+
+    $('#fnd-edit-budget-btn')?.addEventListener('click', () => {
+      $('#fnd-budget-amount').value = fndData.budget.annual_budget || 500000;
+      $('#fnd-budget-dialog').showModal();
+    });
+
+    $('#fnd-budget-form')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const annual_budget = $('#fnd-budget-amount').value;
+      try {
+        await api('foundation/admin/settings', {
+          method: 'POST',
+          body: JSON.stringify({ annual_budget })
+        });
+        $('#fnd-budget-dialog').close();
+        toast('Annual budget updated.');
+        await loadFoundation();
+      } catch (err) {
+        toast(err.message);
+      }
+    });
+
+    $('#fnd-dlg-verify-btn')?.addEventListener('click', async () => {
+      if (!window._curFndApp) return;
+      const notes = $('#fnd-dlg-notes').value;
+      try {
+        await api(`foundation/admin/applications/${window._curFndApp.id}/status`, {
+          method: 'POST',
+          body: JSON.stringify({ status: 'verified', review_notes: notes })
+        });
+        $('#fnd-app-dialog').close();
+        toast('School rubber stamp & teacher credentials verified.');
+        await loadFoundation();
+      } catch (err) {
+        toast(err.message);
+      }
+    });
+
+    $('#fnd-dlg-approve-btn')?.addEventListener('click', async () => {
+      if (!window._curFndApp) return;
+      const notes = $('#fnd-dlg-notes').value;
+      try {
+        await api(`foundation/admin/applications/${window._curFndApp.id}/status`, {
+          method: 'POST',
+          body: JSON.stringify({ status: 'approved', review_notes: notes })
+        });
+        $('#fnd-app-dialog').close();
+        toast('Application approved! You can now log purchase bills and disburse aid.');
+        await loadFoundation();
+      } catch (err) {
+        toast(err.message);
+      }
+    });
+
+    $('#fnd-dlg-reject-btn')?.addEventListener('click', async () => {
+      if (!window._curFndApp) return;
+      const reason = prompt('Please enter the reason for rejection (this will be visible to the applicant):', 'Criteria not met / Duplicate school request.');
+      if (!reason) return;
+      try {
+        await api(`foundation/admin/applications/${window._curFndApp.id}/status`, {
+          method: 'POST',
+          body: JSON.stringify({ status: 'rejected', rejection_reason: reason })
+        });
+        $('#fnd-app-dialog').close();
+        toast('Application marked as rejected.');
+        await loadFoundation();
+      } catch (err) {
+        toast(err.message);
+      }
+    });
+
+    $('#fnd-bill-form')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const payload = {
+        application_id: $('#fnd-bill-app-id').value,
+        vendor_name: $('#fnd-bill-vendor').value.trim(),
+        item_summary: $('#fnd-bill-items').value.trim(),
+        amount: Number($('#fnd-bill-amount').value),
+        bill_date: $('#fnd-bill-date').value
+      };
+      try {
+        const res = await api('foundation/admin/disbursements', {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+        $('#fnd-bill-dialog').close();
+        toast(`Internal invoice logged. ₹${payload.amount} deducted from annual reserve.`);
+        await loadFoundation();
+      } catch (err) {
+        toast(err.message);
+      }
+    });
+
+    $('#fnd-dispatch-form')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const payload = {
+        shipping_carrier: $('#fnd-disp-carrier').value,
+        tracking_number: $('#fnd-disp-tracking').value.trim(),
+        status: $('#fnd-disp-status').value
+      };
+      const appId = $('#fnd-disp-app-id').value;
+      try {
+        await api(`foundation/admin/applications/${appId}/dispatch`, {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+        $('#fnd-dispatch-dialog').close();
+        toast(`Postal waybill committed: ${payload.shipping_carrier} (#${payload.tracking_number}).`);
+        await loadFoundation();
+      } catch (err) {
+        toast(err.message);
+      }
+    });
+
     $$('[data-close-dialog]').forEach(button => button.addEventListener('click', () => button.closest('dialog').close()));
     $$('.nav-item').forEach(button => button.addEventListener('click', () => setView(button.dataset.view)));
     $$('[data-open-view]').forEach(button => button.addEventListener('click', () => setView(button.dataset.openView)));
@@ -496,14 +633,201 @@
     catch(error){toast(error.message);await refresh();}
   }
 
+  // ==========================================
+  // FOUNDATION & PHILANTHROPIC DESK MODULE
+  // ==========================================
+  let fndData = { applications: [], disbursements: [], campaigns: [], budget: {}, filter: 'all' };
+
+  async function loadFoundation() {
+    try {
+      const res = await api('foundation/admin/overview');
+      if (!res.ok) return;
+      fndData.applications = res.applications || [];
+      fndData.disbursements = res.disbursements || [];
+      fndData.campaigns = res.campaigns || [];
+      fndData.budget = res.budget || {};
+
+      // 1. Fiscal & KPI cards
+      const annBudget = Number(fndData.budget.annual_budget || 500000);
+      const totalDisb = Number(fndData.budget.total_disbursed || 0);
+      const remaining = Math.max(0, annBudget - totalDisb);
+      const beneficiaries = fndData.applications.filter(a => a.status === 'disbursed' || a.status === 'delivered').length;
+      const pendingCnt = fndData.applications.filter(a => a.status === 'pending_review').length;
+
+      $('#fnd-stat-budget').textContent = money(annBudget);
+      $('#fnd-stat-disbursed').textContent = money(totalDisb);
+      $('#fnd-stat-bills-count').textContent = `${fndData.disbursements.length} Purchase Bills Logged`;
+      $('#fnd-stat-remaining').textContent = money(remaining);
+      $('#fnd-stat-beneficiaries').textContent = beneficiaries;
+      $('#fnd-stat-pending').textContent = `${pendingCnt} Pending Review`;
+
+      // 2. Campaign Engine
+      const activeCamp = fndData.campaigns[0] || null;
+      if (activeCamp) {
+        $('#fnd-active-camp-title').textContent = activeCamp.title;
+        $('#fnd-active-camp-desc').textContent = activeCamp.description;
+        $('#fnd-active-camp-kit').textContent = activeCamp.kit_summary;
+        $('#fnd-active-camp-target').textContent = activeCamp.target_audience;
+        $('#fnd-active-camp-budget').textContent = money(activeCamp.allocated_budget);
+
+        const isPaused = activeCamp.status === 'paused';
+        $('#fnd-camp-status-badge').textContent = isPaused ? 'DRIVE PAUSED' : 'DRIVE ACTIVE';
+        $('#fnd-camp-status-badge').className = `status ${isPaused ? 'lead' : 'confirmed'}`;
+        $('#fnd-toggle-camp-btn').textContent = isPaused ? 'Resume Drive' : 'Pause Drive';
+        $('#fnd-toggle-camp-btn').dataset.campId = activeCamp.id;
+        $('#fnd-toggle-camp-btn').dataset.nextStatus = isPaused ? 'active' : 'paused';
+      }
+
+      // 3. Status Filter Counts
+      $('#fnd-cnt-all').textContent = fndData.applications.length;
+      $('#fnd-cnt-pending').textContent = fndData.applications.filter(a => a.status === 'pending_review').length;
+      $('#fnd-cnt-verified').textContent = fndData.applications.filter(a => a.status === 'verified').length;
+      $('#fnd-cnt-approved').textContent = fndData.applications.filter(a => a.status === 'approved').length;
+      $('#fnd-cnt-disbursed').textContent = fndData.applications.filter(a => a.status === 'disbursed' || a.status === 'delivered').length;
+      $('#fnd-cnt-rejected').textContent = fndData.applications.filter(a => a.status === 'rejected').length;
+
+      renderFoundationApplications();
+      renderFoundationDisbursements();
+    } catch (err) {
+      toast(err.message || 'Failed to load foundation overview.');
+    }
+  }
+
+  function renderFoundationApplications() {
+    const filter = fndData.filter || 'all';
+    let filtered = fndData.applications;
+    if (filter === 'disbursed') filtered = filtered.filter(a => a.status === 'disbursed' || a.status === 'delivered');
+    else if (filter !== 'all') filtered = filtered.filter(a => a.status === filter);
+
+    const tbody = $('#fnd-applications-tbody');
+    if (!filtered.length) {
+      tbody.innerHTML = `<tr><td colspan="9" class="muted" style="text-align:center; padding:24px;">No applications found in this queue.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = filtered.map(app => {
+      const statusMap = {
+        pending_review: '<span class="status lead" style="font-size:10px;">Pending Review</span>',
+        verified: '<span class="status scheduled" style="font-size:10px; background:rgba(96,165,250,0.15); color:#93c5fd;">Seal Verified</span>',
+        approved: '<span class="status in_session" style="font-size:10px; background:rgba(192,132,252,0.15); color:#d8b4fe;">Aid Approved</span>',
+        dispatched: '<span class="status confirmed" style="font-size:10px;">Speed Post 🚚</span>',
+        delivered: '<span class="status delivered" style="font-size:10px;">Delivered 🎉</span>',
+        rejected: '<span class="status archived" style="font-size:10px;">Rejected</span>'
+      };
+
+      return `
+        <tr>
+          <td><strong style="font-family:var(--font-mono); color:var(--green);">${escapeHtml(app.application_code)}</strong></td>
+          <td>
+            <strong>${escapeHtml(app.student_name)}</strong>
+            <small class="muted" style="display:block;">${escapeHtml(app.class_grade)}</small>
+          </td>
+          <td>
+            <span>${escapeHtml(app.school_name)}</span>
+            <small class="muted" style="display:block;">${escapeHtml(app.school_district)}, ${escapeHtml(app.school_state)}</small>
+          </td>
+          <td>
+            <span>${escapeHtml(app.teacher_name)}</span>
+            <small class="muted" style="display:block;">${escapeHtml(app.teacher_phone)}</small>
+          </td>
+          <td><span style="font-family:var(--font-mono); font-size:11px;">XXXX-${escapeHtml(app.student_aadhaar_last4)}</span></td>
+          <td>
+            ${app.document_url ? `<a href="${escapeHtml(app.document_url)}" target="_blank" class="small-button" style="text-decoration:none; font-size:10px;">📄 View Seal ↗</a>` : '<span class="muted">—</span>'}
+          </td>
+          <td>
+            ${app.tracking_number ? `<strong style="font-family:var(--font-mono); font-size:10.5px; color:var(--blue);">${escapeHtml(app.tracking_number)}</strong>` : '<span class="muted">Not shipped</span>'}
+          </td>
+          <td>${statusMap[app.status] || app.status}</td>
+          <td>
+            <div style="display:flex; gap:4px;">
+              <button class="small-button" onclick="window.fndOpenAppModal('${app.id}')">Inspect</button>
+              ${app.status === 'approved' ? `<button class="small-button gold" onclick="window.fndOpenBillModal('${app.id}')">Log Bill</button>` : ''}
+              ${app.status === 'disbursed' || app.status === 'approved' ? `<button class="small-button" style="color:var(--blue);" onclick="window.fndOpenDispatchModal('${app.id}')">Dispatch</button>` : ''}
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  function renderFoundationDisbursements() {
+    const tbody = $('#fnd-disbursements-tbody');
+    if (!fndData.disbursements.length) {
+      tbody.innerHTML = `<tr><td colspan="8" class="muted" style="text-align:center; padding:20px;">No internal purchase bills recorded yet.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = fndData.disbursements.map(b => `
+      <tr>
+        <td><strong style="font-family:var(--font-mono); color:var(--gold);">${escapeHtml(b.bill_code)}</strong></td>
+        <td><span style="font-family:var(--font-mono); font-size:11px;">${escapeHtml(b.application_code || '—')}</span></td>
+        <td>
+          <strong>${escapeHtml(b.student_name || '—')}</strong>
+          <small class="muted" style="display:block;">${escapeHtml(b.school_name || '')}</small>
+        </td>
+        <td><span>${escapeHtml(b.vendor_name)}</span></td>
+        <td><span style="font-size:11.5px;">${escapeHtml(b.item_summary)}</span></td>
+        <td><span class="muted">${humanDate(b.bill_date)}</span></td>
+        <td><strong style="color:var(--amber); font-family:var(--font-mono);">${money(b.amount)}</strong></td>
+        <td><span class="muted">${escapeHtml(b.created_by)}</span></td>
+      </tr>
+    `).join('');
+  }
+
+  // Window Helpers for Foundation Actions
+  window.fndOpenAppModal = function(id) {
+    const app = fndData.applications.find(a => a.id === id);
+    if (!app) return;
+    window._curFndApp = app;
+
+    $('#fnd-dlg-student-name').textContent = app.student_name;
+    $('#fnd-dlg-code').textContent = app.application_code;
+    $('#fnd-dlg-class').textContent = app.class_grade;
+    $('#fnd-dlg-aadhaar').textContent = `XXXX-XXXX-${app.student_aadhaar_last4}`;
+    $('#fnd-dlg-school').textContent = app.school_name;
+    $('#fnd-dlg-address').textContent = `${app.school_address || ''}, ${app.school_district}, ${app.school_state}`;
+    $('#fnd-dlg-teacher').textContent = `${app.teacher_name} (${app.teacher_designation})`;
+    $('#fnd-dlg-phone').textContent = `+91 ${app.teacher_phone}`;
+    $('#fnd-dlg-phone').href = `https://wa.me/91${app.teacher_phone}`;
+    $('#fnd-dlg-needs').textContent = app.specific_needs;
+    $('#fnd-dlg-doc-name').textContent = app.document_name || 'School_Requisition.pdf';
+    $('#fnd-dlg-doc-link').href = app.document_url || '#';
+    $('#fnd-dlg-notes').value = app.review_notes || '';
+
+    $('#fnd-app-dialog').showModal();
+  };
+
+  window.fndOpenBillModal = function(id) {
+    const app = fndData.applications.find(a => a.id === id);
+    if (!app) return;
+    $('#fnd-bill-app-id').value = app.id;
+    $('#fnd-bill-student-name').textContent = app.student_name;
+    $('#fnd-bill-app-code').textContent = app.application_code;
+    $('#fnd-bill-date').value = new Date().toISOString().slice(0, 10);
+    $('#fnd-bill-form').reset();
+    $('#fnd-bill-app-id').value = app.id;
+    $('#fnd-bill-dialog').showModal();
+  };
+
+  window.fndOpenDispatchModal = function(id) {
+    const app = fndData.applications.find(a => a.id === id);
+    if (!app) return;
+    $('#fnd-disp-app-id').value = app.id;
+    $('#fnd-disp-student').textContent = app.student_name;
+    $('#fnd-disp-school').textContent = app.school_name;
+    $('#fnd-disp-tracking').value = app.tracking_number || '';
+    $('#fnd-dispatch-dialog').showModal();
+  };
+
   function setView(view) {
-    if(!['overview','inquiries','projects','schedule','tasks','billing','team','settings'].includes(view)||['team','settings'].includes(view)&&state.staff?.role!=='admin'||['billing','inquiries'].includes(view)&&!['admin','sales'].includes(state.staff?.role)) return;
+    if(!['overview','inquiries','projects','schedule','tasks','billing','team','settings','foundation'].includes(view)||['team','settings','foundation'].includes(view)&&state.staff?.role!=='admin'||['billing','inquiries'].includes(view)&&!['admin','sales'].includes(state.staff?.role)) return;
     state.view=view; $$('.view').forEach(el=>el.hidden=el.id!==`${view}-view`); $$('.nav-item').forEach(el=>el.classList.toggle('active',el.dataset.view===view));
-    $('#view-title').textContent={overview:'Overview',inquiries:'Inquiries',projects:'Projects',schedule:'Schedule',tasks:'Tasks',billing:'Billing',team:'Team',settings:'Settings'}[view];
+    $('#view-title').textContent={overview:'Overview',inquiries:'Inquiries',projects:'Projects',schedule:'Schedule',tasks:'Tasks',billing:'Billing',team:'Team',settings:'Settings',foundation:'Foundation'}[view];
     if(view==='team') loadTeam(); if(view==='schedule')renderSchedule();
     if(view==='tasks')loadTasks();if(view==='billing')loadInvoices();
     if(view==='inquiries')loadInquiries();
     if(view==='settings')loadSettings();
+    if(view==='foundation')loadFoundation();
   }
   document.addEventListener('DOMContentLoaded',boot);
 })();

@@ -1387,6 +1387,424 @@ async function handle(request, env, route) {
     return json({ ok: true, session: { ended_at: ended, elapsed_minutes: elapsed, overtime_minutes: overtime, overtime_units: units, overtime_rate: project.overtime_rate, overtime_fee: fee } });
   }
 
+  // ==========================================
+  // FOUNDATION & PHILANTHROPIC INITIATIVE APIS
+  // ==========================================
+
+  // Public: Get Foundation Meta & Active Campaigns
+  if (parts[0] === 'foundation' && parts[1] === 'public' && method === 'GET') {
+    const settingsRows = await env.DB.prepare('SELECT setting_key, setting_value FROM foundation_settings').all().catch(() => ({ results: [] }));
+    const settings = Object.fromEntries((settingsRows.results || []).map(r => [r.setting_key, r.setting_value]));
+
+    const campaigns = await env.DB.prepare("SELECT * FROM foundation_campaigns WHERE status = 'active' ORDER BY created_at DESC").all().catch(() => ({ results: [] }));
+    const disbSum = await env.DB.prepare('SELECT COALESCE(SUM(amount), 0) AS total, COUNT(DISTINCT application_id) AS beneficiaries FROM foundation_disbursements').first().catch(() => ({ total: 0, beneficiaries: 0 }));
+
+    return json({
+      ok: true,
+      settings: {
+        initiative_name: settings.initiative_name || 'Chiranjit Kar Foundation',
+        initiative_motto: settings.initiative_motto || 'Direct Educational Assistance for Underprivileged Students',
+        financial_year: settings.financial_year || '2026-2027',
+        launch_status: settings.launch_status || 'launching_soon',
+        contact_email: settings.contact_email || 'foundation@chiranjitkar.com',
+        contact_phone: settings.contact_phone || '+91 9402369889'
+      },
+      hasActiveCampaign: (campaigns.results || []).length > 0,
+      activeCampaigns: campaigns.results || [],
+      publicImpact: {
+        beneficiariesAssisted: Number(disbSum?.beneficiaries || 0),
+        aidDeliveredINR: Number(disbSum?.total || 0)
+      }
+    });
+  }
+
+  // Public: Submit Student Assistance Application (Teacher/Headmaster verified)
+  if (parts[0] === 'foundation' && parts[1] === 'apply' && method === 'POST') {
+    const studentName = String(body.student_name || '').trim();
+    const classGrade = String(body.class_grade || '').trim();
+    const schoolName = String(body.school_name || '').trim();
+    const schoolAddress = String(body.school_address || '').trim();
+    const schoolDistrict = String(body.school_district || 'West Tripura').trim();
+    const schoolState = String(body.school_state || 'Tripura').trim();
+    const teacherName = String(body.teacher_name || '').trim();
+    const teacherDesignation = String(body.teacher_designation || '').trim();
+    const teacherPhone = String(body.teacher_phone || '').replace(/[^0-9]/g, '').slice(-10);
+    const teacherEmail = String(body.teacher_email || '').trim();
+    const rawAadhaar = String(body.student_aadhaar || '').replace(/[^0-9]/g, '');
+    const assistanceType = String(body.assistance_type || 'study_materials').trim();
+    const specificNeeds = String(body.specific_needs || '').trim();
+    const documentUrl = String(body.document_url || '').trim();
+    const documentName = String(body.document_name || 'School_Requisition_Certificate.pdf').trim();
+    const campaignId = String(body.campaign_id || '').trim();
+
+    if (!studentName || studentName.length < 2) return fail('Please enter the full legal name of the student.', 422);
+    if (!classGrade) return fail('Please specify the current class/grade of the student.', 422);
+    if (!schoolName || schoolName.length < 3) return fail('Please enter the official name of the school / educational institution.', 422);
+    if (!teacherName || teacherName.length < 2) return fail('Please enter the recommending teacher or headmaster’s full name.', 422);
+    if (!teacherDesignation) return fail('Please enter the teacher or headmaster’s designation.', 422);
+    if (!teacherPhone || teacherPhone.length < 10) return fail('Please provide a valid 10-digit mobile number for the recommending teacher / headmaster.', 422);
+    if (!rawAadhaar || rawAadhaar.length !== 12) return fail('Please provide a valid 12-digit Student Aadhaar Number. This is strictly required to ensure fair 1-package-per-month distribution.', 422);
+    if (!specificNeeds || specificNeeds.length < 10) return fail('Please describe the specific books, notebooks, or study materials required.', 422);
+    if (!documentUrl) return fail('Please upload the Requisition Letter bearing the official School Seal and Teacher / Headmaster signature.', 422);
+
+    const aadhaarHash = await digest(`fnd_aadhaar_salt:${rawAadhaar}`);
+    const aadhaarLast4 = rawAadhaar.slice(-4);
+    const currentMonth = new Date().toISOString().slice(0, 7); // Format: YYYY-MM
+
+    // Anti-Scam Guard: Check 1 application per Aadhaar per calendar month
+    const existing = await env.DB.prepare('SELECT id, application_code, created_at, status FROM foundation_applications WHERE student_aadhaar_hash=? AND application_month=?').bind(aadhaarHash, currentMonth).first().catch(() => null);
+    if (existing) {
+      return fail(`An educational assistance application for Student Aadhaar Ending In XXXX-XXXX-${aadhaarLast4} has already been registered in ${currentMonth} (Ref: ${existing.application_code}, Status: ${existing.status}). Under our Foundation Charter, to ensure fair distribution across all underprivileged children, each student may submit only 1 aid application per calendar month. If there is an urgent school emergency, please contact the foundation desk directly at +91 9402369889.`, 409);
+    }
+
+    // Auto-resolve campaign if not provided
+    let activeCampaignId = campaignId;
+    if (!activeCampaignId) {
+      const activeCamp = await env.DB.prepare("SELECT id FROM foundation_campaigns WHERE status='active' ORDER BY created_at DESC LIMIT 1").first().catch(() => null);
+      activeCampaignId = activeCamp?.id || null;
+    }
+
+    // Clean and standardize DOB (e.g. 10/10/1999 or 1999-10-10)
+    let cleanDob = String(body.student_dob || '').trim();
+    if (cleanDob.includes('-')) {
+      const p = cleanDob.split('-');
+      if (p.length === 3 && p[0].length === 4) cleanDob = `${p[2].padStart(2,'0')}/${p[1].padStart(2,'0')}/${p[0]}`;
+    }
+
+    const appId = id();
+    const appCode = `CKF-${currentMonth.replace('-', '')}-${Math.floor(1000 + Math.random() * 9000)}`;
+    const timestamp = now();
+
+    await env.DB.prepare(`
+      INSERT INTO foundation_applications (
+        id, application_code, campaign_id, student_name, student_aadhaar_hash, student_aadhaar_last4,
+        student_dob, student_gender, class_grade, school_name, school_address, school_district, school_state,
+        teacher_name, teacher_designation, teacher_phone, teacher_email, assistance_type, specific_needs,
+        document_url, document_name, status, application_month, created_at, updated_at
+      ) VALUES (
+        ?, ?, ?, ?, ?, ?,
+        ?, ?, ?, ?, ?, ?, ?,
+        ?, ?, ?, ?, ?, ?,
+        ?, ?, 'pending_review', ?, ?, ?
+      )
+    `).bind(
+      appId, appCode, activeCampaignId, studentName, aadhaarHash, aadhaarLast4,
+      cleanDob || null, body.student_gender || null, classGrade, schoolName, schoolAddress, schoolDistrict, schoolState,
+      teacherName, teacherDesignation, teacherPhone, teacherEmail || null, assistanceType, specificNeeds,
+      documentUrl, documentName, currentMonth, timestamp, timestamp
+    ).run();
+
+    return json({
+      ok: true,
+      application_code: appCode,
+      student_aadhaar_last4: aadhaarLast4,
+      login_credentials: {
+        account_id: `Aadhaar (XXXX-XXXX-${aadhaarLast4})`,
+        password_hint: 'Date of Birth (DD/MM/YYYY)'
+      },
+      message: 'Educational aid application submitted successfully. An account has been created using your Aadhaar Number and Date of Birth for live tracking.'
+    });
+  }
+
+  // Student / Teacher Portal: Login & Live Application Tracking
+  // Account = Aadhaar Number | Password = Date of Birth (DD/MM/YYYY)
+  if (parts[0] === 'foundation' && parts[1] === 'student' && parts[2] === 'login' && method === 'POST') {
+    const rawAadhaar = String(body.aadhaar || '').replace(/[^0-9]/g, '');
+    let rawDob = String(body.dob || '').trim();
+
+    if (!rawAadhaar || rawAadhaar.length !== 12) {
+      return fail('Please enter your 12-digit Student Aadhaar Number.', 422);
+    }
+    if (!rawDob) {
+      return fail('Please enter your Date of Birth (DD/MM/YYYY).', 422);
+    }
+
+    // Standardize DOB format to DD/MM/YYYY
+    if (rawDob.includes('-')) {
+      const parts = rawDob.split('-');
+      if (parts.length === 3) {
+        if (parts[0].length === 4) rawDob = `${parts[2].padStart(2,'0')}/${parts[1].padStart(2,'0')}/${parts[0]}`;
+        else rawDob = `${parts[0].padStart(2,'0')}/${parts[1].padStart(2,'0')}/${parts[2]}`;
+      }
+    }
+
+    const aadhaarHash = await digest(`fnd_aadhaar_salt:${rawAadhaar}`);
+    const apps = await env.DB.prepare(`
+      SELECT a.*, c.title AS campaign_title, c.kit_summary AS campaign_kit 
+      FROM foundation_applications a 
+      LEFT JOIN foundation_campaigns c ON c.id = a.campaign_id 
+      WHERE a.student_aadhaar_hash=? 
+      ORDER BY a.created_at DESC
+    `).bind(aadhaarHash).all().catch(() => ({ results: [] }));
+
+    const list = apps.results || [];
+    if (!list.length) {
+      return fail('No aid application found matching this Aadhaar Number. Please submit an application or verify the digits.', 404);
+    }
+
+    // Verify Date of Birth against registered records
+    const matched = list.some(app => {
+      if (!app.student_dob) return true; // if dob wasn't strictly entered
+      let dbDob = String(app.student_dob).trim();
+      if (dbDob.includes('-')) {
+        const p = dbDob.split('-');
+        if (p[0].length === 4) dbDob = `${p[2].padStart(2,'0')}/${p[1].padStart(2,'0')}/${p[0]}`;
+      }
+      return dbDob === rawDob;
+    });
+
+    if (!matched) {
+      return fail('Incorrect Date of Birth for this Aadhaar Number. Please enter the exact DOB submitted on the application (DD/MM/YYYY).', 401);
+    }
+
+    const primary = list[0];
+    return json({
+      ok: true,
+      student: {
+        name: primary.student_name,
+        aadhaar_last4: primary.student_aadhaar_last4,
+        dob: primary.student_dob,
+        school_name: primary.school_name,
+        district: primary.school_district,
+        state: primary.school_state
+      },
+      applications: list.map(a => ({
+        id: a.id,
+        application_code: a.application_code,
+        campaign_title: a.campaign_title || 'Direct Educational Assistance',
+        kit_summary: a.campaign_kit || a.specific_needs,
+        status: a.status,
+        class_grade: a.class_grade,
+        assistance_type: a.assistance_type,
+        specific_needs: a.specific_needs,
+        shipping_carrier: a.shipping_carrier || 'India Post',
+        tracking_number: a.tracking_number || null,
+        shipped_at: a.shipped_at || null,
+        delivered_at: a.delivered_at || null,
+        created_at: a.created_at,
+        updated_at: a.updated_at,
+        teacher_name: a.teacher_name,
+        teacher_designation: a.teacher_designation,
+        document_name: a.document_name,
+        rejection_reason: a.rejection_reason,
+        review_notes: a.review_notes
+      }))
+    });
+  }
+
+  // Admin: Foundation Management Overview & Statistics
+  if (parts[0] === 'foundation' && parts[1] === 'admin' && parts[2] === 'overview' && method === 'GET') {
+    const auth = await requireStaff(request, env, ['admin', 'sales']);
+    if (auth.response) return auth.response;
+
+    const settingsRows = await env.DB.prepare('SELECT setting_key, setting_value FROM foundation_settings').all().catch(() => ({ results: [] }));
+    const settings = Object.fromEntries((settingsRows.results || []).map(r => [r.setting_key, r.setting_value]));
+
+    const annualBudget = parseInt(settings.annual_budget || '500000', 10);
+    const disbRow = await env.DB.prepare('SELECT COALESCE(SUM(amount), 0) AS total, COUNT(*) AS count FROM foundation_disbursements').first().catch(() => ({ total: 0, count: 0 }));
+    const totalDisbursed = Number(disbRow?.total || 0);
+    const remainingBudget = Math.max(0, annualBudget - totalDisbursed);
+
+    const counts = await env.DB.prepare('SELECT status, COUNT(*) AS count FROM foundation_applications GROUP BY status').all().catch(() => ({ results: [] }));
+    const statusCounts = Object.fromEntries((counts.results || []).map(r => [r.status, r.count]));
+
+    const campaigns = await env.DB.prepare('SELECT * FROM foundation_campaigns ORDER BY created_at DESC').all().catch(() => ({ results: [] }));
+    const applications = await env.DB.prepare('SELECT id, application_code, campaign_id, student_name, student_aadhaar_last4, class_grade, school_name, school_district, school_state, teacher_name, teacher_designation, teacher_phone, teacher_email, assistance_type, specific_needs, document_url, document_name, status, rejection_reason, review_notes, application_month, created_at, updated_at FROM foundation_applications ORDER BY created_at DESC LIMIT 50').all().catch(() => ({ results: [] }));
+    const disbursements = await env.DB.prepare(`
+      SELECT d.*, a.student_name, a.school_name, a.application_code 
+      FROM foundation_disbursements d 
+      JOIN foundation_applications a ON a.id = d.application_id 
+      ORDER BY d.created_at DESC LIMIT 50
+    `).all().catch(() => ({ results: [] }));
+
+    return json({
+      ok: true,
+      budget: {
+        annual_budget: annualBudget,
+        total_disbursed: totalDisbursed,
+        remaining_budget: remainingBudget,
+        financial_year: settings.financial_year || '2026-2027',
+        launch_status: settings.launch_status || 'launching_soon'
+      },
+      stats: {
+        total: Object.values(statusCounts).reduce((a, b) => a + b, 0),
+        pending_review: statusCounts.pending_review || 0,
+        verified: statusCounts.verified || 0,
+        approved: statusCounts.approved || 0,
+        disbursed: statusCounts.disbursed || 0,
+        rejected: statusCounts.rejected || 0
+      },
+      campaigns: campaigns.results || [],
+      applications: applications.results || [],
+      disbursements: disbursements.results || []
+    });
+  }
+
+  // Admin: Toggle Campaign Status (Active <-> Paused / Closed)
+  if (parts[0] === 'foundation' && parts[1] === 'admin' && parts[2] === 'campaigns' && parts[3] && parts[4] === 'toggle' && method === 'POST') {
+    const auth = await requireStaff(request, env, ['admin']);
+    if (auth.response) return auth.response;
+
+    const campaignId = parts[3];
+    const targetStatus = body.status === 'active' ? 'active' : body.status === 'closed' ? 'closed' : 'paused';
+    const timestamp = now();
+
+    await env.DB.prepare('UPDATE foundation_campaigns SET status=?, updated_at=? WHERE id=?').bind(targetStatus, timestamp, campaignId).run();
+    return json({ ok: true, status: targetStatus, message: `Campaign status updated to ${targetStatus}.` });
+  }
+
+  // Admin: Create or Update Campaign
+  if (parts[0] === 'foundation' && parts[1] === 'admin' && parts[2] === 'campaigns' && method === 'POST') {
+    const auth = await requireStaff(request, env, ['admin']);
+    if (auth.response) return auth.response;
+
+    const campaignId = body.id || id();
+    const code = body.campaign_code || `CMP-${Date.now().toString().slice(-6)}`;
+    const title = String(body.title || '').trim();
+    const subtitle = String(body.subtitle || '').trim();
+    const description = String(body.description || '').trim();
+    const targetAudience = String(body.target_audience || 'Class 8-12 Underprivileged Students').trim();
+    const kitSummary = String(body.kit_summary || 'Prescribed Textbooks, Notebooks & Exam Stationery').trim();
+    const status = body.status === 'paused' ? 'paused' : body.status === 'closed' ? 'closed' : 'active';
+    const allocatedBudget = parseInt(body.allocated_budget || '150000', 10);
+    const maxBeneficiaries = parseInt(body.max_beneficiaries || '100', 10);
+    const timestamp = now();
+
+    if (!title || !description) return fail('Title and description are required for the campaign.', 422);
+
+    await env.DB.prepare(`
+      INSERT OR REPLACE INTO foundation_campaigns (
+        id, campaign_code, title, subtitle, description, target_audience, kit_summary,
+        status, allocated_budget, max_beneficiaries, start_date, end_date, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now', '+60 days'), ?, ?)
+    `).bind(
+      campaignId, code, title, subtitle, description, targetAudience, kitSummary,
+      status, allocatedBudget, maxBeneficiaries, timestamp, timestamp
+    ).run();
+
+    return json({ ok: true, message: 'Campaign saved successfully.' });
+  }
+
+  // Admin: Update Application Review Status (verify, approve, reject)
+  if (parts[0] === 'foundation' && parts[1] === 'admin' && parts[2] === 'applications' && parts[3] && parts[4] === 'status' && method === 'POST') {
+    const auth = await requireStaff(request, env, ['admin', 'sales']);
+    if (auth.response) return auth.response;
+
+    const applicationId = parts[3];
+    const newStatus = ['pending_review', 'verified', 'approved', 'rejected', 'disbursed'].includes(body.status) ? body.status : 'verified';
+    const reviewNotes = String(body.review_notes || '').trim();
+    const rejectionReason = String(body.rejection_reason || '').trim();
+    const timestamp = now();
+
+    await env.DB.prepare(`
+      UPDATE foundation_applications 
+      SET status=?, review_notes=?, rejection_reason=?, reviewed_by=?, reviewed_at=?, updated_at=?
+      WHERE id=?
+    `).bind(newStatus, reviewNotes, rejectionReason, auth.staff.name, timestamp, timestamp, applicationId).run();
+
+    return json({ ok: true, status: newStatus, message: `Application updated to ${newStatus}.` });
+  }
+
+  // Admin: Update Shipping & Post Consignment Tracking
+  if (parts[0] === 'foundation' && parts[1] === 'admin' && parts[2] === 'applications' && parts[3] && parts[4] === 'dispatch' && method === 'POST') {
+    const auth = await requireStaff(request, env, ['admin']);
+    if (auth.response) return auth.response;
+
+    const applicationId = parts[3];
+    const shippingCarrier = String(body.shipping_carrier || 'India Post Speed Post').trim();
+    const trackingNumber = String(body.tracking_number || '').trim();
+    const newStatus = body.status === 'delivered' ? 'delivered' : 'dispatched';
+    const timestamp = now();
+    const shippedAt = body.shipped_at || timestamp;
+    const deliveredAt = body.status === 'delivered' ? (body.delivered_at || timestamp) : null;
+
+    if (!trackingNumber) return fail('Tracking Consignment Number / Waybill is required.', 422);
+
+    await env.DB.prepare(`
+      UPDATE foundation_applications 
+      SET shipping_carrier=?, tracking_number=?, shipped_at=?, delivered_at=COALESCE(?, delivered_at), status=?, updated_at=?
+      WHERE id=?
+    `).bind(shippingCarrier, trackingNumber, shippedAt, deliveredAt, newStatus, timestamp, applicationId).run();
+
+    return json({
+      ok: true,
+      status: newStatus,
+      tracking_number: trackingNumber,
+      shipping_carrier: shippingCarrier,
+      message: `Consignment tracking updated for ${shippingCarrier} (#${trackingNumber}).`
+    });
+  }
+
+  // Admin: Record Internal Purchase Invoice / Disbursement
+  if (parts[0] === 'foundation' && parts[1] === 'admin' && parts[2] === 'disbursements' && method === 'POST') {
+    const auth = await requireStaff(request, env, ['admin']);
+    if (auth.response) return auth.response;
+
+    const applicationId = String(body.application_id || '').trim();
+    const vendorName = String(body.vendor_name || '').trim();
+    const itemSummary = String(body.item_summary || '').trim();
+    const amount = parseInt(body.amount, 10);
+    const billDate = String(body.bill_date || now().slice(0, 10)).trim();
+    const billReceiptUrl = String(body.bill_receipt_url || '').trim();
+
+    if (!applicationId) return fail('Valid application ID is required.', 422);
+    if (!vendorName) return fail('Vendor or Book Depot name is required.', 422);
+    if (!itemSummary) return fail('Summary of items purchased is required.', 422);
+    if (isNaN(amount) || amount <= 0) return fail('Valid invoice amount in INR is required.', 422);
+
+    const app = await env.DB.prepare('SELECT id, application_code, student_name FROM foundation_applications WHERE id=?').bind(applicationId).first();
+    if (!app) return fail('Application not found.', 404);
+
+    const disbId = id();
+    const billCode = `FND-BILL-${Date.now().toString().slice(-6)}`;
+    const timestamp = now();
+
+    await env.DB.prepare(`
+      INSERT INTO foundation_disbursements (
+        id, application_id, bill_code, vendor_name, item_summary, amount, bill_date, bill_receipt_url, created_by, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+      disbId, applicationId, billCode, vendorName, itemSummary, amount, billDate, billReceiptUrl, auth.staff.name, timestamp
+    ).run();
+
+    // Mark application as disbursed
+    await env.DB.prepare("UPDATE foundation_applications SET status='disbursed', updated_at=? WHERE id=?").bind(timestamp, applicationId).run();
+
+    // Fetch updated budget metrics
+    const settingsRows = await env.DB.prepare('SELECT setting_value FROM foundation_settings WHERE setting_key="annual_budget"').first();
+    const annualBudget = parseInt(settingsRows?.setting_value || '500000', 10);
+    const disbSum = await env.DB.prepare('SELECT COALESCE(SUM(amount), 0) AS total FROM foundation_disbursements').first();
+    const totalDisbursed = Number(disbSum?.total || 0);
+    const remainingBudget = Math.max(0, annualBudget - totalDisbursed);
+
+    return json({
+      ok: true,
+      bill_code: billCode,
+      total_disbursed: totalDisbursed,
+      remaining_budget: remainingBudget,
+      message: `Disbursement bill ${billCode} of ₹${amount.toLocaleString('en-IN')} recorded and deducted from annual budget.`
+    });
+  }
+
+  // Admin: Update Foundation Settings & Annual Budget
+  if (parts[0] === 'foundation' && parts[1] === 'admin' && parts[2] === 'settings' && method === 'POST') {
+    const auth = await requireStaff(request, env, ['admin']);
+    if (auth.response) return auth.response;
+
+    const timestamp = now();
+    if (body.annual_budget) {
+      const budget = Math.max(10000, parseInt(body.annual_budget, 10));
+      await env.DB.prepare('INSERT OR REPLACE INTO foundation_settings (setting_key, setting_value, updated_at) VALUES (?, ?, ?)')
+        .bind('annual_budget', String(budget), timestamp).run();
+    }
+    if (body.launch_status) {
+      await env.DB.prepare('INSERT OR REPLACE INTO foundation_settings (setting_key, setting_value, updated_at) VALUES (?, ?, ?)')
+        .bind('launch_status', String(body.launch_status), timestamp).run();
+    }
+
+    return json({ ok: true, message: 'Foundation settings updated successfully.' });
+  }
+
   return fail('API route not found.', 404);
 }
 
