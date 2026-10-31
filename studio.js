@@ -277,9 +277,13 @@
       }
     });
 
-    $('#fnd-dlg-letter-btn')?.addEventListener('click', () => {
-      if (!window._curFndApp) return;
-      window.fndOpenLetterModal(window._curFndApp.id);
+    $('#fnd-dlg-letter-btn')?.addEventListener('click', (e) => {
+      const appId = e.currentTarget.dataset.appId || window._curFndApp?.id;
+      if (!appId) {
+        toast('Please select an application first.');
+        return;
+      }
+      window.fndOpenLetterModal(appId);
     });
 
     $('#fnd-ltr-back-btn')?.addEventListener('click', () => {
@@ -1047,6 +1051,7 @@ Official School Rubber Stamp: [ OFFICIAL SCHOOL RUBBER STAMP ]
     const app = fndData.applications.find(a => a.id === id);
     if (!app) return;
     window._curFndApp = app;
+    if ($('#fnd-dlg-letter-btn')) $('#fnd-dlg-letter-btn').dataset.appId = app.id;
 
     $('#fnd-dlg-student-name').textContent = app.student_name;
     $('#fnd-dlg-code').textContent = app.application_code;
@@ -1144,67 +1149,94 @@ Official School Rubber Stamp: [ OFFICIAL SCHOOL RUBBER STAMP ]
   };
 
   window.fndOpenLetterModal = async function(id) {
-    const app = fndData.applications.find(a => a.id === id) || window._curFndApp;
-    if (!app) return;
-    window._curFndApp = app;
+    let app = fndData.applications?.find(a => String(a.id) === String(id) || String(a.application_code) === String(id)) || window._curFndApp;
+    const appId = id || app?.id || window._curFndApp?.id;
+    if (!appId) {
+      toast('Please select an application to generate letter.');
+      return;
+    }
 
     try {
-      // Close application dialog if open to prevent Safari stacked modal issues
-      if ($('#fnd-app-dialog')?.open) $('#fnd-app-dialog').close();
+      toast('Preparing official intimation letter…');
 
-      const res = await api(`foundation/admin/applications/${app.id}/generate-letter`, {
+      const res = await api(`foundation/admin/applications/${appId}/generate-letter`, {
         method: 'POST'
       });
       if (!res.ok) throw new Error(res.error || 'Failed to generate letter');
 
-      const letter = res.letter;
-      const fullApp = res.application || app;
+      const letter = res.letter || {};
+      const fullApp = res.application || app || window._curFndApp || {};
       window._curFndLetter = letter;
       window._curFndLetterApp = fullApp;
 
-      $('#fnd-ltr-title').textContent = `Official Letter to ${letter.school_name || fullApp.school_name}`;
-      $('#fnd-ltr-ref-num').textContent = letter.letter_code || 'CKF-LTR-2026';
-      $('#fnd-ltr-app-code').textContent = fullApp.application_code || 'CKF-APP';
+      if ($('#fnd-ltr-title')) $('#fnd-ltr-title').textContent = `Official Letter to ${letter.school_name || fullApp.school_name || 'Government School'}`;
+      if ($('#fnd-ltr-ref-num')) $('#fnd-ltr-ref-num').textContent = letter.letter_code || 'CKF-LTR-2026';
+      if ($('#fnd-ltr-app-code')) $('#fnd-ltr-app-code').textContent = fullApp.application_code || 'CKF-APP';
 
       const issueDate = letter.created_at
         ? new Intl.DateTimeFormat('en-IN', { dateStyle: 'long' }).format(new Date(letter.created_at))
         : new Intl.DateTimeFormat('en-IN', { dateStyle: 'long' }).format(new Date());
-      $('#fnd-ltr-date').textContent = issueDate;
-      $('#fnd-ltr-carrier').textContent = fullApp.shipping_carrier || 'India Post Speed Post';
+      if ($('#fnd-ltr-date')) $('#fnd-ltr-date').textContent = issueDate;
+      if ($('#fnd-ltr-carrier')) $('#fnd-ltr-carrier').textContent = fullApp.shipping_carrier || 'India Post Speed Post';
 
-      $('#fnd-ltr-school-name').textContent = fullApp.school_name || 'Government School';
-      $('#fnd-ltr-school-addr').textContent = `${fullApp.school_address ? fullApp.school_address + ', ' : ''}${fullApp.school_district || ''}, ${fullApp.school_state || 'Tripura'}`;
+      if ($('#fnd-ltr-school-name')) $('#fnd-ltr-school-name').textContent = fullApp.school_name || 'Government School';
+      if ($('#fnd-ltr-school-addr')) $('#fnd-ltr-school-addr').textContent = `${fullApp.school_address ? fullApp.school_address + ', ' : ''}${fullApp.school_district || ''}, ${fullApp.school_state || 'Tripura'}`;
 
-      $('#fnd-ltr-subj-student').textContent = (fullApp.student_name || 'STUDENT').toUpperCase();
-      $('#fnd-ltr-subj-class').textContent = (fullApp.class_grade || 'CLASS').toUpperCase();
+      if ($('#fnd-ltr-subj-student')) $('#fnd-ltr-subj-student').textContent = (fullApp.student_name || 'STUDENT').toUpperCase();
+      if ($('#fnd-ltr-subj-class')) $('#fnd-ltr-subj-class').textContent = (fullApp.class_grade || 'CLASS').toUpperCase();
 
-      $('#fnd-ltr-body-student').textContent = fullApp.student_name || 'Student';
-      $('#fnd-ltr-body-aadhaar').textContent = `XXXX-XXXX-${fullApp.student_aadhaar_last4 || fullApp.aadhaar_last4 || 'XXXX'}`;
+      if ($('#fnd-ltr-body-student')) $('#fnd-ltr-body-student').textContent = fullApp.student_name || 'Student';
+      if ($('#fnd-ltr-body-aadhaar')) $('#fnd-ltr-body-aadhaar').textContent = `XXXX-XXXX-${fullApp.student_aadhaar_last4 || fullApp.aadhaar_last4 || 'XXXX'}`;
 
       // Table specs
-      $('#fnd-ltr-tbl-student').textContent = fullApp.student_name || 'Student';
-      $('#fnd-ltr-tbl-class').textContent = fullApp.class_grade || 'Class';
-      $('#fnd-ltr-tbl-school').textContent = `${fullApp.school_name}, ${fullApp.school_district || ''}`;
-      $('#fnd-ltr-tbl-guardian').textContent = fullApp.father_guardian_name || 'Parent / Guardian';
-      $('#fnd-ltr-tbl-phone').textContent = `+91 ${fullApp.guardian_phone || 'Registered Phone'}`;
-      $('#fnd-ltr-tbl-needs').textContent = fullApp.specific_needs || 'Standard Syllabus Textbooks, Exercise Registers & Exam Kits';
-      $('#fnd-ltr-tbl-carrier').textContent = fullApp.shipping_carrier || 'India Post Speed Post';
-      $('#fnd-ltr-tbl-tracking').textContent = fullApp.tracking_number || 'Dispatch in Progress (India Post Speed Post)';
+      if ($('#fnd-ltr-tbl-student')) $('#fnd-ltr-tbl-student').textContent = fullApp.student_name || 'Student';
+      if ($('#fnd-ltr-tbl-class')) $('#fnd-ltr-tbl-class').textContent = fullApp.class_grade || 'Class';
+      if ($('#fnd-ltr-tbl-school')) $('#fnd-ltr-tbl-school').textContent = `${fullApp.school_name || ''}, ${fullApp.school_district || ''}`;
+      if ($('#fnd-ltr-tbl-guardian')) $('#fnd-ltr-tbl-guardian').textContent = fullApp.father_guardian_name || 'Parent / Guardian';
+      if ($('#fnd-ltr-tbl-phone')) $('#fnd-ltr-tbl-phone').textContent = `+91 ${fullApp.guardian_phone || 'Registered Phone'}`;
+      if ($('#fnd-ltr-tbl-needs')) $('#fnd-ltr-tbl-needs').textContent = fullApp.specific_needs || 'Standard Syllabus Textbooks, Exercise Registers & Exam Kits';
+      if ($('#fnd-ltr-tbl-carrier')) $('#fnd-ltr-tbl-carrier').textContent = fullApp.shipping_carrier || 'India Post Speed Post';
+      if ($('#fnd-ltr-tbl-tracking')) $('#fnd-ltr-tbl-tracking').textContent = fullApp.tracking_number || 'Dispatch in Progress (India Post Speed Post)';
 
-      $('#fnd-ltr-proto-student').textContent = fullApp.student_name || 'the student';
+      if ($('#fnd-ltr-proto-student')) $('#fnd-ltr-proto-student').textContent = fullApp.student_name || 'the student';
 
       // Handover slip
-      $('#fnd-ltr-slip-student').textContent = fullApp.student_name || '____________________________';
-      $('#fnd-ltr-slip-class').textContent = fullApp.class_grade || '__________';
+      if ($('#fnd-ltr-slip-student')) $('#fnd-ltr-slip-student').textContent = fullApp.student_name || '____________________________';
+      if ($('#fnd-ltr-slip-class')) $('#fnd-ltr-slip-class').textContent = fullApp.class_grade || '__________';
 
-      $('#fnd-letter-dialog').showModal();
+      // Fallback for any legacy script references
+      if ($('#fnd-ltr-content')) $('#fnd-ltr-content').textContent = letter.letter_content || '';
+      if ($('#fnd-ltr-code')) $('#fnd-ltr-code').textContent = letter.letter_code || '';
+
+      // Safely close previous app modal and open letter modal
+      const appDlg = $('#fnd-app-dialog');
+      if (appDlg && appDlg.open) appDlg.close();
+
+      const ltrDlg = $('#fnd-letter-dialog');
+      if (ltrDlg && !ltrDlg.open) ltrDlg.showModal();
     } catch (err) {
       toast(err.message || 'Failed to load official letter.');
     }
   };
 
   function printOfficialLetter() {
-    if (!window._curFndLetter || !window._curFndLetterApp) return;
+    if (!window._curFndLetter || !window._curFndLetterApp) {
+      toast('Please open an application letter first.');
+      return;
+    }
+
+    const sheetEl = document.getElementById('fnd-letter-sheet');
+    if (!sheetEl) {
+      window.print();
+      return;
+    }
+
+    // Check if on iOS / mobile Safari where iframe printing is restricted
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    if (isIOS) {
+      window.print();
+      return;
+    }
 
     let printFrame = document.getElementById('fnd-print-iframe');
     if (!printFrame) {

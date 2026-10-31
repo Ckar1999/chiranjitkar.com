@@ -2074,25 +2074,32 @@ async function handle(request, env, route) {
   }
 
   // Admin: Generate / Fetch Official Acceptance & Intimation Letter to School Headmaster
-  if (parts[0] === 'foundation' && parts[1] === 'admin' && parts[2] === 'applications' && parts[3] && parts[4] === 'generate-letter' && method === 'POST') {
+  if (parts[0] === 'foundation' && parts[1] === 'admin' && parts[2] === 'applications' && parts[3] && parts[4] === 'generate-letter' && (method === 'POST' || method === 'GET')) {
     const auth = await requireStaff(request, env, ['admin']);
     if (auth.response) return auth.response;
 
     const applicationId = parts[3];
     let app = await env.DB.prepare(`
-      SELECT a.*, s.legal_name AS student_name, s.aadhaar_last4, s.dob AS student_dob, s.father_guardian_name, s.guardian_phone, s.residential_address
+      SELECT a.*, 
+             COALESCE(s.legal_name, a.student_name, 'Student') AS student_name, 
+             COALESCE(s.aadhaar_last4, a.student_aadhaar_last4, '') AS aadhaar_last4, 
+             s.dob AS student_dob, 
+             COALESCE(s.father_guardian_name, 'Parent / Guardian') AS father_guardian_name, 
+             COALESCE(s.guardian_phone, a.teacher_phone, '') AS guardian_phone, 
+             s.residential_address
       FROM foundation_applications_v2 a
-      JOIN foundation_students s ON s.id = a.student_id
-      WHERE a.id=?
-    `).bind(applicationId).first().catch(() => null);
+      LEFT JOIN foundation_students s ON s.id = a.student_id
+      WHERE a.id=? OR a.application_code=?
+    `).bind(applicationId, applicationId).first().catch(() => null);
 
     if (!app) {
-      app = await env.DB.prepare('SELECT * FROM foundation_applications WHERE id=?').bind(applicationId).first().catch(() => null);
+      app = await env.DB.prepare('SELECT * FROM foundation_applications WHERE id=? OR application_code=?').bind(applicationId, applicationId).first().catch(() => null);
     }
     if (!app) return fail('Application not found.', 404);
 
+    const targetAppId = app.id;
     const timestamp = now();
-    let letter = await env.DB.prepare('SELECT * FROM foundation_school_letters WHERE application_id=?').bind(applicationId).first().catch(() => null);
+    let letter = await env.DB.prepare('SELECT * FROM foundation_school_letters WHERE application_id=?').bind(targetAppId).first().catch(() => null);
 
     if (!letter) {
       const letterId = id();
@@ -2160,7 +2167,7 @@ Official School Rubber Stamp: [ OFFICIAL SCHOOL RUBBER STAMP ]
           letter_content, dispatch_carrier, dispatch_tracking, created_at
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).bind(
-        letterId, applicationId, app.student_id || applicationId, letterCode,
+        letterId, targetAppId, app.student_id || targetAppId, letterCode,
         app.school_name, app.teacher_name || 'Headmaster', letterContent,
         app.shipping_carrier || 'India Post Speed Post', app.tracking_number || null,
         timestamp
@@ -2171,7 +2178,7 @@ Official School Rubber Stamp: [ OFFICIAL SCHOOL RUBBER STAMP ]
         UPDATE foundation_applications_v2 
         SET headmaster_letter_id=?, headmaster_letter_status='dispatched_to_school', updated_at=?
         WHERE id=?
-      `).bind(letterId, timestamp, applicationId).run().catch(() => {});
+      `).bind(letterId, timestamp, targetAppId).run().catch(() => {});
 
       letter = {
         id: letterId,
