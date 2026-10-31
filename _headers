@@ -4,9 +4,19 @@
   X-Frame-Options: DENY
   Permissions-Policy: camera=(), microphone=(), geolocation=()
 
-/studio.html
-  Cache-Control: no-store
+/studio
+  Cache-Control: no-cache, no-store, must-revalidate
   Referrer-Policy: no-referrer
+
+/studio.html
+  Cache-Control: no-cache, no-store, must-revalidate
+  Referrer-Policy: no-referrer
+
+/foundation
+  Cache-Control: no-cache, no-store, must-revalidate
+
+/foundation.html
+  Cache-Control: no-cache, no-store, must-revalidate
 
 /studio.js
   Cache-Control: no-cache, no-store, must-revalidate

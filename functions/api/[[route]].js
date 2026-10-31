@@ -2081,8 +2081,9 @@ async function handle(request, env, route) {
     const applicationId = parts[3];
     let app = await env.DB.prepare(`
       SELECT a.*, 
-             COALESCE(s.legal_name, a.student_name, 'Student') AS student_name, 
-             COALESCE(s.aadhaar_last4, a.student_aadhaar_last4, '') AS aadhaar_last4, 
+             COALESCE(s.legal_name, 'Student') AS student_name, 
+             COALESCE(s.aadhaar_last4, '') AS student_aadhaar_last4, 
+             COALESCE(s.aadhaar_last4, '') AS aadhaar_last4, 
              s.dob AS student_dob, 
              COALESCE(s.father_guardian_name, 'Parent / Guardian') AS father_guardian_name, 
              COALESCE(s.guardian_phone, a.teacher_phone, '') AS guardian_phone, 
@@ -2090,10 +2091,23 @@ async function handle(request, env, route) {
       FROM foundation_applications_v2 a
       LEFT JOIN foundation_students s ON s.id = a.student_id
       WHERE a.id=? OR a.application_code=?
-    `).bind(applicationId, applicationId).first().catch(() => null);
+    `).bind(applicationId, applicationId).first().catch((err) => {
+      console.error('generate-letter app v2 query error:', err);
+      return null;
+    });
 
     if (!app) {
-      app = await env.DB.prepare('SELECT * FROM foundation_applications WHERE id=? OR application_code=?').bind(applicationId, applicationId).first().catch(() => null);
+      app = await env.DB.prepare(`
+        SELECT *, 
+               student_name, 
+               student_aadhaar_last4 AS aadhaar_last4, 
+               student_dob, 
+               'Parent / Guardian' AS father_guardian_name, 
+               teacher_phone AS guardian_phone, 
+               school_address AS residential_address
+        FROM foundation_applications 
+        WHERE id=? OR application_code=?
+      `).bind(applicationId, applicationId).first().catch(() => null);
     }
     if (!app) return fail('Application not found.', 404);
 

@@ -47,6 +47,26 @@
     $('#agreement-form')?.addEventListener('submit', handleAgreementDispatch);
     $('#leegality-settings-form')?.addEventListener('submit', saveLeegalitySettings);
     
+    // Foundation Sub-Tab Navigation Switcher
+    $$('[data-fnd-tab]').forEach(btn => btn.addEventListener('click', () => {
+      const targetTab = btn.dataset.fndTab;
+      const appsSection = $('#fnd-section-apps');
+      const studentsSection = $('#fnd-section-students');
+      const billsSection = $('#fnd-section-bills');
+      if (appsSection) appsSection.hidden = targetTab !== 'apps';
+      if (studentsSection) studentsSection.hidden = targetTab !== 'students';
+      if (billsSection) billsSection.hidden = targetTab !== 'bills';
+
+      $$('[data-fnd-tab]').forEach(b => {
+        const isCurrent = b === btn;
+        b.classList.toggle('active', isCurrent);
+        b.style.background = isCurrent ? 'rgba(52,211,153,0.15)' : 'transparent';
+        b.style.color = isCurrent ? 'var(--green)' : 'var(--muted)';
+        b.style.borderColor = isCurrent ? 'rgba(52,211,153,0.3)' : 'var(--line)';
+        b.style.fontWeight = isCurrent ? '600' : '500';
+      });
+    }));
+
     // Foundation Event Listeners
     $$('.fnd-filter-btn').forEach(btn => btn.addEventListener('click', () => {
       fndData.filter = btn.dataset.fndStatus;
@@ -879,7 +899,7 @@ Official School Rubber Stamp: [ OFFICIAL SCHOOL RUBBER STAMP ]
   async function loadFoundation() {
     try {
       const res = await api('foundation/admin/overview');
-      if (!res.ok) return;
+      if (res.ok === false) return;
       fndData.applications = res.applications || [];
       fndData.students = res.students || [];
       fndData.disbursements = res.disbursements || [];
@@ -945,6 +965,9 @@ Official School Rubber Stamp: [ OFFICIAL SCHOOL RUBBER STAMP ]
       $('#fnd-cnt-approved').textContent = fndData.applications.filter(a => a.status === 'approved').length;
       $('#fnd-cnt-disbursed').textContent = fndData.applications.filter(a => a.status === 'disbursed' || a.status === 'delivered').length;
       $('#fnd-cnt-rejected').textContent = fndData.applications.filter(a => a.status === 'rejected').length;
+
+      if ($('#fnd-tab-cnt-students')) $('#fnd-tab-cnt-students').textContent = fndData.students.length;
+      if ($('#fnd-tab-cnt-bills')) $('#fnd-tab-cnt-bills').textContent = fndData.disbursements.length;
 
       renderFoundationApplications();
       renderFoundationStudents();
@@ -1271,244 +1294,13 @@ Official School Rubber Stamp: [ OFFICIAL SCHOOL RUBBER STAMP ]
 
     const sheetEl = document.getElementById('fnd-letter-sheet');
     if (!sheetEl) {
-      window.print();
+      toast('Letter content is not ready.');
       return;
     }
 
-    // Check if on iOS / mobile Safari where iframe printing is restricted
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-    if (isIOS) {
-      window.print();
-      return;
-    }
-
-    let printFrame = document.getElementById('fnd-print-iframe');
-    if (!printFrame) {
-      printFrame = document.createElement('iframe');
-      printFrame.id = 'fnd-print-iframe';
-      printFrame.style.position = 'fixed';
-      printFrame.style.right = '0';
-      printFrame.style.bottom = '0';
-      printFrame.style.width = '0';
-      printFrame.style.height = '0';
-      printFrame.style.border = '0';
-      document.body.appendChild(printFrame);
-    }
-
-    const sheetContent = sheetEl.innerHTML;
-
-    const frameDoc = printFrame.contentWindow.document;
-    frameDoc.open();
-    frameDoc.write(`
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="utf-8">
-        <title>${escapeHtml(window._curFndLetter.letter_code)} - Chiranjit Kar Foundation Official Intimation</title>
-        <style>
-          @page {
-            size: A4 portrait;
-            margin: 10mm 14mm;
-          }
-          * {
-            box-sizing: border-box;
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-          }
-          body {
-            margin: 0;
-            padding: 0;
-            font-family: 'Times New Roman', Cambria, Georgia, serif;
-            color: #000000;
-            background: #ffffff;
-            font-size: 13px;
-            line-height: 1.45;
-          }
-          .fnd-letter-header {
-            text-align: center;
-            border-bottom: 2px solid #000000;
-            padding-bottom: 10px;
-            margin-bottom: 12px;
-          }
-          .fnd-letter-crest {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: #064e3b;
-            color: #fbbf24;
-            margin-bottom: 4px;
-            border: 2px solid #d97706;
-          }
-          .fnd-letter-title {
-            margin: 0;
-            font-size: 19px;
-            font-weight: 800;
-            letter-spacing: 1.5px;
-            text-transform: uppercase;
-            color: #000000;
-          }
-          .fnd-letter-sub {
-            font-size: 10.5px;
-            font-weight: 700;
-            color: #047857;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            margin-top: 2px;
-          }
-          .fnd-letter-contact {
-            font-size: 9.5px;
-            color: #475569;
-            margin-top: 3px;
-          }
-          .fnd-meta-grid {
-            display: flex;
-            justify-content: space-between;
-            font-size: 11px;
-            margin-bottom: 12px;
-            border-bottom: 1px dotted #cbd5e1;
-            padding-bottom: 8px;
-          }
-          .fnd-meta-right { text-align: right; }
-          .fnd-addressee {
-            margin-bottom: 12px;
-            font-size: 12px;
-            line-height: 1.4;
-          }
-          .fnd-subject-bar {
-            background: #f1f5f9;
-            border-left: 4px solid #000000;
-            padding: 7px 10px;
-            font-weight: 700;
-            font-size: 11.5px;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-            margin: 12px 0;
-          }
-          .fnd-salutation {
-            font-weight: 700;
-            margin-bottom: 6px;
-            font-size: 12px;
-          }
-          .fnd-body-p {
-            margin-bottom: 8px;
-            text-align: justify;
-            line-height: 1.45;
-            font-size: 12px;
-          }
-          .fnd-spec-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 12px 0;
-            font-size: 11px;
-          }
-          .fnd-spec-table th, .fnd-spec-table td {
-            border: 1px solid #cbd5e1;
-            padding: 6px 8px;
-            text-align: left;
-          }
-          .fnd-spec-table th {
-            background: #f8fafc;
-            font-weight: 700;
-            width: 32%;
-          }
-          .fnd-handover-box {
-            background: #f0fdf4;
-            border: 1px solid #86efac;
-            border-radius: 4px;
-            padding: 8px 12px;
-            font-size: 10.5px;
-            line-height: 1.45;
-            color: #14532d;
-            margin: 10px 0;
-          }
-          .fnd-handover-box ol { margin: 3px 0 0 16px; padding: 0; }
-          .fnd-sign-block {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-            margin-top: 14px;
-          }
-          .fnd-seal-zone { display: flex; align-items: center; gap: 8px; }
-          .fnd-seal-zone img { width: 60px; height: 60px; }
-          .fnd-sign-zone { text-align: right; font-size: 11px; }
-          .fnd-sign-zone img { height: 38px; display: block; margin: 2px 0 2px auto; }
-          .fnd-tear-off-line {
-            margin: 16px 0 10px;
-            border-top: 1.5px dashed #64748b;
-            position: relative;
-            text-align: center;
-          }
-          .fnd-tear-off-line span {
-            position: relative;
-            top: -8px;
-            background: #ffffff;
-            padding: 0 8px;
-            font-size: 8.5px;
-            font-family: monospace;
-            color: #475569;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-          }
-          .fnd-receipt-slip {
-            border: 1.5px solid #64748b;
-            border-radius: 4px;
-            padding: 8px 10px;
-            background: #fafafa;
-            font-size: 10px;
-            line-height: 1.35;
-          }
-          .fnd-receipt-head {
-            text-align: center;
-            border-bottom: 1px solid #e2e8f0;
-            padding-bottom: 4px;
-            margin-bottom: 6px;
-          }
-          .fnd-receipt-head strong { font-size: 10.5px; text-transform: uppercase; }
-          .fnd-receipt-head small { font-size: 8.5px; color: #475569; }
-          .fnd-receipt-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 6px;
-            margin-top: 8px;
-            text-align: center;
-          }
-          .fnd-receipt-col {
-            border: 1px dashed #cbd5e1;
-            padding: 6px 4px;
-            min-height: 48px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            background: #ffffff;
-            font-size: 9px;
-          }
-          .fnd-receipt-col.stamp-box {
-            border: 1.5px solid #000000;
-            background: #f8fafc;
-            font-weight: 700;
-          }
-        </style>
-      </head>
-      <body>
-        <div class="fnd-letter-sheet">
-          ${sheetContent}
-        </div>
-      </body>
-      </html>
-    `);
-    frameDoc.close();
-
-    printFrame.contentWindow.focus();
-    setTimeout(() => {
-      try {
-        printFrame.contentWindow.print();
-      } catch (e) {
-        window.print();
-      }
-    }, 250);
+    // Direct window.print() inside user click gesture is 100% reliable across Safari Mac, iOS, and Chrome.
+    // Our @media print stylesheet isolates #fnd-letter-sheet onto a clean white A4 portrait document.
+    window.print();
   }
 
   function setView(view) {

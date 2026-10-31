@@ -2382,13 +2382,30 @@ input[type="date"], input[type="datetime-local"] {
 }
 
 @media print {
-  /* Clean A4 document print rules */
+  /* Clean A4 official letterhead document print rules */
+  html, body {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .app-shell, #login-view, .toast, .notice, header, nav, .sidebar {
+    display: none !important;
+  }
+
   body * {
     visibility: hidden !important;
   }
-  #fnd-letter-sheet, #fnd-letter-sheet * {
+
+  #fnd-letter-dialog, #fnd-letter-sheet, #fnd-letter-sheet * {
     visibility: visible !important;
   }
+
   #fnd-letter-sheet {
     position: absolute !important;
     left: 0 !important;
@@ -2396,12 +2413,14 @@ input[type="date"], input[type="datetime-local"] {
     width: 100% !important;
     max-width: 100% !important;
     margin: 0 !important;
-    padding: 10mm 12mm !important;
+    padding: 8mm 12mm !important;
     box-shadow: none !important;
     border: none !important;
     background: #ffffff !important;
     color: #000000 !important;
+    box-sizing: border-box !important;
   }
+
   .fnd-letter-wrapper {
     background: transparent !important;
     border: none !important;
@@ -2409,19 +2428,32 @@ input[type="date"], input[type="datetime-local"] {
     margin: 0 !important;
     max-height: none !important;
     overflow: visible !important;
+    box-shadow: none !important;
   }
-  .dialog, .dialog-card {
+
+  dialog, .dialog, .dialog-card {
     position: static !important;
-    background: transparent !important;
+    background: #ffffff !important;
+    background-color: #ffffff !important;
     border: none !important;
     box-shadow: none !important;
     max-height: none !important;
     overflow: visible !important;
     padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
   }
+
+  dialog::backdrop {
+    display: none !important;
+    background: transparent !important;
+  }
+
   .dialog-head, .dialog-actions, button, [data-close-dialog] {
     display: none !important;
   }
+
   @page {
     size: A4 portrait;
     margin: 10mm 12mm;

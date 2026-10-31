@@ -6,7 +6,7 @@
   <meta name="robots" content="noindex,nofollow">
   <meta name="theme-color" content="#070709">
   <title>Studio Workspace &amp; Production Terminal | Chiranjit Kar Photography</title>
-  <link rel="stylesheet" href="studio.css?v=20261031-1535">
+  <link rel="stylesheet" href="studio.css?v=20261031-1550">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 </head>
@@ -244,99 +244,118 @@
             </div>
           </section>
 
-          <!-- Applications Management Queue -->
-          <div class="section-heading" style="margin-bottom:12px;">
-            <div>
-              <h3>Student Applications &amp; Teacher Verifications</h3>
-              <p class="muted">Review incoming requests certified with official school rubber stamps and teacher signatures.</p>
+          <!-- Foundation Sub-Tab Navigation Bar -->
+          <div class="fnd-subnav" style="display:flex; gap:8px; margin:20px 0 16px; border-bottom:1px solid var(--line); padding-bottom:10px;">
+            <button type="button" class="tab-pill active" id="fnd-tab-btn-apps" data-fnd-tab="apps" style="font-size:12px; padding:7px 16px; border-radius:6px; cursor:pointer; background:rgba(52,211,153,0.15); color:var(--green); border:1px solid rgba(52,211,153,0.3); font-weight:600;">
+              📋 Applications &amp; Verifications
+            </button>
+            <button type="button" class="tab-pill" id="fnd-tab-btn-students" data-fnd-tab="students" style="font-size:12px; padding:7px 16px; border-radius:6px; cursor:pointer; background:transparent; color:var(--muted); border:1px solid var(--line); font-weight:500;">
+              🎓 Registered Student Profiles (<span id="fnd-tab-cnt-students">0</span>)
+            </button>
+            <button type="button" class="tab-pill" id="fnd-tab-btn-bills" data-fnd-tab="bills" style="font-size:12px; padding:7px 16px; border-radius:6px; cursor:pointer; background:transparent; color:var(--muted); border:1px solid var(--line); font-weight:500;">
+              🧾 Procurement Bills Ledger (<span id="fnd-tab-cnt-bills">0</span>)
+            </button>
+          </div>
+
+          <!-- Section 1: Applications Management Queue -->
+          <div id="fnd-section-apps">
+            <div class="section-heading" style="margin-bottom:12px;">
+              <div>
+                <h3>Student Applications &amp; Teacher Verifications</h3>
+                <p class="muted">Review incoming requests certified with official school rubber stamps and teacher signatures.</p>
+              </div>
+              <div class="filter-bar" style="display:flex; gap:6px;">
+                <button class="filter-chip active fnd-filter-btn" data-fnd-status="all">All (<span id="fnd-cnt-all">0</span>)</button>
+                <button class="filter-chip fnd-filter-btn" data-fnd-status="pending_review">Pending (<span id="fnd-cnt-pending">0</span>)</button>
+                <button class="filter-chip fnd-filter-btn" data-fnd-status="verified">Verified (<span id="fnd-cnt-verified">0</span>)</button>
+                <button class="filter-chip fnd-filter-btn" data-fnd-status="approved">Approved (<span id="fnd-cnt-approved">0</span>)</button>
+                <button class="filter-chip fnd-filter-btn" data-fnd-status="disbursed">Disbursed / Shipped (<span id="fnd-cnt-disbursed">0</span>)</button>
+                <button class="filter-chip fnd-filter-btn" data-fnd-status="rejected">Rejected (<span id="fnd-cnt-rejected">0</span>)</button>
+              </div>
             </div>
-            <div class="filter-bar" style="display:flex; gap:6px;">
-              <button class="filter-chip active fnd-filter-btn" data-fnd-status="all">All (<span id="fnd-cnt-all">0</span>)</button>
-              <button class="filter-chip fnd-filter-btn" data-fnd-status="pending_review">Pending (<span id="fnd-cnt-pending">0</span>)</button>
-              <button class="filter-chip fnd-filter-btn" data-fnd-status="verified">Verified (<span id="fnd-cnt-verified">0</span>)</button>
-              <button class="filter-chip fnd-filter-btn" data-fnd-status="approved">Approved (<span id="fnd-cnt-approved">0</span>)</button>
-              <button class="filter-chip fnd-filter-btn" data-fnd-status="disbursed">Disbursed / Shipped (<span id="fnd-cnt-disbursed">0</span>)</button>
-              <button class="filter-chip fnd-filter-btn" data-fnd-status="rejected">Rejected (<span id="fnd-cnt-rejected">0</span>)</button>
-            </div>
-          </div>
 
-          <div class="table-shell" style="margin-bottom:24px;">
-            <table class="data-table" style="font-size:12px;">
-              <thead>
-                <tr>
-                  <th>Code</th>
-                  <th>Student &amp; Class</th>
-                  <th>School &amp; District</th>
-                  <th>Teacher Recommender</th>
-                  <th>Student Aadhaar</th>
-                  <th>Requisition Proof</th>
-                  <th>Dispatch / Post</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody id="fnd-applications-tbody">
-                <tr><td colspan="9" class="muted" style="text-align:center; padding:24px;">Loading foundation applications...</td></tr>
-              </tbody>
-            </table>
-          </div>
-
-          <!-- Registered Student Accounts & Aadhaar Identity Verification -->
-          <div class="section-heading" style="margin-bottom:12px; margin-top:32px;">
-            <div>
-              <h3>Registered Student Profiles &amp; Aadhaar Card Verification</h3>
-              <p class="muted">Inspect student identity documents, cross-check legal name &amp; DOB, verify genuine need, and track academic standing.</p>
-            </div>
-            <span class="status lead" id="fnd-students-cnt-badge" style="font-size:11px; padding:3px 10px;">0 Registered</span>
-          </div>
-
-          <div class="table-shell" style="margin-bottom:28px;">
-            <table class="data-table" style="font-size:12px;">
-              <thead>
-                <tr>
-                  <th>Student Legal Name</th>
-                  <th>Aadhaar Number</th>
-                  <th>DOB / Age</th>
-                  <th>Grade &amp; School</th>
-                  <th>Guardian &amp; Phone</th>
-                  <th>Aadhaar Document</th>
-                  <th>Account Status</th>
-                  <th>Academic Standing</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody id="fnd-students-tbody">
-                <tr><td colspan="9" class="muted" style="text-align:center; padding:20px;">No registered student profiles yet.</td></tr>
-              </tbody>
-            </table>
-          </div>
-
-          <!-- Internal Billing & Disbursement Ledger -->
-          <div class="section-heading" style="margin-bottom:12px; margin-top:32px;">
-            <div>
-              <h3>Internal Procurement Bills &amp; Invoice Ledger</h3>
-              <p class="muted">Every rupee spent on study materials is recorded against vendor bills and deducted from the Annual Reserve.</p>
+            <div class="table-shell" style="margin-bottom:24px;">
+              <table class="data-table" style="font-size:12px;">
+                <thead>
+                  <tr>
+                    <th>Code</th>
+                    <th>Student &amp; Class</th>
+                    <th>School &amp; District</th>
+                    <th>Teacher Recommender</th>
+                    <th>Student Aadhaar</th>
+                    <th>Requisition Proof</th>
+                    <th>Dispatch / Post</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="fnd-applications-tbody">
+                  <tr><td colspan="9" class="muted" style="text-align:center; padding:24px;">Loading foundation applications...</td></tr>
+                </tbody>
+              </table>
             </div>
           </div>
 
-          <div class="table-shell">
-            <table class="data-table" style="font-size:12px;">
-              <thead>
-                <tr>
-                  <th>Bill Code</th>
-                  <th>Application Ref</th>
-                  <th>Student &amp; School</th>
-                  <th>Vendor / Book Depot</th>
-                  <th>Purchased Study Materials</th>
-                  <th>Bill Date</th>
-                  <th>Invoice Amount</th>
-                  <th>Logged By</th>
-                </tr>
-              </thead>
-              <tbody id="fnd-disbursements-tbody">
-                <tr><td colspan="8" class="muted" style="text-align:center; padding:20px;">No internal purchase bills recorded yet.</td></tr>
-              </tbody>
-            </table>
+          <!-- Section 2: Registered Student Accounts & Aadhaar Identity Verification -->
+          <div id="fnd-section-students" hidden>
+            <div class="section-heading" style="margin-bottom:12px;">
+              <div>
+                <h3>Registered Student Profiles &amp; Aadhaar Card Verification</h3>
+                <p class="muted">Inspect student identity documents, cross-check legal name &amp; DOB, verify genuine need, and track academic standing.</p>
+              </div>
+              <span class="status lead" id="fnd-students-cnt-badge" style="font-size:11px; padding:3px 10px;">0 Registered</span>
+            </div>
+
+            <div class="table-shell" style="margin-bottom:28px;">
+              <table class="data-table" style="font-size:12px;">
+                <thead>
+                  <tr>
+                    <th>Student Legal Name</th>
+                    <th>Aadhaar Number</th>
+                    <th>DOB / Age</th>
+                    <th>Grade &amp; School</th>
+                    <th>Guardian &amp; Phone</th>
+                    <th>Aadhaar Document</th>
+                    <th>Account Status</th>
+                    <th>Academic Standing</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="fnd-students-tbody">
+                  <tr><td colspan="9" class="muted" style="text-align:center; padding:20px;">No registered student profiles yet.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Section 3: Internal Billing & Disbursement Ledger -->
+          <div id="fnd-section-bills" hidden>
+            <div class="section-heading" style="margin-bottom:12px;">
+              <div>
+                <h3>Internal Procurement Bills &amp; Invoice Ledger</h3>
+                <p class="muted">Every rupee spent on study materials is recorded against vendor bills and deducted from the Annual Reserve.</p>
+              </div>
+            </div>
+
+            <div class="table-shell">
+              <table class="data-table" style="font-size:12px;">
+                <thead>
+                  <tr>
+                    <th>Bill Code</th>
+                    <th>Application Ref</th>
+                    <th>Student &amp; School</th>
+                    <th>Vendor / Book Depot</th>
+                    <th>Purchased Study Materials</th>
+                    <th>Bill Date</th>
+                    <th>Invoice Amount</th>
+                    <th>Logged By</th>
+                  </tr>
+                </thead>
+                <tbody id="fnd-disbursements-tbody">
+                  <tr><td colspan="8" class="muted" style="text-align:center; padding:20px;">No internal purchase bills recorded yet.</td></tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
 
@@ -1230,6 +1249,6 @@
   </dialog>
 
   <div id="toast" class="toast" role="status"></div>
-  <script src="studio.js?v=20261031-1535" defer></script>
+  <script src="studio.js?v=20261031-1550" defer></script>
 </body>
 </html>
