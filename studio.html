@@ -251,12 +251,12 @@
               <p class="muted">Review incoming requests certified with official school rubber stamps and teacher signatures.</p>
             </div>
             <div class="filter-bar" style="display:flex; gap:6px;">
-              <button class="button small active fnd-filter-btn" data-fnd-status="all">All (<span id="fnd-cnt-all">0</span>)</button>
-              <button class="button small fnd-filter-btn" data-fnd-status="pending_review">Pending (<span id="fnd-cnt-pending">0</span>)</button>
-              <button class="button small fnd-filter-btn" data-fnd-status="verified">Verified (<span id="fnd-cnt-verified">0</span>)</button>
-              <button class="button small fnd-filter-btn" data-fnd-status="approved">Approved (<span id="fnd-cnt-approved">0</span>)</button>
-              <button class="button small fnd-filter-btn" data-fnd-status="disbursed">Disbursed / Shipped (<span id="fnd-cnt-disbursed">0</span>)</button>
-              <button class="button small fnd-filter-btn" data-fnd-status="rejected">Rejected (<span id="fnd-cnt-rejected">0</span>)</button>
+              <button class="filter-chip active fnd-filter-btn" data-fnd-status="all">All (<span id="fnd-cnt-all">0</span>)</button>
+              <button class="filter-chip fnd-filter-btn" data-fnd-status="pending_review">Pending (<span id="fnd-cnt-pending">0</span>)</button>
+              <button class="filter-chip fnd-filter-btn" data-fnd-status="verified">Verified (<span id="fnd-cnt-verified">0</span>)</button>
+              <button class="filter-chip fnd-filter-btn" data-fnd-status="approved">Approved (<span id="fnd-cnt-approved">0</span>)</button>
+              <button class="filter-chip fnd-filter-btn" data-fnd-status="disbursed">Disbursed / Shipped (<span id="fnd-cnt-disbursed">0</span>)</button>
+              <button class="filter-chip fnd-filter-btn" data-fnd-status="rejected">Rejected (<span id="fnd-cnt-rejected">0</span>)</button>
             </div>
           </div>
 
@@ -894,24 +894,177 @@
 
   <!-- Foundation: Official Headmaster Intimation Letter Dialog -->
   <dialog id="fnd-letter-dialog" class="dialog">
-    <div class="dialog-card" style="max-width:640px;">
-      <div class="dialog-head">
+    <div class="dialog-card" style="max-width:860px; width:100%; padding:22px 26px;">
+      <div class="dialog-head" style="align-items:flex-start;">
         <div>
-          <span class="eyebrow" style="color:var(--green);">OFFICIAL FOUNDATION INTIMATION LETTER</span>
-          <h2 id="fnd-ltr-title">Letter to Headmaster</h2>
-          <p class="muted" id="fnd-ltr-code">CKF-LTR-0000</p>
+          <span class="eyebrow" style="color:var(--green);">OFFICIAL INSTITUTIONAL INTIMATION &amp; SCHOLARSHIP GRANT ORDER</span>
+          <h2 id="fnd-ltr-title">Official Letter to Headmaster</h2>
+          <p class="muted" style="font-size:12px;">Standard A4 layout with official letterhead, consignment specs &amp; school handover acknowledgment slip.</p>
         </div>
         <button type="button" class="icon-button" data-close-dialog aria-label="Close">×</button>
       </div>
 
-      <div style="margin:14px 0; background:#06120e; border:1px solid rgba(52,211,153,0.3); border-radius:8px; padding:16px; font-family:monospace; font-size:11.5px; white-space:pre-wrap; line-height:1.6; max-height:360px; overflow-y:auto; color:var(--text);" id="fnd-ltr-content">
-        Letter text...
+      <!-- Scrollable Preview Canvas for Letter -->
+      <div class="fnd-letter-wrapper">
+        <div id="fnd-letter-sheet" class="fnd-letter-sheet">
+          
+          <!-- Official Letterhead Header -->
+          <div class="fnd-letter-header">
+            <div class="fnd-letter-crest">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"></path>
+                <path d="M6 6h10"></path>
+                <path d="M6 10h10"></path>
+                <path d="M6 14h7"></path>
+              </svg>
+            </div>
+            <h1 class="fnd-letter-title">CHIRANJIT KAR FOUNDATION</h1>
+            <div class="fnd-letter-sub">Direct Child Education &amp; Philanthropic Stewardship &bull; 100% Private Philanthropy</div>
+            <div class="fnd-letter-contact">
+              Central Desk: Agartala, Tripura West – 799001 | Helpline / WhatsApp: +91 9402369889 | Email: foundation@chiranjitkar.com | Web: https://foundation.chiranjitkar.com
+            </div>
+          </div>
+
+          <!-- Metadata Grid: Ref & Date -->
+          <div class="fnd-meta-grid">
+            <div class="fnd-meta-left">
+              <div><strong>LETTER REF NO:</strong> <span id="fnd-ltr-ref-num" style="font-family:monospace; font-weight:700; color:#0f172a;">CKF-LTR-202610-1285</span></div>
+              <div><strong>APPLICATION CODE:</strong> <span id="fnd-ltr-app-code" style="font-family:monospace;">CKF-202610-0001</span></div>
+            </div>
+            <div class="fnd-meta-right">
+              <div><strong>DATE OF ISSUE:</strong> <span id="fnd-ltr-date">31 October 2026</span></div>
+              <div><strong>CONSIGNMENT CARRIER:</strong> <span id="fnd-ltr-carrier">India Post Speed Post</span></div>
+            </div>
+          </div>
+
+          <!-- Addressee Block -->
+          <div class="fnd-addressee">
+            <strong>To,</strong><br>
+            <strong>The Respected Headmaster / Teacher In-Charge,</strong><br>
+            <span id="fnd-ltr-school-name" style="font-weight:600;">School Name</span><br>
+            <span id="fnd-ltr-school-addr">School Address, District, State</span>
+          </div>
+
+          <!-- Subject Line -->
+          <div class="fnd-subject-bar">
+            SUBJECT: OFFICIAL INTIMATION OF EDUCATIONAL AID APPROVAL &amp; CONSIGNMENT DISPATCH FOR STUDENT: <span id="fnd-ltr-subj-student">STUDENT NAME</span> (<span id="fnd-ltr-subj-class">CLASS 8</span>)
+          </div>
+
+          <!-- Salutation -->
+          <div class="fnd-salutation">Respected Sir / Madam,</div>
+
+          <!-- Letter Body Paragraphs -->
+          <div class="fnd-body-p">
+            Greetings from the <strong>Chiranjit Kar Foundation</strong>. First and foremost, we extend our deepest respect and sincere gratitude to you and the esteemed teaching faculty of your institution for your noble, unwavering dedication to educating and uplifting the youth of our society.
+          </div>
+
+          <div class="fnd-body-p">
+            Following the formal recommendation and official school seal certification submitted by your school, we are pleased to inform you that the educational aid application for your student, <strong id="fnd-ltr-body-student">Student Name</strong> (Aadhaar Reference: <span id="fnd-ltr-body-aadhaar" style="font-family:monospace;">XXXX-XXXX-0000</span>), has been formally <strong>APPROVED</strong> under our Foundation Educational Aid Initiative.
+          </div>
+
+          <div class="fnd-body-p">
+            Under our Foundation Charter, our mission is to discover and empower genuine latent potential, curious minds, and dedicated students who lack adequate financial means for prescribed curriculum study materials. We firmly believe that no deserving child should be left behind due to economic hardship.
+          </div>
+
+          <!-- Structured Kit & Consignment Table -->
+          <table class="fnd-spec-table">
+            <tbody>
+              <tr>
+                <th>Beneficiary Student</th>
+                <td><strong id="fnd-ltr-tbl-student">Student Name</strong> (<span id="fnd-ltr-tbl-class">Class 8</span>)</td>
+              </tr>
+              <tr>
+                <th>Enrolled School</th>
+                <td id="fnd-ltr-tbl-school">School Name, District</td>
+              </tr>
+              <tr>
+                <th>Guardian / Parent</th>
+                <td><span id="fnd-ltr-tbl-guardian">Father / Mother</span> &bull; Tel: <span id="fnd-ltr-tbl-phone">+91 0000000000</span></td>
+              </tr>
+              <tr>
+                <th>Approved Educational Kit</th>
+                <td><strong id="fnd-ltr-tbl-needs" style="color:#047857;">NCERT Guides, Ruled Registers &amp; Exam Geometry Kits</strong></td>
+              </tr>
+              <tr>
+                <th>Postal Consignment Waybill</th>
+                <td><span id="fnd-ltr-tbl-carrier">India Post Speed Post</span> &bull; Tracking AWB: <strong id="fnd-ltr-tbl-tracking" style="font-family:monospace; color:#1d4ed8;">Pending Dispatch</strong></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- Handover Protocol Instructions -->
+          <div class="fnd-handover-box">
+            <strong style="text-transform:uppercase; letter-spacing:0.5px;">Protocol for School Authority &amp; Headmaster Handover:</strong>
+            <ol>
+              <li><strong>Consignment Receipt &amp; Verification:</strong> The educational study kit has been packed and dispatched directly to your school address via India Post Speed Post. Upon physical delivery at the school office, kindly verify that the outer packaging seal is intact.</li>
+              <li><strong>Formal Handover to Student:</strong> We humbly request the Headmaster or designated Teacher In-Charge to personally hand over the study materials package to <strong id="fnd-ltr-proto-student">Student Name</strong> during school hours.</li>
+              <li><strong>Parent Notification:</strong> The student's parents / legal guardians have been separately notified regarding this dispatch.</li>
+              <li><strong>Continuous Academic Nurturing:</strong> As part of our Foundation Charter, we kindly request your teachers to observe the student's attendance and academic progress. Satisfactory dedication ensures ongoing renewal for upcoming academic sessions.</li>
+            </ol>
+          </div>
+
+          <!-- Signatory & Foundation Seal Block -->
+          <div class="fnd-sign-block">
+            <div class="fnd-seal-zone">
+              <img src="/assets/verified_seal.png" alt="Foundation Seal" onerror="this.style.display='none'">
+              <div style="font-size:10.5px; color:#475569; line-height:1.4;">
+                <strong style="color:#0f172a; text-transform:uppercase;">Official Foundation Seal</strong><br>
+                Direct Child Philanthropy<br>
+                Certified &bull; Registered Desk
+              </div>
+            </div>
+            <div class="fnd-sign-zone">
+              <div>Yours sincerely in service to education,</div>
+              <img src="/assets/signature.png" alt="Signature" onerror="this.style.display='none'">
+              <strong style="font-size:13px; color:#0f172a;">CHIRANJIT KAR</strong><br>
+              <span style="font-size:11px; color:#475569;">Founder &amp; Philanthropic Trustee</span><br>
+              <span style="font-size:10.5px; color:#64748b;">Chiranjit Kar Foundation</span>
+            </div>
+          </div>
+
+          <!-- Perforated Tear-off Handover Receipt Slip -->
+          <div class="fnd-tear-off-line">
+            <span>✂ CUT OR TEAR ALONG PERFORATION &bull; RETAIN IN SCHOOL OFFICE OR RETURN RECEIPT</span>
+          </div>
+
+          <div class="fnd-receipt-slip">
+            <div class="fnd-receipt-head">
+              <strong>SCHOOL HANDOVER ACKNOWLEDGMENT &amp; VERIFICATION RECEIPT</strong>
+              <small>(To be completed by Headmaster upon physical kit delivery to student &bull; Retain in school records or transmit photo to Foundation Desk: +91 9402369889)</small>
+            </div>
+            <div style="margin-top:6px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:6px; font-size:11px;">
+              <div>Student Name: <strong id="fnd-ltr-slip-student">____________________________</strong></div>
+              <div>Class: <strong id="fnd-ltr-slip-class">__________</strong></div>
+              <div>Roll No: <strong>___________</strong></div>
+              <div>Handover Date: <strong>____ / ____ / 2026</strong></div>
+            </div>
+            <div style="margin-top:6px; font-size:10.5px;">
+              Package Condition: [ &nbsp; ] Seal Intact &amp; All Books Received &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [ &nbsp; ] Discrepancy / Damage (if any): ________________________________________
+            </div>
+            <div class="fnd-receipt-grid">
+              <div class="fnd-receipt-col">
+                <span style="font-size:10px; color:#64748b;">Student Beneficiary Signature</span>
+                <span style="border-top:1px solid #cbd5e1; margin-top:28px;">(Signature of Student)</span>
+              </div>
+              <div class="fnd-receipt-col">
+                <span style="font-size:10px; color:#64748b;">Teacher In-Charge / Handover Officer</span>
+                <span style="border-top:1px solid #cbd5e1; margin-top:28px;">(Signature &amp; Date)</span>
+              </div>
+              <div class="fnd-receipt-col stamp-box">
+                <span style="font-size:9.5px; font-weight:700; color:#0f172a; text-transform:uppercase;">Official School Rubber Stamp</span>
+                <span style="color:#94a3b8; font-size:9px; margin-top:18px;">[ AFFIX RUBBER SEAL HERE ]</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
       </div>
 
-      <div class="dialog-actions" style="margin-top:14px;">
+      <div class="dialog-actions" style="margin-top:14px; flex-wrap:wrap;">
+        <button type="button" id="fnd-ltr-back-btn" class="button quiet">← Back to Application</button>
         <button type="button" class="button quiet" data-close-dialog>Close</button>
-        <button type="button" id="fnd-ltr-copy-btn" class="button quiet">📋 Copy Letter Text</button>
-        <button type="button" id="fnd-ltr-print-btn" class="button gold">🖨️ Print Official Letter</button>
+        <button type="button" id="fnd-ltr-copy-btn" class="button quiet">📋 Copy Official Letter Text</button>
+        <button type="button" id="fnd-ltr-print-btn" class="button gold">🖨️ Print Official Letter (A4)</button>
       </div>
     </div>
   </dialog>
@@ -1022,6 +1175,52 @@
       <div class="dialog-actions" style="margin-top:16px;">
         <button type="button" class="button quiet" data-close-dialog>Cancel</button>
         <button type="submit" class="button gold">Update Budget</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Foundation: Create / Edit Campaign Dialog -->
+  <dialog id="fnd-camp-dialog" class="dialog">
+    <form id="fnd-camp-form" class="dialog-card" style="max-width:540px;">
+      <div class="dialog-head">
+        <div>
+          <span class="eyebrow" style="color:var(--green);">AID CAMPAIGN MANAGEMENT</span>
+          <h2 id="fnd-camp-modal-title">New Educational Aid Drive</h2>
+          <p class="muted">Launch a targeted scholarship or study material distribution campaign.</p>
+        </div>
+        <button type="button" class="icon-button" data-close-dialog aria-label="Close">×</button>
+      </div>
+
+      <input type="hidden" id="fnd-camp-id">
+
+      <label>Campaign Title *
+        <input type="text" id="fnd-camp-title" required placeholder="e.g. Winter 2026 Board &amp; Secondary Exam Prep Drive">
+      </label>
+
+      <label>Target Audience *
+        <input type="text" id="fnd-camp-target" required placeholder="e.g. Class 8-10 Underprivileged School Students">
+      </label>
+
+      <label>Kit Summary (Prescribed Materials) *
+        <input type="text" id="fnd-camp-kit" required placeholder="e.g. Prescribed NCERT Textbooks, 12 Exercise Registers, Geometry Box">
+      </label>
+
+      <div class="fnd-grid-2col" style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+        <label>Allocated Aid Budget (₹) *
+          <input type="number" id="fnd-camp-budget" required min="5000" step="5000" placeholder="250000">
+        </label>
+        <label>Max Beneficiaries Target *
+          <input type="number" id="fnd-camp-max" required min="1" placeholder="100">
+        </label>
+      </div>
+
+      <label>Campaign Mission &amp; Scope Description *
+        <textarea id="fnd-camp-desc" rows="3" required placeholder="Brief description of the initiative and how books are directly delivered..."></textarea>
+      </label>
+
+      <div class="dialog-actions" style="margin-top:16px;">
+        <button type="button" class="button quiet" data-close-dialog>Cancel</button>
+        <button type="submit" class="button gold">Save &amp; Activate Campaign</button>
       </div>
     </form>
   </dialog>

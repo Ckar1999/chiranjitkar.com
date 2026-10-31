@@ -2097,7 +2097,62 @@ async function handle(request, env, route) {
     if (!letter) {
       const letterId = id();
       const letterCode = `CKF-LTR-${new Date().toISOString().slice(0, 7).replace('-', '')}-${Math.floor(1000 + Math.random() * 9000)}`;
-      const letterContent = `OFFICIAL INTIMATION OF SCHOLARSHIP & STUDY MATERIAL ASSISTANCE APPROVAL\n\nTo:\nThe Respected Headmaster / Teacher In-Charge\n${app.school_name}\n${app.school_address || app.school_district}, ${app.school_state || 'Tripura'}\n\nSubject: Official Intimation of Educational Aid Approval for Student: ${app.student_name} (Class: ${app.class_grade})\n\nRespected Sir / Madam,\n\nGreetings from the Chiranjit Kar Foundation. First and foremost, we offer our deepest respect and sincere gratitude to you and your esteemed teaching faculty for your noble service in educating the children of our society.\n\nFollowing your formal recommendation and official school seal certification, we are pleased to inform you that the application of your student, ${app.student_name} (Aadhaar: XXXX-XXXX-${app.aadhaar_last4 || 'XXXX'}), has been APPROVED under our Foundation Educational Aid Initiative.\n\nApproved Assistance Scope:\n- Tailored educational materials / books / uniform: ${app.specific_needs || 'Standard Syllabus Books, Exercise Registers & Exam Kits'}\n\nDISPATCH & HANDOVER PROTOCOL:\n1. The study materials package is being prepared and will be delivered directly to your school address via India Post Speed Post.\n2. We humbly request the Headmaster or Teacher In-Charge to personally receive the consignment and formally hand it over to ${app.student_name} in person.\n3. We have also formally alerted the student's parents / guardian (${app.father_guardian_name || 'Guardian'}, Phone: ${app.guardian_phone || 'Registered Phone'}) regarding this dispatch.\n\nCONTINUOUS ACADEMIC MONITORING:\nAs part of our Foundation Charter, we kindly request your faculty to continuously track ${app.student_name}'s academic progress, exam results, and school attendance. Satisfactory academic dedication is required for the child to remain eligible for subsequent aid campaigns.\n\nThank you for partnering with us to keep deserving children learning with dignity.\n\nSincerely in Education,\nChiranjit Kar\nFounder & Philanthropic Steward\nChiranjit Kar Foundation\nDesk: +91 9402369889 | Agartala, Tripura`;
+      const issueDate = new Intl.DateTimeFormat('en-IN', { dateStyle: 'long' }).format(new Date());
+      const letterContent = `CHIRANJIT KAR FOUNDATION
+Direct Child Education & Philanthropic Stewardship • 100% Private Philanthropy
+Central Desk: Agartala, Tripura West – 799001 | Desk: +91 9402369889 | Email: foundation@chiranjitkar.com
+
+Letter Ref No: ${letterCode}
+Date of Issue: ${issueDate}
+Application Ref: ${app.application_code || applicationId}
+
+To:
+The Respected Headmaster / Teacher In-Charge
+${app.school_name}
+${app.school_address ? app.school_address + ', ' : ''}${app.school_district || ''}, ${app.school_state || 'Tripura'}
+
+SUBJECT: OFFICIAL INTIMATION OF EDUCATIONAL AID APPROVAL & CONSIGNMENT DISPATCH FOR STUDENT: ${(app.student_name || '').toUpperCase()} (${app.class_grade})
+
+Respected Sir / Madam,
+
+Greetings from the Chiranjit Kar Foundation. First and foremost, we extend our deepest respect and sincere gratitude to you and the esteemed teaching faculty of your school for your noble, unwavering dedication to educating and uplifting the youth of our society.
+
+Following the formal recommendation and official school seal certification submitted by your school, we are pleased to inform you that the educational aid application for your student, ${app.student_name} (Aadhaar Reference: XXXX-XXXX-${app.student_aadhaar_last4 || app.aadhaar_last4 || 'XXXX'}), has been formally APPROVED under our Foundation Educational Aid Initiative.
+
+Under our Foundation Charter, our mission is to discover and empower genuine latent potential, curious minds, and dedicated students who lack adequate financial means for prescribed curriculum study materials. We firmly believe that no deserving child should be left behind due to economic hardship.
+
+APPROVED ASSISTANCE & CONSIGNMENT SPECIFICATIONS:
+- Beneficiary Student: ${app.student_name} (${app.class_grade})
+- Enrolled School: ${app.school_name}
+- Parent / Guardian: ${app.father_guardian_name || 'Parent / Guardian'} (Tel: +91 ${app.guardian_phone || 'Registered Phone'})
+- Approved Educational Kit: ${app.specific_needs || 'Standard Syllabus Guides, Registers & Exam Stationery'}
+- Shipping Carrier: ${app.shipping_carrier || 'India Post Speed Post (Prepaid)'}
+- Consignment Tracking AWB: ${app.tracking_number || 'Dispatch in Progress'}
+
+PROTOCOL FOR SCHOOL AUTHORITY & HEADMASTER HANDOVER:
+1. Consignment Receipt & Verification: The educational study kit has been packed and dispatched directly to your school address via India Post Speed Post. Upon physical delivery at the school office, kindly verify that the outer packaging seal is intact.
+2. Formal Handover to Student: We humbly request the Headmaster or designated Teacher In-Charge to personally hand over the study materials package to ${app.student_name} during school hours.
+3. Parent Notification: The student's parents / legal guardians have been separately notified regarding this dispatch.
+4. Continuous Academic Nurturing: As part of our Foundation Charter, we kindly request your teachers to observe the student's attendance and academic progress. Satisfactory dedication ensures ongoing renewal for upcoming academic sessions.
+
+Yours sincerely in service to education,
+
+Chiranjit Kar
+Founder & Philanthropic Trustee
+Chiranjit Kar Foundation
+Desk: +91 9402369889 | Agartala, Tripura
+
+--------------------------------------------------------------------------------
+SCHOOL HANDOVER ACKNOWLEDGMENT & VERIFICATION RECEIPT
+(To be completed by Headmaster upon physical kit delivery to student and retained in school records)
+
+Student: ${app.student_name} | Class: ${app.class_grade} | Roll No: ________ | Date of Handover: ____ / ____ / 2026
+Consignment Condition: [ ] Seal Intact & All Books Received   [ ] Discrepancy: ____________________
+
+Student Signature: _______________________
+Teacher In-Charge Signature: _______________________
+Official School Rubber Stamp: [ OFFICIAL SCHOOL RUBBER STAMP ]
+--------------------------------------------------------------------------------`;
 
       await env.DB.prepare(`
         INSERT INTO foundation_school_letters (

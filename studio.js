@@ -241,20 +241,51 @@
       }
     });
 
-    $('#fnd-dlg-letter-btn')?.addEventListener('click', async () => {
-      if (!window._curFndApp) return;
+    $('#fnd-new-camp-btn')?.addEventListener('click', () => {
+      $('#fnd-camp-form').reset();
+      $('#fnd-camp-id').value = '';
+      $('#fnd-camp-budget').value = '250000';
+      $('#fnd-camp-max').value = '100';
+      $('#fnd-camp-target').value = 'Class 8-10 Underprivileged School Students';
+      $('#fnd-camp-kit').value = 'Prescribed NCERT Textbooks, 12 Exercise Registers, Geometry Box';
+      $('#fnd-camp-modal-title').textContent = 'New Educational Aid Campaign';
+      $('#fnd-camp-dialog').showModal();
+    });
+
+    $('#fnd-camp-form')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const payload = {
+        id: $('#fnd-camp-id').value || undefined,
+        title: $('#fnd-camp-title').value.trim(),
+        target_audience: $('#fnd-camp-target').value.trim(),
+        kit_summary: $('#fnd-camp-kit').value.trim(),
+        allocated_budget: Number($('#fnd-camp-budget').value),
+        max_beneficiaries: Number($('#fnd-camp-max').value),
+        description: $('#fnd-camp-desc').value.trim(),
+        status: 'active'
+      };
       try {
-        const res = await api(`foundation/admin/applications/${window._curFndApp.id}/generate-letter`, {
-          method: 'POST'
+        await api('foundation/admin/campaigns', {
+          method: 'POST',
+          body: JSON.stringify(payload)
         });
-        if (!res.ok) throw new Error(res.error || 'Failed to generate letter');
-        window._curFndLetter = res.letter;
-        $('#fnd-ltr-title').textContent = `Official Letter to ${res.letter.school_name}`;
-        $('#fnd-ltr-code').textContent = res.letter.letter_code;
-        $('#fnd-ltr-content').textContent = res.letter.letter_content;
-        $('#fnd-letter-dialog').showModal();
+        $('#fnd-camp-dialog').close();
+        toast('Campaign launched & activated successfully!');
+        await loadFoundation();
       } catch (err) {
-        toast(err.message);
+        toast(err.message || 'Failed to save campaign.');
+      }
+    });
+
+    $('#fnd-dlg-letter-btn')?.addEventListener('click', () => {
+      if (!window._curFndApp) return;
+      window.fndOpenLetterModal(window._curFndApp.id);
+    });
+
+    $('#fnd-ltr-back-btn')?.addEventListener('click', () => {
+      $('#fnd-letter-dialog')?.close();
+      if (window._curFndLetterApp) {
+        window.fndOpenAppModal(window._curFndLetterApp.id);
       }
     });
 
@@ -275,39 +306,71 @@
     });
 
     $('#fnd-ltr-copy-btn')?.addEventListener('click', () => {
-      if (!window._curFndLetter) return;
-      navigator.clipboard.writeText(window._curFndLetter.letter_content);
-      toast('Official letter copied to clipboard.');
+      if (!window._curFndLetter || !window._curFndLetterApp) return;
+      const app = window._curFndLetterApp;
+      const ltr = window._curFndLetter;
+      const text = `CHIRANJIT KAR FOUNDATION
+Direct Child Education & Philanthropic Stewardship • 100% Private Philanthropy
+Central Desk: Agartala, Tripura West – 799001 | Desk: +91 9402369889 | Email: foundation@chiranjitkar.com
+
+Letter Ref No: ${ltr.letter_code}
+Date of Issue: ${new Intl.DateTimeFormat('en-IN', { dateStyle: 'long' }).format(new Date(ltr.created_at || Date.now()))}
+Application Ref: ${app.application_code || app.id}
+
+To:
+The Respected Headmaster / Teacher In-Charge
+${app.school_name}
+${app.school_address ? app.school_address + ', ' : ''}${app.school_district || ''}, ${app.school_state || 'Tripura'}
+
+SUBJECT: OFFICIAL INTIMATION OF EDUCATIONAL AID APPROVAL & CONSIGNMENT DISPATCH FOR STUDENT: ${(app.student_name || '').toUpperCase()} (${app.class_grade})
+
+Respected Sir / Madam,
+
+Greetings from the Chiranjit Kar Foundation. First and foremost, we extend our deepest respect and sincere gratitude to you and the esteemed teaching faculty of your school for your noble, unwavering dedication to educating and uplifting the youth of our society.
+
+Following the formal recommendation and official school seal certification submitted by your school, we are pleased to inform you that the educational aid application for your student, ${app.student_name} (Aadhaar Reference: XXXX-XXXX-${app.student_aadhaar_last4 || app.aadhaar_last4 || 'XXXX'}), has been formally APPROVED under our Foundation Educational Aid Initiative.
+
+Under our Foundation Charter, our mission is to discover and empower genuine latent potential, curious minds, and dedicated students who lack adequate financial means for prescribed curriculum study materials. We firmly believe that no deserving child should be left behind due to economic hardship.
+
+APPROVED ASSISTANCE & CONSIGNMENT SPECIFICATIONS:
+- Beneficiary Student: ${app.student_name} (${app.class_grade})
+- Enrolled School: ${app.school_name}
+- Parent / Guardian: ${app.father_guardian_name || 'Parent / Guardian'} (Tel: +91 ${app.guardian_phone || 'Registered Phone'})
+- Approved Educational Kit: ${app.specific_needs || 'Standard Syllabus Guides, Registers & Exam Stationery'}
+- Shipping Carrier: ${app.shipping_carrier || 'India Post Speed Post (Prepaid)'}
+- Consignment Tracking AWB: ${app.tracking_number || 'Dispatch in Progress'}
+
+PROTOCOL FOR SCHOOL AUTHORITY & HEADMASTER HANDOVER:
+1. Consignment Receipt & Verification: The educational study kit has been packed and dispatched directly to your school address via India Post Speed Post. Upon physical delivery at the school office, kindly verify that the outer packaging seal is intact.
+2. Formal Handover to Student: We humbly request the Headmaster or designated Teacher In-Charge to personally hand over the study materials package to ${app.student_name} during school hours.
+3. Parent Notification: The student's parents / legal guardians have been separately notified regarding this dispatch.
+4. Continuous Academic Nurturing: As part of our Foundation Charter, we kindly request your teachers to observe the student's attendance and academic progress. Satisfactory dedication ensures ongoing renewal for upcoming academic sessions.
+
+Yours sincerely in service to education,
+
+Chiranjit Kar
+Founder & Philanthropic Trustee
+Chiranjit Kar Foundation
+Desk: +91 9402369889 | Agartala, Tripura
+
+--------------------------------------------------------------------------------
+SCHOOL HANDOVER ACKNOWLEDGMENT & VERIFICATION RECEIPT
+(To be completed by Headmaster upon physical kit delivery to student and retained in school records)
+
+Student: ${app.student_name} | Class: ${app.class_grade} | Roll No: ________ | Date of Handover: ____ / ____ / 2026
+Consignment Condition: [ ] Seal Intact & All Books Received   [ ] Discrepancy: ____________________
+
+Student Signature: _______________________
+Teacher In-Charge Signature: _______________________
+Official School Rubber Stamp: [ OFFICIAL SCHOOL RUBBER STAMP ]
+--------------------------------------------------------------------------------`;
+
+      navigator.clipboard.writeText(text);
+      toast('Official intimation letter copied to clipboard.');
     });
 
     $('#fnd-ltr-print-btn')?.addEventListener('click', () => {
-      if (!window._curFndLetter) return;
-      const printWin = window.open('', '_blank');
-      printWin.document.write(`
-        <html>
-        <head>
-          <title>${window._curFndLetter.letter_code} - Foundation Intimation Letter</title>
-          <style>
-            body { font-family: 'Times New Roman', serif; padding: 40px; line-height: 1.6; color: #000; font-size: 14px; }
-            pre { white-space: pre-wrap; font-family: inherit; }
-            .header { border-bottom: 2px solid #000; padding-bottom: 12px; margin-bottom: 24px; text-align: center; }
-            h1 { margin: 0; font-size: 20px; text-transform: uppercase; letter-spacing: 1px; }
-            .sub { font-size: 12px; color: #444; }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <h1>CHIRANJIT KAR FOUNDATION</h1>
-            <div class="sub">Direct Child Education &amp; Philanthropic Stewardship &bull; 100% Private Philanthropy</div>
-            <div class="sub">Agartala, Tripura West - 799001 | Desk: +91 9402369889 | foundation@chiranjitkar.com</div>
-          </div>
-          <pre>${window._curFndLetter.letter_content}</pre>
-        </body>
-        </html>
-      `);
-      printWin.document.close();
-      printWin.focus();
-      setTimeout(() => printWin.print(), 300);
+      printOfficialLetter();
     });
 
     $$('[data-close-dialog]').forEach(button => button.addEventListener('click', () => button.closest('dialog').close()));
@@ -440,8 +503,8 @@
 
   async function loadSettings(){
     try{
-      const result=await api('settings');state.settings=result.settings;
-      const form=$('#settings-form');Object.entries(state.settings).forEach(([key,value])=>{if(form.elements[key])form.elements[key].value=value;});
+      const result=await api('settings');state.settings=result.settings || {};
+      const form=$('#settings-form');Object.entries(state.settings || {}).forEach(([key,value])=>{if(form.elements[key])form.elements[key].value=value;});
       const lForm = $('#leegality-settings-form');
       if (lForm && state.settings) {
         if (state.settings.leegality_auth_token) $('#leegality-auth-token').value = state.settings.leegality_auth_token;
@@ -450,7 +513,7 @@
         if (state.settings.leegality_estamp_number) $('#leegality-estamp-no').value = state.settings.leegality_estamp_number;
         if ($('#leegality-doc-fee')) $('#leegality-doc-fee').value = state.settings.agreement_fee ?? 99;
       }
-      $('#integration-cards').innerHTML=Object.entries(result.integrations).map(([key,value])=>{
+      $('#integration-cards').innerHTML=Object.entries(result.integrations || {}).map(([key,value])=>{
         const labels={leegality:'Leegality Aadhaar eSign',bank_alerts:'Gmail bank alerts',client_codes:'Session approvals',sms_email:'SMS & email delivery',payments:'Payment processing',media_storage:'Photo & video storage'};
         const tags={connected:'Connected',webhook_ready:'Webhook ready',needs_token:'Needs Token',needs_setup:'Needs token',client_portal:'Portal codes',not_connected:'Not connected',manual_ledger:'Manual ledger',external_links:'External links'};
         return `<article class="integration-card"><div class="integration-head"><strong>${escapeHtml(labels[key]||key)}</strong><span class="integration-state ${['client_portal','webhook_ready','connected'].includes(value.status)?'ready':''}"><i></i>${escapeHtml(tags[value.status]||value.status)}</span></div><p>${escapeHtml(value.detail)}</p></article>`;
@@ -943,8 +1006,9 @@
           </td>
           <td>${statusMap[app.status] || app.status}</td>
           <td>
-            <div style="display:flex; gap:4px;">
+            <div style="display:flex; gap:4px; flex-wrap:wrap;">
               <button class="small-button" onclick="window.fndOpenAppModal('${app.id}')">Inspect</button>
+              ${['verified','approved','disbursed','delivered'].includes(app.status) ? `<button class="small-button" style="color:var(--green); font-size:10.5px;" onclick="window.fndOpenLetterModal('${app.id}')">📜 Letter</button>` : ''}
               ${app.status === 'approved' ? `<button class="small-button gold" onclick="window.fndOpenBillModal('${app.id}')">Log Bill</button>` : ''}
               ${app.status === 'disbursed' || app.status === 'approved' ? `<button class="small-button" style="color:var(--blue);" onclick="window.fndOpenDispatchModal('${app.id}')">Dispatch</button>` : ''}
             </div>
@@ -1078,6 +1142,303 @@
       toast(err.message);
     }
   };
+
+  window.fndOpenLetterModal = async function(id) {
+    const app = fndData.applications.find(a => a.id === id) || window._curFndApp;
+    if (!app) return;
+    window._curFndApp = app;
+
+    try {
+      // Close application dialog if open to prevent Safari stacked modal issues
+      if ($('#fnd-app-dialog')?.open) $('#fnd-app-dialog').close();
+
+      const res = await api(`foundation/admin/applications/${app.id}/generate-letter`, {
+        method: 'POST'
+      });
+      if (!res.ok) throw new Error(res.error || 'Failed to generate letter');
+
+      const letter = res.letter;
+      const fullApp = res.application || app;
+      window._curFndLetter = letter;
+      window._curFndLetterApp = fullApp;
+
+      $('#fnd-ltr-title').textContent = `Official Letter to ${letter.school_name || fullApp.school_name}`;
+      $('#fnd-ltr-ref-num').textContent = letter.letter_code || 'CKF-LTR-2026';
+      $('#fnd-ltr-app-code').textContent = fullApp.application_code || 'CKF-APP';
+
+      const issueDate = letter.created_at
+        ? new Intl.DateTimeFormat('en-IN', { dateStyle: 'long' }).format(new Date(letter.created_at))
+        : new Intl.DateTimeFormat('en-IN', { dateStyle: 'long' }).format(new Date());
+      $('#fnd-ltr-date').textContent = issueDate;
+      $('#fnd-ltr-carrier').textContent = fullApp.shipping_carrier || 'India Post Speed Post';
+
+      $('#fnd-ltr-school-name').textContent = fullApp.school_name || 'Government School';
+      $('#fnd-ltr-school-addr').textContent = `${fullApp.school_address ? fullApp.school_address + ', ' : ''}${fullApp.school_district || ''}, ${fullApp.school_state || 'Tripura'}`;
+
+      $('#fnd-ltr-subj-student').textContent = (fullApp.student_name || 'STUDENT').toUpperCase();
+      $('#fnd-ltr-subj-class').textContent = (fullApp.class_grade || 'CLASS').toUpperCase();
+
+      $('#fnd-ltr-body-student').textContent = fullApp.student_name || 'Student';
+      $('#fnd-ltr-body-aadhaar').textContent = `XXXX-XXXX-${fullApp.student_aadhaar_last4 || fullApp.aadhaar_last4 || 'XXXX'}`;
+
+      // Table specs
+      $('#fnd-ltr-tbl-student').textContent = fullApp.student_name || 'Student';
+      $('#fnd-ltr-tbl-class').textContent = fullApp.class_grade || 'Class';
+      $('#fnd-ltr-tbl-school').textContent = `${fullApp.school_name}, ${fullApp.school_district || ''}`;
+      $('#fnd-ltr-tbl-guardian').textContent = fullApp.father_guardian_name || 'Parent / Guardian';
+      $('#fnd-ltr-tbl-phone').textContent = `+91 ${fullApp.guardian_phone || 'Registered Phone'}`;
+      $('#fnd-ltr-tbl-needs').textContent = fullApp.specific_needs || 'Standard Syllabus Textbooks, Exercise Registers & Exam Kits';
+      $('#fnd-ltr-tbl-carrier').textContent = fullApp.shipping_carrier || 'India Post Speed Post';
+      $('#fnd-ltr-tbl-tracking').textContent = fullApp.tracking_number || 'Dispatch in Progress (India Post Speed Post)';
+
+      $('#fnd-ltr-proto-student').textContent = fullApp.student_name || 'the student';
+
+      // Handover slip
+      $('#fnd-ltr-slip-student').textContent = fullApp.student_name || '____________________________';
+      $('#fnd-ltr-slip-class').textContent = fullApp.class_grade || '__________';
+
+      $('#fnd-letter-dialog').showModal();
+    } catch (err) {
+      toast(err.message || 'Failed to load official letter.');
+    }
+  };
+
+  function printOfficialLetter() {
+    if (!window._curFndLetter || !window._curFndLetterApp) return;
+
+    let printFrame = document.getElementById('fnd-print-iframe');
+    if (!printFrame) {
+      printFrame = document.createElement('iframe');
+      printFrame.id = 'fnd-print-iframe';
+      printFrame.style.position = 'fixed';
+      printFrame.style.right = '0';
+      printFrame.style.bottom = '0';
+      printFrame.style.width = '0';
+      printFrame.style.height = '0';
+      printFrame.style.border = '0';
+      document.body.appendChild(printFrame);
+    }
+
+    const sheetEl = document.getElementById('fnd-letter-sheet');
+    if (!sheetEl) {
+      window.print();
+      return;
+    }
+    const sheetContent = sheetEl.innerHTML;
+
+    const frameDoc = printFrame.contentWindow.document;
+    frameDoc.open();
+    frameDoc.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>${escapeHtml(window._curFndLetter.letter_code)} - Chiranjit Kar Foundation Official Intimation</title>
+        <style>
+          @page {
+            size: A4 portrait;
+            margin: 10mm 14mm;
+          }
+          * {
+            box-sizing: border-box;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Times New Roman', Cambria, Georgia, serif;
+            color: #000000;
+            background: #ffffff;
+            font-size: 13px;
+            line-height: 1.45;
+          }
+          .fnd-letter-header {
+            text-align: center;
+            border-bottom: 2px solid #000000;
+            padding-bottom: 10px;
+            margin-bottom: 12px;
+          }
+          .fnd-letter-crest {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #064e3b;
+            color: #fbbf24;
+            margin-bottom: 4px;
+            border: 2px solid #d97706;
+          }
+          .fnd-letter-title {
+            margin: 0;
+            font-size: 19px;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: #000000;
+          }
+          .fnd-letter-sub {
+            font-size: 10.5px;
+            font-weight: 700;
+            color: #047857;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-top: 2px;
+          }
+          .fnd-letter-contact {
+            font-size: 9.5px;
+            color: #475569;
+            margin-top: 3px;
+          }
+          .fnd-meta-grid {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            margin-bottom: 12px;
+            border-bottom: 1px dotted #cbd5e1;
+            padding-bottom: 8px;
+          }
+          .fnd-meta-right { text-align: right; }
+          .fnd-addressee {
+            margin-bottom: 12px;
+            font-size: 12px;
+            line-height: 1.4;
+          }
+          .fnd-subject-bar {
+            background: #f1f5f9;
+            border-left: 4px solid #000000;
+            padding: 7px 10px;
+            font-weight: 700;
+            font-size: 11.5px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            margin: 12px 0;
+          }
+          .fnd-salutation {
+            font-weight: 700;
+            margin-bottom: 6px;
+            font-size: 12px;
+          }
+          .fnd-body-p {
+            margin-bottom: 8px;
+            text-align: justify;
+            line-height: 1.45;
+            font-size: 12px;
+          }
+          .fnd-spec-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 12px 0;
+            font-size: 11px;
+          }
+          .fnd-spec-table th, .fnd-spec-table td {
+            border: 1px solid #cbd5e1;
+            padding: 6px 8px;
+            text-align: left;
+          }
+          .fnd-spec-table th {
+            background: #f8fafc;
+            font-weight: 700;
+            width: 32%;
+          }
+          .fnd-handover-box {
+            background: #f0fdf4;
+            border: 1px solid #86efac;
+            border-radius: 4px;
+            padding: 8px 12px;
+            font-size: 10.5px;
+            line-height: 1.45;
+            color: #14532d;
+            margin: 10px 0;
+          }
+          .fnd-handover-box ol { margin: 3px 0 0 16px; padding: 0; }
+          .fnd-sign-block {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-top: 14px;
+          }
+          .fnd-seal-zone { display: flex; align-items: center; gap: 8px; }
+          .fnd-seal-zone img { width: 60px; height: 60px; }
+          .fnd-sign-zone { text-align: right; font-size: 11px; }
+          .fnd-sign-zone img { height: 38px; display: block; margin: 2px 0 2px auto; }
+          .fnd-tear-off-line {
+            margin: 16px 0 10px;
+            border-top: 1.5px dashed #64748b;
+            position: relative;
+            text-align: center;
+          }
+          .fnd-tear-off-line span {
+            position: relative;
+            top: -8px;
+            background: #ffffff;
+            padding: 0 8px;
+            font-size: 8.5px;
+            font-family: monospace;
+            color: #475569;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+          }
+          .fnd-receipt-slip {
+            border: 1.5px solid #64748b;
+            border-radius: 4px;
+            padding: 8px 10px;
+            background: #fafafa;
+            font-size: 10px;
+            line-height: 1.35;
+          }
+          .fnd-receipt-head {
+            text-align: center;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 4px;
+            margin-bottom: 6px;
+          }
+          .fnd-receipt-head strong { font-size: 10.5px; text-transform: uppercase; }
+          .fnd-receipt-head small { font-size: 8.5px; color: #475569; }
+          .fnd-receipt-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+            margin-top: 8px;
+            text-align: center;
+          }
+          .fnd-receipt-col {
+            border: 1px dashed #cbd5e1;
+            padding: 6px 4px;
+            min-height: 48px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            background: #ffffff;
+            font-size: 9px;
+          }
+          .fnd-receipt-col.stamp-box {
+            border: 1.5px solid #000000;
+            background: #f8fafc;
+            font-weight: 700;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="fnd-letter-sheet">
+          ${sheetContent}
+        </div>
+      </body>
+      </html>
+    `);
+    frameDoc.close();
+
+    printFrame.contentWindow.focus();
+    setTimeout(() => {
+      try {
+        printFrame.contentWindow.print();
+      } catch (e) {
+        window.print();
+      }
+    }, 250);
+  }
 
   function setView(view) {
     if(!['overview','inquiries','projects','schedule','tasks','billing','team','settings','foundation'].includes(view)||['team','settings','foundation'].includes(view)&&state.staff?.role!=='admin'||['billing','inquiries'].includes(view)&&!['admin','sales'].includes(state.staff?.role)) return;
