@@ -54,10 +54,7 @@ export async function onRequest(context) {
   // 2. MAIN WEBSITE ROUTING (chiranjitkar.com)
   if (host === MAIN_HOST || host === WWW_MAIN_HOST) {
     if (path === '/foundation' || path === '/foundation.html') {
-      const target = new URL('https://' + FOUNDATION_HOST + '/');
-      target.search = url.search;
-      target.hash = url.hash;
-      return Response.redirect(target.toString(), 302);
+      return serveAsset(context, '/foundation.html');
     }
     if (path === '/collaborate' || path === '/collaborate.html') {
       const target = new URL('https://' + BOOK_HOST + '/collaborate');
@@ -137,14 +134,6 @@ export async function onRequest(context) {
 
   // 5. FOUNDATION SUBDOMAIN ROUTING (foundation.chiranjitkar.com)
   if (host === FOUNDATION_HOST) {
-    // Canonical redirect from /foundation or /foundation.html to root /
-    if (path === '/foundation' || path === '/foundation.html') {
-      const target = new URL('https://' + FOUNDATION_HOST + '/');
-      target.search = url.search;
-      target.hash = url.hash;
-      return Response.redirect(target.toString(), 302);
-    }
-
     // Cross-link redirects
     if (path === '/session' || path === '/session.html' || path === '/client') {
       const target = new URL('https://' + CLIENT_HOST + '/');
@@ -158,8 +147,8 @@ export async function onRequest(context) {
       return Response.redirect(target.toString(), 302);
     }
 
-    // Serve Foundation portal at root
-    if (path === '/' || path === '/index.html') {
+    // Serve Foundation portal at root or /foundation
+    if (path === '/' || path === '/index.html' || path === '/foundation' || path === '/foundation.html') {
       return serveAsset(context, '/foundation.html');
     }
   }
