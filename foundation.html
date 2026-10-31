@@ -97,10 +97,10 @@
 <body class="min-h-screen flex flex-col antialiased selection:bg-emerald-500 selection:text-black">
 
     <!-- Top Private Charter Strip -->
-    <div class="bg-gradient-to-r from-emerald-950 via-emerald-900 to-black text-[12px] text-emerald-200 py-2 border-b border-emerald-800/40 px-4 text-center">
+    <div id="top-charter-strip" class="bg-gradient-to-r from-amber-950 via-neutral-900 to-black text-[12px] text-amber-200 py-2 border-b border-amber-800/40 px-4 text-center">
         <span class="inline-flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <strong>100% Private Philanthropic Initiative</strong> by Chiranjit Kar &bull; Exclusively for Government School Students (Nursery to Class 10) &bull; Zero Public Donations
+            <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+            <strong>🚀 Chiranjit Kar Foundation &bull; Launching Soon (Pilot Active)</strong> &bull; Exclusively for Government School Students (Nursery to Class 10) &bull; Zero Public Donations
         </span>
     </div>
 
@@ -141,8 +141,8 @@
 
         <!-- Hero Section -->
         <section class="max-w-5xl mx-auto px-4 sm:px-6 pt-12 sm:pt-20 pb-16 text-center">
-            <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono uppercase tracking-wider mb-6">
-                <span>🌱</span> Direct Child Education &amp; Welfare &bull; Nursery to Class 10
+            <div id="hero-status-badge" class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs font-mono uppercase tracking-wider mb-6">
+                <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span> LAUNCHING SOON &bull; PILOT ACTIVE &bull; NURSERY TO CLASS 10
             </div>
 
             <h1 class="text-3xl sm:text-5xl lg:text-6xl font-cinzel font-extrabold text-white tracking-tight leading-tight">
@@ -153,8 +153,8 @@
                 Direct educational companionship for children from <strong>Nursery up to Class 10</strong>. We provide core syllabus books, educator study notes, writing registers, geometry kits, school uniforms, winter sweaters, and learning supplies. Hand-delivered or dispatched via <strong>India Post Speed Post</strong>.
             </p>
 
-            <div class="mt-8 flex flex-wrap items-center justify-center gap-4">
-                <button onclick="switchPortalTab('register')" class="px-6 py-3.5 rounded-xl font-bold bg-emerald-500 hover:bg-emerald-400 text-black text-sm sm:text-base shadow-xl shadow-emerald-500/30 transition flex items-center gap-2">
+            <div id="hero-actions" class="mt-8 flex flex-wrap items-center justify-center gap-4">
+                <button onclick="switchPortalTab('register')" id="hero-reg-btn" class="px-6 py-3.5 rounded-xl font-bold bg-emerald-500 hover:bg-emerald-400 text-black text-sm sm:text-base shadow-xl shadow-emerald-500/30 transition flex items-center gap-2">
                     <span>✍️</span> Register Student Account (One-Time)
                 </button>
                 <button onclick="switchPortalTab('login')" class="px-6 py-3.5 rounded-xl font-semibold bg-white/5 hover:bg-white/10 border border-white/10 text-white text-sm sm:text-base transition flex items-center gap-2">
@@ -211,7 +211,7 @@
                     <div class="flex flex-col items-center justify-center min-w-[200px] p-5 rounded-2xl bg-emerald-950/40 border border-emerald-800/40 text-center">
                         <span class="text-xs font-mono text-neutral-400 uppercase">Target Beneficiaries</span>
                         <span class="text-base font-bold text-white mt-1" id="camp-target">Nursery to Class 10</span>
-                        <button onclick="switchPortalTab('login')" class="mt-4 w-full py-2.5 px-4 rounded-xl font-bold bg-emerald-500 hover:bg-emerald-400 text-black text-xs text-center transition shadow-md">
+                        <button id="camp-apply-btn" onclick="switchPortalTab('login')" class="mt-4 w-full py-2.5 px-4 rounded-xl font-bold bg-emerald-500 hover:bg-emerald-400 text-black text-xs text-center transition shadow-md">
                             Apply for this Drive
                         </button>
                     </div>
@@ -348,6 +348,15 @@
 
                 <!-- VIEW 1: ONE-TIME STUDENT REGISTRATION FORM -->
                 <div id="view-register">
+                    <div id="reg-launching-soon-banner" class="hidden p-5 rounded-2xl bg-amber-950/40 border border-amber-500/30 text-amber-200 text-xs sm:text-sm space-y-2 mb-6 text-left">
+                        <div class="font-bold flex items-center gap-2 text-amber-300">
+                            <span>🚀</span> Public Student Enrollment Launching Soon (Pilot Active)
+                        </div>
+                        <p class="text-neutral-300 text-xs leading-relaxed">
+                            The Chiranjit Kar Foundation is currently operating in its closed pilot phase with selected rural Government schools to verify postal supply chains. Open public enrollment will be activated upon official rollout. If you already have an enrolled pilot account, click <strong>"2. Login &amp; Track Parcels"</strong> above to track your assistance and consignment letters.
+                        </p>
+                    </div>
+
                     <div class="text-center max-w-xl mx-auto mb-8">
                         <span class="text-xs font-mono uppercase tracking-widest text-emerald-400 font-bold">STEP 1: PERMANENT STUDENT PROFILE</span>
                         <h2 class="text-2xl sm:text-3xl font-cinzel font-bold text-white mt-1">One-Time Student Registration</h2>
@@ -811,6 +820,12 @@
 
             errDiv.classList.add('hidden');
             succDiv.classList.add('hidden');
+
+            if (publicFoundationData?.settings?.launch_status === 'launching_soon') {
+                errDiv.innerText = 'The Chiranjit Kar Foundation is currently in its active pilot testing phase. Open public student registrations will unlock shortly upon official launch. If you already have an enrolled pilot account, please sign in via "2. Login & Track Parcels".';
+                errDiv.classList.remove('hidden');
+                return;
+            }
 
             const rawAadhaar = document.getElementById('reg_aadhaar').value.replace(/\D/g, '');
             if (rawAadhaar.length !== 12) {
@@ -1323,9 +1338,108 @@
                 btn.innerText = 'Submit Academic Progress Record';
             }
         }
-    </script>
-</body>
-</html>
+
+        // 5. Dynamic Launch Status Engine (Launching Soon vs Live)
+        let publicFoundationData = null;
+
+        async function initFoundationPublic() {
+            try {
+                const res = await fetch('/api/foundation/public');
+                const data = await res.json();
+                if (!res.ok || !data.ok) return;
+                publicFoundationData = data;
+
+                const launchStatus = data.settings?.launch_status || 'launching_soon';
+                const isLive = launchStatus === 'live';
+
+                // 1. Top charter banner
+                const topStrip = document.getElementById('top-charter-strip');
+                if (topStrip) {
+                    if (isLive) {
+                        topStrip.className = "bg-gradient-to-r from-emerald-950 via-emerald-900 to-black text-[12px] text-emerald-200 py-2 border-b border-emerald-800/40 px-4 text-center";
+                        topStrip.innerHTML = `
+                            <span class="inline-flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                                <strong>100% Private Philanthropic Initiative</strong> by Chiranjit Kar &bull; Exclusively for Government School Students (Nursery to Class 10) &bull; Zero Public Donations
+                            </span>
+                        `;
+                    } else {
+                        topStrip.className = "bg-gradient-to-r from-amber-950 via-neutral-900 to-black text-[12px] text-amber-200 py-2 border-b border-amber-800/40 px-4 text-center";
+                        topStrip.innerHTML = `
+                            <span class="inline-flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                                <strong>🚀 Chiranjit Kar Foundation &bull; Launching Soon (Pilot Active)</strong> &bull; Exclusively for Government School Students (Nursery to Class 10) &bull; Zero Public Donations
+                            </span>
+                        `;
+                    }
+                }
+
+                // 2. Hero Status Badge & Action Buttons
+                const heroBadge = document.getElementById('hero-status-badge');
+                if (heroBadge) {
+                    if (isLive) {
+                        heroBadge.className = "inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono uppercase tracking-wider mb-6";
+                        heroBadge.innerHTML = `<span>🌱</span> Direct Child Education &amp; Welfare &bull; Nursery to Class 10`;
+                    } else {
+                        heroBadge.className = "inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs font-mono uppercase tracking-wider mb-6";
+                        heroBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span> LAUNCHING SOON &bull; PILOT ACTIVE &bull; NURSERY TO CLASS 10`;
+                    }
+                }
+
+                // 3. Campaign Drive Preview
+                if (data.activeCampaigns && data.activeCampaigns.length > 0) {
+                    const c = data.activeCampaigns[0];
+                    if (document.getElementById('camp-code')) document.getElementById('camp-code').innerText = c.campaign_code;
+                    if (document.getElementById('camp-title')) document.getElementById('camp-title').innerText = c.title;
+                    if (document.getElementById('camp-desc')) document.getElementById('camp-desc').innerText = c.description;
+                    if (document.getElementById('camp-target')) document.getElementById('camp-target').innerText = c.target_audience;
+                    if (document.getElementById('camp-kit')) document.getElementById('camp-kit').innerHTML = `<strong>📦 Kit Contents:</strong> ${c.kit_summary}`;
+                }
+
+                const campBadge = document.getElementById('camp-badge');
+                const campApplyBtn = document.getElementById('camp-apply-btn');
+                if (campBadge) {
+                    if (isLive) {
+                        campBadge.className = "px-2.5 py-1 rounded-md text-[11px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 uppercase tracking-widest";
+                        campBadge.innerText = "Active Drive";
+                    } else {
+                        campBadge.className = "px-2.5 py-1 rounded-md text-[11px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 uppercase tracking-widest";
+                        campBadge.innerText = "Pilot Drive · Launching Soon";
+                    }
+                }
+                if (campApplyBtn) {
+                    if (isLive) {
+                        campApplyBtn.innerText = "Apply for this Drive →";
+                        campApplyBtn.onclick = () => switchPortalTab('login');
+                    } else {
+                        campApplyBtn.innerText = "Track Pilot Parcel / Sign In 🔑";
+                        campApplyBtn.onclick = () => switchPortalTab('login');
+                    }
+                }
+
+                // 4. Registration Form Gate
+                const regBanner = document.getElementById('reg-launching-soon-banner');
+                const regBtn = document.getElementById('reg-submit-btn');
+                if (regBanner && regBtn) {
+                    if (isLive) {
+                        regBanner.classList.add('hidden');
+                        regBtn.disabled = false;
+                        regBtn.innerText = "Create Permanent Student Account";
+                        regBtn.classList.remove('opacity-60', 'cursor-not-allowed');
+                    } else {
+                        regBanner.classList.remove('hidden');
+                        regBtn.disabled = true;
+                        regBtn.innerText = "Public Enrollment Unlocks Upon Launch (Pilot Active)";
+                        regBtn.classList.add('opacity-60', 'cursor-not-allowed');
+                    }
+                }
+
+            } catch (err) {
+                console.error('Failed to initialize public foundation data:', err);
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', initFoundationPublic);
     </script>
 </body>
 </html>

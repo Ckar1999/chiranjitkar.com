@@ -70,6 +70,25 @@
       }
     });
 
+    $('#fnd-toggle-launch-status-btn')?.addEventListener('click', async (e) => {
+      const nextStatus = e.currentTarget.dataset.nextStatus || 'live';
+      const isActivating = nextStatus === 'live';
+      const confirmMsg = isActivating 
+        ? 'Make the Foundation website publicly LIVE to all students and teachers?' 
+        : 'Switch Foundation website back to Launching Soon / Pilot phase?';
+      if (!confirm(confirmMsg)) return;
+      try {
+        await api('foundation/admin/settings', {
+          method: 'POST',
+          body: JSON.stringify({ launch_status: nextStatus })
+        });
+        toast(isActivating ? '🎉 Foundation website is now PUBLICLY LIVE!' : 'Foundation website set to Launching Soon.');
+        await loadFoundation();
+      } catch (err) {
+        toast(err.message);
+      }
+    });
+
     $('#fnd-edit-budget-btn')?.addEventListener('click', () => {
       $('#fnd-budget-amount').value = fndData.budget.annual_budget || 500000;
       $('#fnd-budget-dialog').showModal();
@@ -771,6 +790,25 @@
       $('#fnd-stat-beneficiaries').textContent = beneficiaries;
       $('#fnd-stat-pending').textContent = `${pendingCnt} Pending Review`;
       if ($('#fnd-students-cnt-badge')) $('#fnd-students-cnt-badge').textContent = `${fndData.students.length} Registered`;
+
+      // Launch Status Toggle (Launching Soon vs Live)
+      const launchStatus = fndData.budget.launch_status || 'launching_soon';
+      const isLive = launchStatus === 'live';
+      const launchBadge = $('#fnd-launch-badge');
+      const toggleLaunchBtn = $('#fnd-toggle-launch-status-btn');
+      if (launchBadge) {
+        launchBadge.textContent = isLive ? 'PUBLICLY LIVE' : 'LAUNCHING SOON · PILOT ACTIVE';
+        launchBadge.style.background = isLive ? 'rgba(52,211,153,0.15)' : 'rgba(245,158,11,0.15)';
+        launchBadge.style.color = isLive ? '#34d399' : '#fbbf24';
+        launchBadge.style.borderColor = isLive ? 'rgba(52,211,153,0.4)' : 'rgba(245,158,11,0.4)';
+      }
+      if (toggleLaunchBtn) {
+        toggleLaunchBtn.textContent = isLive ? '⏸ Switch to Launching Soon' : '🚀 Make Publicly Live';
+        toggleLaunchBtn.dataset.nextStatus = isLive ? 'launching_soon' : 'live';
+        toggleLaunchBtn.style.background = isLive ? 'rgba(245,158,11,0.15)' : 'rgba(52,211,153,0.15)';
+        toggleLaunchBtn.style.color = isLive ? '#fbbf24' : 'var(--green)';
+        toggleLaunchBtn.style.borderColor = isLive ? 'rgba(245,158,11,0.3)' : 'rgba(52,211,153,0.35)';
+      }
 
       // 2. Campaign Engine
       const activeCamp = fndData.campaigns[0] || null;

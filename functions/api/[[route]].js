@@ -1454,6 +1454,12 @@ async function handle(request, env, route) {
       return fail('Strict Foundation Eligibility: Chiranjit Kar Foundation assistance is strictly and exclusively reserved for underprivileged children enrolled in Government or Government-Aided schools. Students in private schools are not eligible.', 403);
     }
 
+    const settingsRows = await env.DB.prepare('SELECT setting_key, setting_value FROM foundation_settings').all().catch(() => ({ results: [] }));
+    const settings = Object.fromEntries((settingsRows.results || []).map(r => [r.setting_key, r.setting_value]));
+    if (settings.launch_status === 'launching_soon' && !body.is_pilot_override) {
+      return fail('The Chiranjit Kar Foundation is currently in its active pilot testing phase with selected Government schools. Open public registrations will unlock shortly upon official launch by the administrator. If you already have a pilot student account, you can sign in to track your parcel.', 403);
+    }
+
     if (!rawAadhaar || rawAadhaar.length !== 12) return fail('Please provide a valid 12-digit Student Aadhaar Number.', 422);
     if (!legalName || legalName.length < 3) return fail('Please enter the full legal name of the student as per Aadhaar/School records.', 422);
     if (!dob || dob.length < 8) return fail('Please enter a valid Date of Birth in DD/MM/YYYY format.', 422);
@@ -1694,6 +1700,12 @@ async function handle(request, env, route) {
 
     if (['private', 'private_school', 'convent', 'cbse_private', 'icse_private'].includes(schoolType)) {
       return fail('Strict Foundation Policy: Chiranjit Kar Foundation assistance is strictly and exclusively reserved for underprivileged children enrolled in Government or Government-Aided schools. Students in private schools are not eligible.', 403);
+    }
+
+    const settingsRows = await env.DB.prepare('SELECT setting_key, setting_value FROM foundation_settings').all().catch(() => ({ results: [] }));
+    const settings = Object.fromEntries((settingsRows.results || []).map(r => [r.setting_key, r.setting_value]));
+    if (settings.launch_status === 'launching_soon' && !body.is_pilot_override) {
+      return fail('Campaign applications are currently in Launching Soon / Pilot phase. Open applications will be enabled upon official launch by the administrator.', 403);
     }
 
     if (!rawAadhaar || rawAadhaar.length !== 12) return fail('Valid 12-digit Aadhaar Number is required.', 422);
