@@ -383,14 +383,45 @@ Official School Rubber Stamp: [ OFFICIAL SCHOOL RUBBER STAMP ]
     $('#action-form').addEventListener('submit', submitSessionCode);
     $('#status-filters').innerHTML = filters.map(key => `<button class="filter-chip ${key==='all'?'active':''}" data-filter="${key}">${key==='all'?'All':escapeHtml(statusNames[key])}</button>`).join('');
     $$('#status-filters button').forEach(button => button.addEventListener('click', () => { state.filter=button.dataset.filter; $$('#status-filters button').forEach(x=>x.classList.toggle('active',x===button)); renderProjects(); }));
-    try { const result = await api('auth/me'); state.staff = result.staff; await showApp(); }
-    catch { $('#login-view').hidden = false; $('#app-view').hidden = true; }
+    try {
+      const result = await api('auth/me');
+      state.staff = result.staff;
+      $('#login-view').hidden = true;
+      $('#app-view').hidden = false;
+      await showApp();
+    } catch {
+      if (!state.staff) {
+        $('#login-view').hidden = false;
+        $('#app-view').hidden = true;
+      }
+    }
   }
 
   async function login(event) {
-    event.preventDefault(); const form = new FormData(event.currentTarget); const message = $('#login-message'); message.textContent='Signing in…';
-    try { const result=await api('auth/login',{method:'POST',body:JSON.stringify({email:form.get('email'),password:form.get('password')})}); state.staff=result.staff; message.textContent=''; await showApp(); }
-    catch(error) { message.textContent=error.message; }
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const message = $('#login-message');
+    message.textContent='Signing in…';
+    try {
+      const result = await api('auth/login', {
+        method:'POST',
+        body: JSON.stringify({
+          email: form.get('email'),
+          password: form.get('password')
+        })
+      });
+      state.staff = result.staff;
+      message.textContent = '';
+      $('#login-view').hidden = true;
+      $('#app-view').hidden = false;
+      await showApp();
+    } catch(error) {
+      message.textContent = error.message;
+      if (!state.staff) {
+        $('#login-view').hidden = false;
+        $('#app-view').hidden = true;
+      }
+    }
   }
 
   async function logout() {
@@ -405,16 +436,29 @@ Official School Rubber Stamp: [ OFFICIAL SCHOOL RUBBER STAMP ]
   }
 
   async function showApp() {
-    $('#login-view').hidden=true; $('#app-view').hidden=false;
-    $('#user-name').textContent=state.staff.name; $('#user-role').textContent=roleNames[state.staff.role]||state.staff.role; $('#user-avatar').textContent=state.staff.name.split(/\s+/).map(x=>x[0]).slice(0,2).join('').toUpperCase();
-    $$('.admin-only').forEach(el=>el.hidden=state.staff.role!=='admin');
-    $$('.finance-only').forEach(el=>el.hidden=!['admin','sales'].includes(state.staff.role));
-    $$('.sales-only').forEach(el=>el.hidden=!['admin','sales'].includes(state.staff.role));
-    $$('[data-roles]').forEach(el=>el.hidden=!el.dataset.roles.split(',').includes(state.staff.role));
-    await refresh();
-    if (state.staff.role==='admin') await loadTeam();
-    if (['admin','sales'].includes(state.staff.role)) await loadInquiries();
-    await loadSettings();
+    $('#login-view').hidden=true;
+    $('#app-view').hidden=false;
+    try {
+      if (state.staff) {
+        $('#user-name').textContent = state.staff.name;
+        $('#user-role').textContent = roleNames[state.staff.role] || state.staff.role;
+        $('#user-avatar').textContent = state.staff.name.split(/\s+/).map(x=>x[0]).slice(0,2).join('').toUpperCase();
+        $$('.admin-only').forEach(el=>el.hidden = state.staff.role !== 'admin');
+        $$('.finance-only').forEach(el=>el.hidden = !['admin','sales'].includes(state.staff.role));
+        $$('.sales-only').forEach(el=>el.hidden = !['admin','sales'].includes(state.staff.role));
+        $$('[data-roles]').forEach(el=>el.hidden = !el.dataset.roles.split(',').includes(state.staff.role));
+      }
+    } catch(e) {
+      console.warn('showApp profile render error:', e);
+    }
+    try { await refresh(); } catch(e) { console.warn('refresh error:', e); }
+    if (state.staff?.role === 'admin') {
+      try { await loadTeam(); } catch(e) { console.warn('loadTeam error:', e); }
+    }
+    if (['admin','sales'].includes(state.staff?.role)) {
+      try { await loadInquiries(); } catch(e) { console.warn('loadInquiries error:', e); }
+    }
+    try { await loadSettings(); } catch(e) { console.warn('loadSettings error:', e); }
     clearInterval(state.syncTimer);
     state.syncTimer=setInterval(()=>{if(document.visibilityState!=='visible'||!state.staff)return;refresh();if(state.view==='tasks')loadTasks();if(state.view==='inquiries'&&['admin','sales'].includes(state.staff.role))loadInquiries();},45000);
   }
@@ -1251,11 +1295,6 @@ Official School Rubber Stamp: [ OFFICIAL SCHOOL RUBBER STAMP ]
       document.body.appendChild(printFrame);
     }
 
-    const sheetEl = document.getElementById('fnd-letter-sheet');
-    if (!sheetEl) {
-      window.print();
-      return;
-    }
     const sheetContent = sheetEl.innerHTML;
 
     const frameDoc = printFrame.contentWindow.document;
